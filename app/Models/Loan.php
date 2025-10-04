@@ -10,6 +10,7 @@ class Loan extends Model
     protected $fillable = [
         'tool_id',
         'user_id',
+        'quantity',
         'out_at',
         'due_at',
         'returned_at',
@@ -18,6 +19,7 @@ class Loan extends Model
     ];
 
     protected $casts = [
+        'quantity' => 'integer',
         'out_at' => 'datetime',
         'due_at' => 'datetime',
         'returned_at' => 'datetime',

@@ -28,5 +28,11 @@ class DatabaseSeeder extends Seeder
             ['email' => 'worker@example.com'],
             ['name' => 'Worker', 'password' => bcrypt('password'), 'role' => 'worker']
         );
+
+        // Ejecutar seeder de mayordomos
+        $this->call(ForemanSeeder::class);
+        
+        // Ejecutar seeder de trabajadores
+        $this->call(WorkerSeeder::class);
     }
 }

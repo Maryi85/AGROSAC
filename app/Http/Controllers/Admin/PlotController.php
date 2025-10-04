@@ -16,6 +16,7 @@ class PlotController extends Controller
     {
         $search = (string) $request->string('q');
         $plots = Plot::query()
+            ->with('crops')
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->orderBy('name')
             ->paginate(10)
@@ -40,14 +41,52 @@ class PlotController extends Controller
         return view('admin.plots.edit', compact('plot'));
     }
 
-    public function update(UpdatePlotRequest $request, Plot $plot): RedirectResponse
+    public function update(UpdatePlotRequest $request, Plot $plot): RedirectResponse|\Illuminate\Http\JsonResponse
     {
-        $plot->update($request->validated());
+        $validated = $request->validated();
+        
+        // Verificar si se está intentando inhabilitar un lote que tiene cultivos activos
+        if ($plot->status === 'active' && $validated['status'] === 'inactive') {
+            $activeCrops = $plot->crops()->where('status', 'active')->count();
+            if ($activeCrops > 0) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "No se puede inhabilitar este lote porque tiene {$activeCrops} cultivo(s) activo(s). Primero debe inhabilitar o reubicar los cultivos."
+                    ], 422);
+                }
+                return redirect()->route('admin.plots.index')
+                    ->with('error', "No se puede inhabilitar este lote porque tiene {$activeCrops} cultivo(s) activo(s). Primero debe inhabilitar o reubicar los cultivos.");
+            }
+        }
+        
+        $plot->update($validated);
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Lote actualizado correctamente'
+            ]);
+        }
+        
         return redirect()->route('admin.plots.index')->with('status', 'Lote actualizado');
     }
 
     public function destroy(Plot $plot): RedirectResponse
     {
+        // Verificar si el lote tiene cultivos activos
+        $activeCrops = $plot->crops()->where('status', 'active')->count();
+        if ($activeCrops > 0) {
+            return redirect()->route('admin.plots.index')
+                ->with('error', "No se puede eliminar este lote porque tiene {$activeCrops} cultivo(s) activo(s). Primero debe inhabilitar o reubicar los cultivos.");
+        }
+
+        // Verificar si el lote está activo
+        if ($plot->status === 'active') {
+            return redirect()->route('admin.plots.index')
+                ->with('error', 'No se puede eliminar un lote que está activo. Cambie el estado a inactivo primero.');
+        }
+
         $plot->delete();
         return redirect()->route('admin.plots.index')->with('status', 'Lote eliminado');
     }

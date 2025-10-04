@@ -27,4 +27,9 @@ class Plot extends Model
     {
         return $this->hasMany(SupplyConsumption::class);
     }
+
+    public function crops(): HasMany
+    {
+        return $this->hasMany(Crop::class);
+    }
 }

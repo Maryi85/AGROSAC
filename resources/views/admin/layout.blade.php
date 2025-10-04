@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin | SACRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -20,16 +21,22 @@
                 <div class="text-base font-semibold text-emerald-700">Administrador</div>
             </div>
             <nav class="space-y-1 flex-1">
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.') }}">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="layout-dashboard" class="w-5 h-5 text-emerald-600"></i>
                         <span>Dashboard</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="#">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.foremen.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="user-cog" class="w-5 h-5 text-emerald-600"></i>
                         <span>Mayordomos</span>
+                    </span>
+                </a>
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.workers.index') }}">
+                    <span class="inline-flex items-center gap-2">
+                        <i data-lucide="users" class="w-5 h-5 text-emerald-600"></i>
+                        <span>Trabajadores</span>
                     </span>
                 </a>
                 <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.plots.index') }}">
@@ -44,31 +51,31 @@
                         <span>Cultivos</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="#">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.tasks.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="clipboard-check" class="w-5 h-5 text-emerald-600"></i>
                         <span>Tareas</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="#">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.tools.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="wrench" class="w-5 h-5 text-emerald-600"></i>
                         <span>Inventario</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="#">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.loans.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="arrow-left-right" class="w-5 h-5 text-emerald-600"></i>
                         <span>Préstamos</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="#">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.supplies.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="flask-round" class="w-5 h-5 text-emerald-600"></i>
                         <span>Insumos</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="#">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-emerald-200 hover:bg-emerald-100" href="{{ route('admin.ledger.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="banknote" class="w-5 h-5 text-emerald-600"></i>
                         <span>Contable</span>

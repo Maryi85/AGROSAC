@@ -4,12 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Crop extends Model
 {
     protected $fillable = [
         'name',
+        'description',
+        'variety',
+        'yield_per_hectare',
         'status',
+        'plot_id',
+    ];
+
+    protected $casts = [
+        'yield_per_hectare' => 'decimal:2',
     ];
 
     public function tasks(): HasMany
@@ -25,5 +34,10 @@ class Crop extends Model
     public function ledgerEntries(): HasMany
     {
         return $this->hasMany(LedgerEntry::class);
+    }
+
+    public function plot(): BelongsTo
+    {
+        return $this->belongsTo(Plot::class);
     }
 }
