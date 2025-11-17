@@ -9,6 +9,9 @@ use App\Models\Supply;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SupplyController extends Controller
 {
@@ -54,8 +57,37 @@ class SupplyController extends Controller
 
     public function store(StoreSupplyRequest $request): RedirectResponse
     {
-        $supply = Supply::create($request->validated());
-
+        $data = $request->validated();
+        
+        // Manejar la subida de la foto
+        if ($request->hasFile('photo')) {
+            try {
+                $photo = $request->file('photo');
+                
+                // Generar nombre de archivo seguro (sin espacios ni caracteres especiales)
+                $originalName = $photo->getClientOriginalName();
+                $extension = $photo->getClientOriginalExtension();
+                $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+                $photoName = time() . '_' . $safeName . '.' . $extension;
+                
+                // Asegurar que el directorio existe
+                $directory = storage_path('app/public/photos/supplies');
+                if (!File::exists($directory)) {
+                    File::makeDirectory($directory, 0755, true);
+                }
+                
+                // Guardar la foto usando Storage directamente
+                $path = Storage::disk('public')->putFileAs('photos/supplies', $photo, $photoName);
+                
+                if ($path) {
+                    $data['photo'] = $path;
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error al procesar la foto de insumo: ' . $e->getMessage());
+            }
+        }
+        
+        $supply = Supply::create($data);
         return redirect()->route('admin.supplies.index')
             ->with('status', 'Insumo registrado correctamente');
     }
@@ -83,8 +115,42 @@ class SupplyController extends Controller
 
     public function update(UpdateSupplyRequest $request, Supply $supply): RedirectResponse
     {
-        $supply->update($request->validated());
-
+        $data = $request->validated();
+        
+        // Manejar la subida de la foto
+        if ($request->hasFile('photo')) {
+            try {
+                // Eliminar la foto anterior si existe
+                if ($supply->photo && Storage::disk('public')->exists($supply->photo)) {
+                    Storage::disk('public')->delete($supply->photo);
+                }
+                
+                $photo = $request->file('photo');
+                
+                // Generar nombre de archivo seguro (sin espacios ni caracteres especiales)
+                $originalName = $photo->getClientOriginalName();
+                $extension = $photo->getClientOriginalExtension();
+                $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+                $photoName = time() . '_' . $safeName . '.' . $extension;
+                
+                // Asegurar que el directorio existe
+                $directory = storage_path('app/public/photos/supplies');
+                if (!File::exists($directory)) {
+                    File::makeDirectory($directory, 0755, true);
+                }
+                
+                // Guardar la foto usando Storage directamente
+                $path = Storage::disk('public')->putFileAs('photos/supplies', $photo, $photoName);
+                
+                if ($path) {
+                    $data['photo'] = $path;
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error al procesar la foto de insumo: ' . $e->getMessage());
+            }
+        }
+        
+        $supply->update($data);
         return redirect()->route('admin.supplies.index')
             ->with('status', 'Insumo actualizado correctamente');
     }
@@ -97,9 +163,33 @@ class SupplyController extends Controller
                 ->with('error', 'No se puede eliminar un insumo que tiene consumos registrados.');
         }
 
+        $supplyName = $supply->name;
         $supply->delete();
-
         return redirect()->route('admin.supplies.index')
             ->with('status', 'Insumo eliminado correctamente');
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $query = Supply::query();
+
+        // Aplicar los mismos filtros que en index
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $supplies = $query->orderBy('name')->get();
+
+        $statuses = [
+            'active' => 'Activo',
+            'inactive' => 'Inactivo',
+        ];
+
+        $pdf = Pdf::loadView('admin.supplies.pdf', compact('supplies', 'statuses'));
+        return $pdf->download('insumos-' . now()->format('Y-m-d') . '.pdf');
     }
 }

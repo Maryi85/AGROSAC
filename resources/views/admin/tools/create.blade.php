@@ -1,4 +1,7 @@
-@extends('admin.layout')
+@php
+    $layout = route_prefix() === 'foreman.' ? 'foreman.layout' : 'admin.layout';
+@endphp
+@extends($layout)
 
 @section('header')
 <h2 class="text-lg font-semibold text-emerald-700">Registrar Nueva Herramienta</h2>
@@ -6,7 +9,7 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <form method="POST" action="{{ route('admin.tools.store') }}" class="space-y-4">
+    <form method="POST" action="{{ route(route_prefix() . 'tools.store') }}" class="space-y-4" enctype="multipart/form-data">
         @csrf
         
         <!-- Nombre -->
@@ -56,34 +59,23 @@
             @enderror
         </div>
         
-        <!-- Cantidades -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label for="total_qty" class="block text-sm mb-1 text-emerald-800">Cantidad Total</label>
-                <input type="number" id="total_qty" name="total_qty" value="{{ old('total_qty', 0) }}" 
-                       min="0" 
-                       class="w-full border border-emerald-200 rounded px-3 py-2 @error('total_qty') border-red-500 @enderror" 
-                       required />
-                @error('total_qty')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-            
-            <div>
-                <label for="available_qty" class="block text-sm mb-1 text-emerald-800">Cantidad Disponible</label>
-                <input type="number" id="available_qty" name="available_qty" value="{{ old('available_qty', 0) }}" 
-                       min="0" 
-                       class="w-full border border-emerald-200 rounded px-3 py-2 @error('available_qty') border-red-500 @enderror" 
-                       required />
-                @error('available_qty')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+        <!-- Foto -->
+        <div>
+            <label for="photo" class="block text-sm mb-1 text-emerald-800">Foto de la Herramienta</label>
+            <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/jpg,image/gif" 
+                   class="w-full border border-emerald-200 rounded px-3 py-2 @error('photo') border-red-500 @enderror">
+            <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB</p>
+            @error('photo')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+            <div id="photo-preview" class="mt-3 hidden">
+                <img id="photo-preview-img" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
             </div>
         </div>
         
         <!-- Botones -->
         <div class="flex items-center gap-2 pt-4">
-            <a href="{{ route('admin.tools.index') }}" 
+            <a href="{{ route(route_prefix() . 'tools.index') }}" 
                class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 <span>Volver</span>
@@ -98,25 +90,28 @@
 </div>
 
 <script>
-// Validación en tiempo real para cantidad disponible
+// Vista previa de la foto
 document.addEventListener('DOMContentLoaded', function() {
-    const totalQtyInput = document.getElementById('total_qty');
-    const availableQtyInput = document.getElementById('available_qty');
+    // Vista previa de la foto
+    const photoInput = document.getElementById('photo');
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPreviewImg = document.getElementById('photo-preview-img');
     
-    function validateAvailableQty() {
-        const totalQty = parseInt(totalQtyInput.value) || 0;
-        const availableQty = parseInt(availableQtyInput.value) || 0;
-        
-        if (availableQty > totalQty) {
-            availableQtyInput.setCustomValidity('La cantidad disponible no puede ser mayor que la cantidad total');
-            availableQtyInput.reportValidity();
-        } else {
-            availableQtyInput.setCustomValidity('');
-        }
+    if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photoPreviewImg.src = e.target.result;
+                    photoPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                photoPreview.classList.add('hidden');
+            }
+        });
     }
-    
-    totalQtyInput.addEventListener('input', validateAvailableQty);
-    availableQtyInput.addEventListener('input', validateAvailableQty);
 });
 </script>
 @endsection

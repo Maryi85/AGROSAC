@@ -18,6 +18,14 @@
         </div>
     @endif
 
+    <!-- Botones de acción principales -->
+    <div class="mb-6 flex justify-end items-center">
+        <a href="{{ route('foreman.workers.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
+        </a>
+    </div>
+
     <!-- Filtros de búsqueda -->
     <form method="GET" class="mb-4 flex gap-2 items-end">
         <div class="flex-1">
@@ -32,7 +40,7 @@
                 <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
             </select>
         </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
             <i data-lucide="search" class="w-4 h-4"></i>
             <span>Filtrar</span>
         </button>
@@ -99,6 +107,22 @@
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
                             
+                            <!-- Eliminar -->
+                            @if($worker->email_verified_at)
+                                <!-- Trabajador activo: botón deshabilitado -->
+                                <button disabled class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded bg-gray-100 text-gray-400 cursor-not-allowed opacity-60" title="No se puede eliminar un trabajador activo. Debe desactivarlo primero.">
+                                    <i data-lucide="trash" class="w-4 h-4"></i>
+                                </button>
+                            @else
+                                <!-- Trabajador inactivo: botón habilitado -->
+                                <form method="POST" action="{{ route('foreman.workers.destroy', $worker) }}" class="inline" data-confirm="true" data-message="¿Eliminar este trabajador? Esta acción no se puede deshacer.">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
+                                        <i data-lucide="trash" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

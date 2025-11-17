@@ -1,4 +1,7 @@
-@extends('admin.layout')
+@php
+    $layout = route_prefix() === 'foreman.' ? 'foreman.layout' : 'admin.layout';
+@endphp
+@extends($layout)
 
 @section('header')
 <h2 class="text-lg font-semibold text-emerald-700">Prestar Herramienta</h2>
@@ -6,7 +9,7 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <form method="POST" action="{{ route('admin.loans.store') }}" class="space-y-4">
+    <form method="POST" action="{{ route(route_prefix() . 'loans.store') }}" class="space-y-4">
         @csrf
         
         <!-- Herramienta -->
@@ -85,7 +88,7 @@
         
         <!-- Botones -->
         <div class="flex items-center gap-2 pt-4">
-            <a href="{{ route('admin.loans.index') }}" 
+            <a href="{{ route(route_prefix() . 'loans.index') }}" 
                class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 <span>Volver</span>

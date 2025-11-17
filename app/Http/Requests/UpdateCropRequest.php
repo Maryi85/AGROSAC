@@ -21,6 +21,7 @@ class UpdateCropRequest extends FormRequest
             'yield_per_hectare' => ['nullable', 'numeric', 'min:0'],
             'plot_id' => ['nullable', 'exists:plots,id'],
             'status' => ['required', 'in:active,inactive'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ];
     }
 

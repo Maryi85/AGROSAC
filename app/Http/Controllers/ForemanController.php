@@ -23,10 +23,13 @@ class ForemanController extends Controller
         $pendingTasks = Task::where('status', 'pending')->count();
         $completedTasks = Task::where('status', 'completed')->count();
         $tasksToApprove = Task::where('status', 'completed')->count();
+        $totalTasks = Task::count();
         
         // Estadísticas de herramientas
-        $availableTools = Tool::where('status', 'operational')->sum('available_qty');
-        $totalTools = Tool::sum('total_qty');
+        // Usar el accessor available_qty que calcula desde tool_entries
+        $tools = Tool::with('entries')->where('status', 'operational')->get();
+        $availableTools = $tools->sum('available_qty');
+        $totalTools = $tools->sum('total_entries');
 
         // Actividad reciente - solo información relevante para el mayordomo
         $recentTasks = Task::with(['plot', 'assignee'])
@@ -35,14 +38,18 @@ class ForemanController extends Controller
             ->get();
 
         // Herramientas en uso (con cantidad disponible menor al total)
-        $toolsInUse = Tool::where('available_qty', '<', \DB::raw('total_qty'))
-            ->orWhere('status', '!=', 'operational')
-            ->orderBy('name')
-            ->limit(5)
-            ->get();
+        // Usar el accessor available_qty que calcula desde tool_entries
+        $toolsInUse = Tool::with('entries')
+            ->get()
+            ->filter(function($tool) {
+                return $tool->available_qty < $tool->total_entries || $tool->status != 'operational';
+            })
+            ->sortBy('name')
+            ->take(5)
+            ->values();
 
         return view('foreman.dashboard', compact(
-            'activeWorkers', 'pendingTasks', 'completedTasks', 'tasksToApprove',
+            'activeWorkers', 'pendingTasks', 'completedTasks', 'tasksToApprove', 'totalTasks',
             'availableTools', 'totalTools', 'recentTasks', 'toolsInUse'
         ));
     }

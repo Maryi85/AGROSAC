@@ -26,11 +26,14 @@
     @endif
 
     <!-- Botón para agregar nuevo mayordomo -->
-    <div class="flex justify-between items-center mb-4">
-        <div></div>
-        <a href="{{ route('admin.foremen.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-            <i data-lucide="plus" class="w-4 h-4"></i>
+    <div class="mb-6 flex justify-between items-center">
+        <a href="{{ route('admin.foremen.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="plus" class="w-5 h-5"></i>
             <span>Nuevo Mayordomo</span>
+        </a>
+        <a href="{{ route('admin.foremen.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
         </a>
     </div>
 
@@ -48,7 +51,7 @@
                 <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
             </select>
         </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
             <i data-lucide="search" class="w-4 h-4"></i>
             <span>Filtrar</span>
         </button>
@@ -112,13 +115,19 @@
                             </button>
                             
                             <!-- Eliminar -->
-                            <form method="POST" action="{{ route('admin.foremen.destroy', $foreman) }}" class="inline" data-confirm="true" data-message="¿Eliminar este mayordomo? Esta acción no se puede deshacer.">
-                                @csrf
-                                @method('DELETE')
-                                <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
+                            @if($foreman->email_verified_at)
+                                <button disabled class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded bg-gray-100 text-gray-400 cursor-not-allowed opacity-60" title="No se puede eliminar un mayordomo activo. Debe desactivarlo primero.">
                                     <i data-lucide="trash" class="w-4 h-4"></i>
                                 </button>
-                            </form>
+                            @else
+                                <form method="POST" action="{{ route('admin.foremen.destroy', $foreman) }}" class="inline" data-confirm="true" data-message="¿Eliminar este mayordomo? Esta acción no se puede deshacer.">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
+                                        <i data-lucide="trash" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -182,7 +191,7 @@
         
         <!-- Botón de cerrar -->
         <div class="mt-6 flex justify-end">
-            <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">
+            <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded transition-colors">
                 <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                 Cerrar
             </button>
@@ -279,7 +288,7 @@
                 </button>
                 
                 <button type="submit" id="saveBtn"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+                        class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
                     <i data-lucide="save" class="w-4 h-4"></i>
                     <span>Guardar Cambios</span>
                 </button>

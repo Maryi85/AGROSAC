@@ -74,7 +74,9 @@
                     class="w-full border border-emerald-200 rounded px-3 py-2 @error('crop_id') border-red-500 @enderror">
                 <option value="">Seleccionar cultivo</option>
                 @foreach($crops as $crop)
-                    <option value="{{ $crop->id }}" {{ old('crop_id') == $crop->id ? 'selected' : '' }}>
+                    <option value="{{ $crop->id }}" 
+                            data-plot-id="{{ $crop->plot_id }}"
+                            {{ old('crop_id') == $crop->id ? 'selected' : '' }}>
                         {{ $crop->name }}
                     </option>
                 @endforeach
@@ -133,11 +135,47 @@
                 <span>Volver</span>
             </a>
             <button type="submit" 
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+                    class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>Registrar Movimiento</span>
             </button>
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cropSelect = document.getElementById('crop_id');
+    const plotSelect = document.getElementById('plot_id');
+    
+    // Función para actualizar el lote cuando se selecciona un cultivo
+    cropSelect.addEventListener('change', function() {
+        const selectedCrop = this.options[this.selectedIndex];
+        const plotId = selectedCrop.getAttribute('data-plot-id');
+        
+        // Si no hay cultivo seleccionado, limpiar el lote
+        if (!this.value) {
+            plotSelect.value = '';
+            return;
+        }
+        
+        // Si hay un plot_id asociado al cultivo, seleccionarlo automáticamente
+        if (plotId) {
+            // Buscar la opción del lote con ese ID
+            const plotOption = Array.from(plotSelect.options).find(opt => opt.value == plotId);
+            if (plotOption) {
+                plotSelect.value = plotId;
+            }
+        } else {
+            // Si el cultivo no tiene lote asociado, limpiar la selección
+            plotSelect.value = '';
+        }
+    });
+    
+    // Si hay un valor antiguo, disparar el evento
+    if (cropSelect.value) {
+        cropSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
 @endsection

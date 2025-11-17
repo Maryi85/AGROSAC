@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ForemanToolController extends Controller
 {
@@ -31,7 +32,7 @@ class ForemanToolController extends Controller
             $query->where('status', $status);
         }
 
-        $tools = $query->orderBy('name')->paginate(15);
+        $tools = $query->orderBy('name')->paginate(10);
 
         // Categorías y estados disponibles
         $categories = Tool::distinct()->pluck('category')->filter()->values()->toArray();
@@ -63,8 +64,7 @@ class ForemanToolController extends Controller
             'available_qty' => 'required|integer|min:0|lte:total_qty',
         ]);
 
-        Tool::create($request->all());
-
+        $tool = Tool::create($request->all());
         return redirect()->route('foreman.tools.index')
             ->with('status', 'Herramienta registrada correctamente');
     }
@@ -110,7 +110,6 @@ class ForemanToolController extends Controller
                     ]
                 ]);
             }
-
             return redirect()->route('foreman.tools.index')
                 ->with('status', 'Herramienta actualizada correctamente');
         } catch (\Exception $e) {
@@ -129,9 +128,42 @@ class ForemanToolController extends Controller
 
     public function destroy(Tool $tool): RedirectResponse
     {
+        $toolName = $tool->name;
         $tool->delete();
-
         return redirect()->route('foreman.tools.index')
             ->with('status', 'Herramienta eliminada correctamente');
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $query = Tool::query();
+
+        $search = $request->get('search');
+        $category = $request->get('category');
+        $status = $request->get('status');
+
+        if ($search) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        if ($category && $category !== 'all') {
+            $query->where('category', $category);
+        }
+
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        $tools = $query->orderBy('name')->get();
+
+        $statuses = [
+            'operational' => 'Operacional',
+            'damaged' => 'Dañado',
+            'lost' => 'Perdido',
+            'retired' => 'Retirado'
+        ];
+
+        $pdf = Pdf::loadView('foreman.tools.pdf', compact('tools', 'statuses'));
+        return $pdf->download('herramientas-' . now()->format('Y-m-d') . '.pdf');
     }
 }

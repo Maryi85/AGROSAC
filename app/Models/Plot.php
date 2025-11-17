@@ -32,4 +32,5 @@ class Plot extends Model
     {
         return $this->hasMany(Crop::class);
     }
+
 }

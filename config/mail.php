@@ -1,5 +1,17 @@
 <?php
 
+// Calcular el dominio local de forma segura
+$appUrl = env('APP_URL', 'http://localhost');
+$localDomain = env('MAIL_EHLO_DOMAIN');
+if (empty($localDomain)) {
+    if (empty($appUrl)) {
+        $localDomain = 'localhost';
+    } else {
+        $parsed = parse_url((string) $appUrl, PHP_URL_HOST);
+        $localDomain = $parsed ?: 'localhost';
+    }
+}
+
 return [
 
     /*
@@ -42,11 +54,32 @@ return [
             'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
+            'port' => env('MAIL_PORT', 587),
+            'encryption' => (function() {
+                $encryption = env('MAIL_ENCRYPTION');
+                if (!empty($encryption)) {
+                    return $encryption;
+                }
+                // Detectar automáticamente la encriptación según el host
+                $host = env('MAIL_HOST', '');
+                if (strpos($host, 'gmail.com') !== false || strpos($host, 'mailtrap.io') !== false) {
+                    return 'tls';
+                }
+                return 'tls';
+            })(),
             'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
+            // Remover espacios de la contraseña automáticamente (problema común con contraseñas de aplicación de Gmail)
+            'password' => str_replace(' ', '', env('MAIL_PASSWORD', '')),
             'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'local_domain' => $localDomain,
+            'verify_peer' => false,
+            'stream' => [
+                'ssl' => [
+                    'allow_self_signed' => true,
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                ],
+            ],
         ],
 
         'ses' => [

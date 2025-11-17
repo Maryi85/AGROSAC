@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ForemanWorkerController extends Controller
 {
@@ -192,5 +193,62 @@ class ForemanWorkerController extends Controller
 
         return redirect()->route('foreman.workers.index')
             ->with('status', $message);
+    }
+
+    public function destroy(User $worker): RedirectResponse
+    {
+        // Verificar que sea un trabajador
+        if ($worker->role !== 'worker') {
+            abort(404);
+        }
+
+        // No permitir eliminar si está activo
+        if ($worker->email_verified_at) {
+            return redirect()->route('foreman.workers.index')
+                ->with('error', 'No se puede eliminar un trabajador activo. Debe desactivarlo primero.');
+        }
+
+        // Verificar que no tenga tareas pendientes
+        $pendingTasks = \App\Models\Task::where('assigned_to', $worker->id)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        if ($pendingTasks > 0) {
+            return redirect()->route('foreman.workers.index')
+                ->with('error', 'No se puede eliminar un trabajador que tiene tareas pendientes.');
+        }
+
+        $worker->delete();
+
+        return redirect()->route('foreman.workers.index')
+            ->with('status', 'Trabajador eliminado correctamente');
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $query = User::where('role', 'worker');
+
+        $search = $request->get('search');
+        $status = $request->get('status');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($status && $status !== 'all') {
+            if ($status === 'active') {
+                $query->whereNotNull('email_verified_at');
+            } else {
+                $query->whereNull('email_verified_at');
+            }
+        }
+
+        $workers = $query->orderBy('name')->get();
+
+        $pdf = Pdf::loadView('foreman.workers.pdf', compact('workers'));
+        return $pdf->download('trabajadores-' . now()->format('Y-m-d') . '.pdf');
     }
 }

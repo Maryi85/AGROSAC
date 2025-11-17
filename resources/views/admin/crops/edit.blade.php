@@ -24,7 +24,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.crops.update', $crop) }}" class="space-y-6" id="editCropForm">
+    <form method="POST" action="{{ route('admin.crops.update', $crop) }}" class="space-y-6" id="editCropForm" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         
@@ -87,6 +87,27 @@
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
+
+            <!-- Foto -->
+            <div class="mt-6">
+                <label for="photo" class="block text-sm font-medium text-emerald-800 mb-2">Foto del Cultivo</label>
+                @if(!empty($crop->photo))
+                    <div class="mb-3">
+                        <p class="text-sm text-gray-600 mb-2">Foto actual:</p>
+                        <img src="{{ asset('storage/' . $crop->photo) }}" alt="Foto actual" class="max-w-xs rounded border border-emerald-200" onerror="this.style.display='none';">
+                    </div>
+                @endif
+                <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/jpg,image/gif" 
+                       class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB</p>
+                @error('photo')
+                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                @enderror
+                <div id="photo-preview" class="mt-3 hidden">
+                    <p class="text-sm text-gray-600 mb-2">Nueva foto:</p>
+                    <img id="photo-preview-img" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
+                </div>
+            </div>
         </div>
 
 
@@ -105,7 +126,7 @@
 
         <!-- Botones -->
         <div class="flex items-center gap-4 pt-6 border-t">
-            <button type="submit" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+            <button type="submit" class="px-6 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>Actualizar Cultivo</span>
             </button>
@@ -161,6 +182,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 500);
         }, 7000);
+    }
+    
+    // Vista previa de la foto
+    const photoInput = document.getElementById('photo');
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPreviewImg = document.getElementById('photo-preview-img');
+    
+    if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photoPreviewImg.src = e.target.result;
+                    photoPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                photoPreview.classList.add('hidden');
+            }
+        });
     }
 });
 </script>

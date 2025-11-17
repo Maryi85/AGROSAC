@@ -11,7 +11,7 @@ class UpdateSupplyRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->role === 'admin';
+        return in_array($this->user()?->role, ['admin', 'foreman']);
     }
 
     /**
@@ -24,8 +24,9 @@ class UpdateSupplyRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', 'unique:supplies,name,' . $this->route('supply')->id],
             'unit' => ['required', 'string', 'in:kg,lt,unit,g,ml,lb,gal'],
-            'unit_cost' => ['required', 'numeric', 'min:0'],
+            'unit_cost' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'string', 'in:active,inactive'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ];
     }
 
@@ -40,7 +41,6 @@ class UpdateSupplyRequest extends FormRequest
             'name.max' => 'El nombre no puede tener más de 255 caracteres.',
             'unit.required' => 'La unidad de medida es obligatoria.',
             'unit.in' => 'La unidad de medida seleccionada no es válida.',
-            'unit_cost.required' => 'El costo por unidad es obligatorio.',
             'unit_cost.numeric' => 'El costo por unidad debe ser un número.',
             'unit_cost.min' => 'El costo por unidad no puede ser negativo.',
             'status.required' => 'El estado es obligatorio.',

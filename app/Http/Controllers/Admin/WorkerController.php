@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class WorkerController extends Controller
 {
@@ -168,6 +169,12 @@ class WorkerController extends Controller
         // Verificar que sea un trabajador
         if ($worker->role !== 'worker') {
             abort(404);
+        }
+
+        // Verificar que el trabajador esté inactivo
+        if ($worker->email_verified_at) {
+            return redirect()->route('admin.workers.index')
+                ->with('error', 'No se puede eliminar un trabajador activo. Debe desactivarlo primero.');
         }
 
         // Verificar que no tenga tareas pendientes
@@ -411,5 +418,114 @@ class WorkerController extends Controller
             'total_hours' => $totalHours,
             'total_kilos' => $totalKilos,
         ];
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $query = User::where('role', 'worker');
+
+        // Aplicar los mismos filtros que en index
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            if ($request->status === 'active') {
+                $query->whereNotNull('email_verified_at');
+            } else {
+                $query->whereNull('email_verified_at');
+            }
+        }
+
+        $workers = $query->orderBy('name')->get();
+
+        $pdf = Pdf::loadView('admin.workers.pdf', compact('workers'));
+        return $pdf->download('trabajadores-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function report(User $worker): View
+    {
+        // Verificar que sea un trabajador
+        if ($worker->role !== 'worker') {
+            abort(404);
+        }
+
+        // Obtener todas las tareas aprobadas del trabajador con información de cultivo y precios
+        // También incluir tareas completadas que puedan tener información de pago
+        $tasks = Task::where('assigned_to', $worker->id)
+            ->whereIn('status', ['approved', 'completed'])
+            ->with(['crop', 'plot'])
+            ->orderBy('scheduled_for', 'desc')
+            ->get();
+
+        // Calcular el total_payment para cada tarea si no está guardado o es 0
+        $tasks = $tasks->map(function ($task) {
+            // Si total_payment es null o 0, calcularlo basándose en los precios
+            $calculatedPayment = 0;
+            
+            if ($task->price_per_hour && $task->hours > 0) {
+                $calculatedPayment = $task->hours * $task->price_per_hour;
+            } elseif ($task->price_per_day && $task->hours > 0) {
+                // Convertir horas a días (8 horas = 1 día)
+                $days = $task->hours / 8;
+                $calculatedPayment = $days * $task->price_per_day;
+            } elseif ($task->price_per_kg && $task->kilos > 0) {
+                $calculatedPayment = $task->kilos * $task->price_per_kg;
+            }
+            
+            // Usar el total_payment guardado si existe y es mayor que 0, sino usar el calculado
+            if ($task->total_payment && $task->total_payment > 0) {
+                $task->calculated_payment = $task->total_payment;
+            } else {
+                $task->calculated_payment = $calculatedPayment;
+                // Actualizar también el total_payment para que se guarde en la vista
+                $task->total_payment = $calculatedPayment;
+            }
+            
+            return $task;
+        });
+
+        // Calcular totales sumando todas las tareas
+        $totalPayment = $tasks->sum(function ($task) {
+            return $task->calculated_payment ?? ($task->total_payment ?? 0);
+        });
+        $totalHours = $tasks->sum(function ($task) {
+            return $task->hours ?? 0;
+        });
+        $totalKilos = $tasks->sum(function ($task) {
+            return $task->kilos ?? 0;
+        });
+        $totalTasks = $tasks->count();
+
+        // Agrupar por cultivo
+        $tasksByCrop = $tasks->groupBy('crop_id');
+
+        // Calcular totales por cultivo
+        $cropTotals = [];
+        foreach ($tasksByCrop as $cropId => $cropTasks) {
+            $crop = $cropTasks->first()->crop;
+            $cropPayment = $cropTasks->sum(function ($task) {
+                return $task->calculated_payment ?? ($task->total_payment ?? 0);
+            });
+            $cropHours = $cropTasks->sum(function ($task) {
+                return $task->hours ?? 0;
+            });
+            $cropKilos = $cropTasks->sum(function ($task) {
+                return $task->kilos ?? 0;
+            });
+            $cropTotals[$cropId] = [
+                'crop' => $crop ? $crop->name : 'Sin cultivo',
+                'tasks_count' => $cropTasks->count(),
+                'total_payment' => $cropPayment,
+                'total_hours' => $cropHours,
+                'total_kilos' => $cropKilos,
+            ];
+        }
+
+        return view('admin.workers.report', compact('worker', 'tasks', 'totalPayment', 'totalHours', 'totalKilos', 'totalTasks', 'cropTotals'));
     }
 }

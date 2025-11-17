@@ -1,4 +1,7 @@
-@extends('admin.layout')
+@php
+    $layout = route_prefix() === 'foreman.' ? 'foreman.layout' : 'admin.layout';
+@endphp
+@extends($layout)
 
 @section('header')
 <h2 class="text-lg font-semibold text-emerald-700">Gestión de Inventario</h2>
@@ -18,12 +21,25 @@
         </div>
     @endif
 
-    <!-- Botón para agregar nueva herramienta -->
-    <div class="flex justify-between items-center mb-4">
-        <div></div>
-        <a href="{{ route('admin.tools.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>Nueva Herramienta</span>
+    <!-- Botones de acción -->
+    <div class="mb-6 flex justify-between items-center">
+        <div class="flex gap-4 flex-wrap">
+            <a href="{{ route(route_prefix() . 'tools.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                <span>Nueva Herramienta</span>
+            </a>
+            <a href="{{ route(route_prefix() . 'tool-entries.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="package" class="w-5 h-5"></i>
+                <span>Gestionar Entradas</span>
+            </a>
+            <a href="{{ route(route_prefix() . 'tool-damage.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                <span>Daños y Pérdidas</span>
+            </a>
+        </div>
+        <a href="{{ route(route_prefix() . 'tools.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
         </a>
     </div>
 
@@ -55,7 +71,7 @@
                 @endforeach
             </select>
         </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
             <i data-lucide="search" class="w-4 h-4"></i>
             <span>Filtrar</span>
         </button>
@@ -66,11 +82,14 @@
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
+                    <th class="py-3 pr-4">Foto</th>
                     <th class="py-3 pr-4">Nombre</th>
                     <th class="py-3 pr-4">Categoría</th>
-                    <th class="py-3 pr-4">Estado</th>
-                    <th class="py-3 pr-4">Cantidad Total</th>
+                    <th class="py-3 pr-4">Total Entradas</th>
                     <th class="py-3 pr-4">Disponible</th>
+                    <th class="py-3 pr-4">Dañadas</th>
+                    <th class="py-3 pr-4">Perdidas</th>
+                    <th class="py-3 pr-4">Estado</th>
                     <th class="py-3 pr-4 text-right">Acciones</th>
                 </tr>
             </thead>
@@ -78,27 +97,77 @@
                 @forelse ($tools as $tool)
                 <tr class="border-b hover:bg-gray-50" data-tool-id="{{ $tool->id }}">
                     <td class="py-3 pr-4">
+                        @if(!empty($tool->photo))
+                            <img src="{{ asset('storage/' . $tool->photo) }}" alt="{{ $tool->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            </div>
+                        @else
+                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            </div>
+                        @endif
+                    </td>
+                    <td class="py-3 pr-4">
                         <div class="font-medium text-gray-900 tool-name">{{ $tool->name }}</div>
+                        @if($tool->brand)
+                            <div class="text-xs text-gray-500">{{ $tool->brand }}</div>
+                        @endif
                     </td>
                     <td class="py-3 pr-4 tool-category">
                         {{ ucfirst(str_replace('_', ' ', $tool->category)) }}
                     </td>
-                    <td class="py-3 pr-4 status-badge">
-                        <span class="px-2 py-1 text-xs rounded {{ $tool->status === 'operational' ? 'bg-emerald-100 text-emerald-700' : ($tool->status === 'damaged' ? 'bg-red-100 text-red-700' : ($tool->status === 'lost' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700')) }}">
-                            {{ $statuses[$tool->status] }}
+                    <td class="py-3 pr-4">
+                        <div class="font-semibold text-gray-900">{{ $tool->total_entries }}</div>
+                        <div class="text-xs text-gray-500">Total ingresado</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="font-semibold {{ $tool->available_qty > 0 ? 'text-green-600' : 'text-gray-500' }}">
+                            {{ $tool->available_qty }}
+                        </div>
+                        <div class="text-xs text-gray-500">Para préstamo</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="font-semibold {{ $tool->damaged_qty > 0 ? 'text-orange-600' : 'text-gray-500' }}">
+                            {{ $tool->damaged_qty }}
+                        </div>
+                        <div class="text-xs text-gray-500">Dañadas</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="font-semibold {{ $tool->lost_qty > 0 ? 'text-red-600' : 'text-gray-500' }}">
+                            {{ $tool->lost_qty }}
+                        </div>
+                        <div class="text-xs text-gray-500">Perdidas</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        @php
+                            $inventoryStatus = $tool->inventory_status ?? 'available';
+                            $statusClasses = [
+                                'available' => 'bg-green-100 text-green-700',
+                                'damaged' => 'bg-orange-100 text-orange-700',
+                                'lost' => 'bg-red-100 text-red-700',
+                                'empty' => 'bg-gray-100 text-gray-700',
+                            ];
+                            $statusLabels = [
+                                'available' => 'Disponible',
+                                'damaged' => 'Dañada',
+                                'lost' => 'Perdida',
+                                'empty' => 'Vacía',
+                            ];
+                        @endphp
+                        <span class="px-2 py-1 text-xs rounded {{ $statusClasses[$inventoryStatus] }}">
+                            {{ $statusLabels[$inventoryStatus] }}
                         </span>
                     </td>
-                    <td class="py-3 pr-4 tool-total-qty">{{ $tool->total_qty }}</td>
-                    <td class="py-3 pr-4 tool-available-qty">{{ $tool->available_qty }}</td>
                     <td class="py-3 pr-4 text-right">
                         <div class="flex items-center gap-1 justify-end">
                             <!-- Ver detalles -->
-                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600 view-tool-btn" 
+                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-100 text-blue-600 view-tool-btn" 
                                     data-tool-id="{{ $tool->id }}"
                                     data-tool-name="{{ $tool->name }}"
                                     data-tool-category="{{ $tool->category }}"
                                     data-tool-status="{{ $tool->status }}"
-                                    data-tool-total-qty="{{ $tool->total_qty }}"
+                                    data-tool-total-entries="{{ $tool->total_entries }}"
                                     data-tool-available-qty="{{ $tool->available_qty }}"
                                     data-tool-created="{{ $tool->created_at->format('d/m/Y H:i') }}"
                                     data-tool-updated="{{ $tool->updated_at->format('d/m/Y H:i') }}"
@@ -106,13 +175,27 @@
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                             
+                            <!-- Gestionar entradas -->
+                            <a href="{{ route(route_prefix() . 'tool-entries.create', ['tool_id' => $tool->id]) }}" 
+                               class="inline-flex items-center justify-center w-8 h-8 border border-purple-200 rounded hover:bg-purple-100 text-purple-600" 
+                               title="Gestionar entradas">
+                                <i data-lucide="package" class="w-4 h-4"></i>
+                            </a>
+                            
+                            <!-- Registrar daño/pérdida -->
+                            <a href="{{ route(route_prefix() . 'tool-damage.create', ['tool_id' => $tool->id]) }}" 
+                               class="inline-flex items-center justify-center w-8 h-8 border border-orange-200 rounded hover:bg-orange-100 text-orange-600" 
+                               title="Registrar daño o pérdida">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            </a>
+                            
                             <!-- Editar -->
-                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-600 edit-tool-btn" 
+                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-100 text-emerald-600 edit-tool-btn" 
                                     data-tool-id="{{ $tool->id }}"
                                     data-tool-name="{{ $tool->name }}"
                                     data-tool-category="{{ $tool->category }}"
                                     data-tool-status="{{ $tool->status }}"
-                                    data-tool-total-qty="{{ $tool->total_qty }}"
+                                    data-tool-total-entries="{{ $tool->total_entries }}"
                                     data-tool-available-qty="{{ $tool->available_qty }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
@@ -124,7 +207,7 @@
                                     <i data-lucide="trash" class="w-4 h-4"></i>
                                 </button>
                             @else
-                                <form method="POST" action="{{ route('admin.tools.destroy', $tool) }}" class="inline" data-confirm="true" data-message="¿Eliminar esta herramienta? Esta acción no se puede deshacer.">
+                                <form method="POST" action="{{ route(route_prefix() . 'tools.destroy', $tool) }}" class="inline" data-confirm="true" data-message="¿Eliminar esta herramienta? Esta acción no se puede deshacer.">
                                     @csrf
                                     @method('DELETE')
                                     <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
@@ -137,7 +220,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="py-6 text-center text-emerald-800/70">No hay herramientas registradas</td>
+                    <td colspan="9" class="py-6 text-center text-emerald-800/70">No hay herramientas registradas</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -145,6 +228,14 @@
     </div>
 
     <div class="mt-4">{{ $tools->links() }}</div>
+</div>
+
+<!-- Botón Ver Totales -->
+<div class="mt-6 flex justify-center">
+    <button type="button" id="show-totals-btn" class="inline-flex items-center gap-2 px-8 py-4 bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-200 rounded-lg font-medium transition-colors shadow-sm">
+        <i data-lucide="bar-chart" class="w-6 h-6"></i>
+        <span class="text-lg">Ver Resumen de Inventario</span>
+    </button>
 </div>
 
 <!-- Modal de detalles -->
@@ -203,7 +294,7 @@
         
         <!-- Botón de cerrar -->
         <div class="mt-6 flex justify-end">
-            <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">
+            <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded transition-colors">
                 <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                 Cerrar
             </button>
@@ -269,7 +360,7 @@
                     <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                     Cancelar
                 </button>
-                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded" id="updateButton">
+                <button type="submit" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors" id="updateButton">
                     <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
                     <span>Actualizar</span>
                 </button>
@@ -449,6 +540,66 @@ function showSuccessMessage() {
     }
 }
 
+// Función para mostrar modal de totales
+function showTotalsModal() {
+    // Crear modal dinámicamente
+    const modal = document.createElement('div');
+    modal.id = 'totalsModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Resumen de Inventario</h3>
+                <button type="button" onclick="closeTotalsModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
+                    <span class="text-blue-800 font-medium">Total de Herramientas:</span>
+                    <span class="text-blue-900 font-bold text-lg">{{ $tools->total() }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-green-50 rounded">
+                    <span class="text-green-800 font-medium">Total Entradas:</span>
+                    <span class="text-green-900 font-bold text-lg">{{ $tools->sum('total_entries') }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-emerald-50 rounded">
+                    <span class="text-emerald-800 font-medium">Disponibles:</span>
+                    <span class="text-emerald-900 font-bold text-lg">{{ $tools->sum('available_qty') }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-orange-50 rounded">
+                    <span class="text-orange-800 font-medium">Dañadas:</span>
+                    <span class="text-orange-900 font-bold text-lg">{{ $tools->sum('damaged_qty') }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-red-50 rounded">
+                    <span class="text-red-800 font-medium">Perdidas:</span>
+                    <span class="text-red-900 font-bold text-lg">{{ $tools->sum('lost_qty') }}</span>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button type="button" onclick="closeTotalsModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Inicializar iconos de Lucide
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+// Función para cerrar modal de totales
+function closeTotalsModal() {
+    const modal = document.getElementById('totalsModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     // Asegurar que los modales estén ocultos por defecto
@@ -486,6 +637,14 @@ document.addEventListener('DOMContentLoaded', function() {
             openViewModal(id, name, category, status, total_qty, available_qty, created, updated);
         });
     });
+    
+    // Agregar evento al botón de ver totales
+    const showTotalsBtn = document.getElementById('show-totals-btn');
+    if (showTotalsBtn) {
+        showTotalsBtn.addEventListener('click', function() {
+            showTotalsModal();
+        });
+    }
     
     // Agregar evento de tecla Escape
     document.addEventListener('keydown', function(e) {

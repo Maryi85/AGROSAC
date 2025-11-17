@@ -3,15 +3,23 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Lotes</h2>
-    <a href="{{ route('admin.plots.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-        <i data-lucide="plus" class="w-4 h-4"></i>
-        <span>Nuevo Lote</span>
-    </a>
-  </div>
+</div>
 @endsection
 
 @section('content')
 <div class="bg-white border rounded p-4">
+
+    <!-- Botón para agregar nuevo lote -->
+    <div class="mb-6 flex justify-between items-center">
+        <a href="{{ route('admin.plots.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Nuevo Lote</span>
+        </a>
+        <a href="{{ route('admin.plots.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
+        </a>
+    </div>
 
     <form method="GET" class="mb-4 flex gap-2">
         <input type="text" name="q" value="{{ $search }}" placeholder="Buscar por nombre" class="border border-emerald-200 rounded px-3 py-2 w-full" />
@@ -158,7 +166,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="button" class="px-3 py-2 border rounded inline-flex items-center gap-2" @click="open=false; errors={}; showError=false; showSuccess=false"><i data-lucide="x" class="w-4 h-4"></i><span>Cancelar</span></button>
-                        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i><span>Actualizar</span></button>
+                        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors"><i data-lucide="save" class="w-4 h-4"></i><span>Actualizar</span></button>
                     </div>
                 </form>
             </div>

@@ -20,10 +20,16 @@
 
     <!-- Botones de acción -->
     <div class="flex justify-between items-center mb-4">
-        <a href="{{ route('admin.ledger.dashboard') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
-            <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
-            <span>Dashboard</span>
-        </a>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.ledger.dashboard') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ route('admin.ledger.movements.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                <span>Descargar PDF</span>
+            </a>
+        </div>
         <a href="{{ route('admin.ledger.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
             <i data-lucide="plus" class="w-4 h-4"></i>
             <span>Nuevo Movimiento</span>

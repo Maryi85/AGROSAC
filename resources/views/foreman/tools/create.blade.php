@@ -1,112 +1,108 @@
 @extends('foreman.layout')
 
 @section('header')
-<div class="flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-emerald-700">Registrar Nueva Herramienta</h2>
-    <a href="{{ route('foreman.tools.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">
-        <i data-lucide="arrow-left" class="w-4 h-4 inline mr-2"></i>
-        Volver
-    </a>
-</div>
+<h2 class="text-lg font-semibold text-emerald-700">Registrar Nueva Herramienta</h2>
 @endsection
 
 @section('content')
-<div class="max-w-2xl mx-auto">
-    <div class="bg-white border rounded p-6">
-        <form method="POST" action="{{ route('foreman.tools.store') }}" class="space-y-6">
-            @csrf
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Nombre -->
-                <div>
-                    <label for="name" class="block text-sm font-medium text-emerald-700 mb-2">Nombre de la Herramienta *</label>
-                    <input type="text" name="name" id="name" required 
-                           value="{{ old('name') }}"
-                           placeholder="Ej: Pala, Machete, Rastrillo..."
-                           class="w-full border border-emerald-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('name') border-red-500 @enderror">
-                    @error('name')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Categoría -->
-                <div>
-                    <label for="category" class="block text-sm font-medium text-emerald-700 mb-2">Categoría</label>
-                    <input type="text" name="category" id="category" 
-                           value="{{ old('category') }}"
-                           placeholder="Ej: Jardinería, Construcción, Limpieza..."
-                           class="w-full border border-emerald-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('category') border-red-500 @enderror">
-                    @error('category')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Estado -->
-                <div>
-                    <label for="status" class="block text-sm font-medium text-emerald-700 mb-2">Estado *</label>
-                    <select name="status" id="status" required 
-                            class="w-full border border-emerald-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('status') border-red-500 @enderror">
-                        <option value="">Seleccionar estado</option>
-                        @foreach($statuses as $status)
-                            <option value="{{ $status }}" {{ old('status', 'operational') == $status ? 'selected' : '' }}>
-                                {{ ucfirst($status) }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('status')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Total Qty -->
-                <div>
-                    <label for="total_qty" class="block text-sm font-medium text-emerald-700 mb-2">Cantidad Total *</label>
-                    <input type="number" name="total_qty" id="total_qty" required min="0" 
-                           value="{{ old('total_qty', 1) }}"
-                           class="w-full border border-emerald-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('total_qty') border-red-500 @enderror">
-                    @error('total_qty')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
+<div class="bg-white border rounded p-4">
+    <form method="POST" action="{{ route('foreman.tools.store') }}" class="space-y-4" enctype="multipart/form-data">
+        @csrf
+        <!-- Nombre -->
+        <div>
+            <label for="name" class="block text-sm mb-1 text-emerald-800">Nombre de la Herramienta</label>
+            <input type="text" id="name" name="name" value="{{ old('name') }}" 
+                   class="w-full border border-emerald-200 rounded px-3 py-2 @error('name') border-red-500 @enderror" 
+                   required />
+            @error('name')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        <!-- Categoría -->
+        <div>
+            <label for="category" class="block text-sm mb-1 text-emerald-800">Categoría</label>
+            <select id="category" name="category" 
+                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('category') border-red-500 @enderror" 
+                    required>
+                <option value="">Seleccionar categoría</option>
+                @foreach($categories as $key => $label)
+                    <option value="{{ $key }}" {{ old('category') === $key ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
+            </select>
+            @error('category')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        <!-- Estado -->
+        <div>
+            <label for="status" class="block text-sm mb-1 text-emerald-800">Estado</label>
+            <select id="status" name="status" 
+                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('status') border-red-500 @enderror" 
+                    required>
+                <option value="">Seleccionar estado</option>
+                @foreach($statuses as $key => $label)
+                    <option value="{{ $key }}" {{ old('status') === $key ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
+            </select>
+            @error('status')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        <!-- Foto -->
+        <div>
+            <label for="photo" class="block text-sm mb-1 text-emerald-800">Foto de la Herramienta</label>
+            <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/jpg,image/gif" 
+                   class="w-full border border-emerald-200 rounded px-3 py-2 @error('photo') border-red-500 @enderror">
+            <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB</p>
+            @error('photo')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+            <div id="photo-preview" class="mt-3 hidden">
+                <img id="photo-preview-img" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
             </div>
-
-            <!-- Available Qty -->
-            <div>
-                <label for="available_qty" class="block text-sm font-medium text-emerald-700 mb-2">Cantidad Disponible *</label>
-                <input type="number" name="available_qty" id="available_qty" required min="0" 
-                       value="{{ old('available_qty', 1) }}"
-                       class="w-full border border-emerald-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('available_qty') border-red-500 @enderror">
-                <p class="text-sm text-gray-600 mt-1">La cantidad disponible no puede ser mayor a la cantidad total</p>
-                @error('available_qty')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Botones -->
-            <div class="flex items-center justify-end space-x-4 pt-6 border-t">
-                <a href="{{ route('foreman.tools.index') }}" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors">
-                    Cancelar
-                </a>
-                <button type="submit" class="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 transition-colors">
-                    <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
-                    Registrar Herramienta
-                </button>
-            </div>
-        </form>
-    </div>
+        </div>
+        <!-- Botones -->
+        <div class="flex items-center gap-2 pt-4">
+            <a href="{{ route('foreman.tools.index') }}" 
+               class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Volver</span>
+            </a>
+            <button type="submit" 
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Registrar Herramienta</span>
+            </button>
+        </div>
+    </form>
 </div>
 
 <script>
-// Auto-update available_qty when total_qty changes
-document.getElementById('total_qty').addEventListener('input', function() {
-    const totalQty = parseInt(this.value) || 0;
-    const availableQtyInput = document.getElementById('available_qty');
-    const currentAvailableQty = parseInt(availableQtyInput.value) || 0;
-    
-    if (currentAvailableQty > totalQty) {
-        availableQtyInput.value = totalQty;
+// Vista previa de la foto
+document.addEventListener('DOMContentLoaded', function() {
+    // Vista previa de la foto
+    const photoInput = document.getElementById('photo');
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPreviewImg = document.getElementById('photo-preview-img');
+    if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photoPreviewImg.src = e.target.result;
+                    photoPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                photoPreview.classList.add('hidden');
+            }
+        });
     }
-    availableQtyInput.max = totalQty;
 });
 </script>
 @endsection

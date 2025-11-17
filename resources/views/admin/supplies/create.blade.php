@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <form method="POST" action="{{ route('admin.supplies.store') }}" class="space-y-4">
+    <form method="POST" action="{{ route('admin.supplies.store') }}" class="space-y-4" enctype="multipart/form-data">
         @csrf
         
         <!-- Nombre -->
@@ -20,8 +20,7 @@
             @enderror
         </div>
         
-        <!-- Unidad y Costo -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Unidad de Medida -->
             <div>
                 <label for="unit" class="block text-sm mb-1 text-emerald-800">Unidad de Medida</label>
                 <select id="unit" name="unit" 
@@ -37,17 +36,6 @@
                 @error('unit')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
-            </div>
-            
-            <div>
-                <label for="unit_cost" class="block text-sm mb-1 text-emerald-800">Costo por Unidad</label>
-                <input type="number" step="0.01" min="0" id="unit_cost" name="unit_cost" value="{{ old('unit_cost', 0) }}" 
-                       class="w-full border border-emerald-200 rounded px-3 py-2 @error('unit_cost') border-red-500 @enderror" 
-                       required />
-                @error('unit_cost')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
         </div>
         
         <!-- Estado -->
@@ -65,12 +53,25 @@
             @enderror
         </div>
         
+        <!-- Foto -->
+        <div>
+            <label for="photo" class="block text-sm mb-1 text-emerald-800">Foto del Insumo</label>
+            <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/jpg,image/gif" 
+                   class="w-full border border-emerald-200 rounded px-3 py-2 @error('photo') border-red-500 @enderror">
+            <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB</p>
+            @error('photo')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+            <div id="photo-preview" class="mt-3 hidden">
+                <img id="photo-preview-img" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
+            </div>
+        </div>
+        
         <!-- Información adicional -->
         <div class="bg-blue-50 border border-blue-200 rounded p-4">
             <h4 class="text-sm font-semibold text-blue-800 mb-2">Información Importante</h4>
             <ul class="text-xs text-blue-700 space-y-1">
                 <li>• El nombre del insumo debe ser único en el sistema</li>
-                <li>• El costo por unidad se utilizará para calcular el costo total de los consumos</li>
                 <li>• Los insumos activos estarán disponibles para registrar consumos</li>
                 <li>• Una vez registrado, podrá crear consumos de este insumo en el módulo correspondiente</li>
             </ul>
@@ -91,4 +92,29 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Vista previa de la foto
+    const photoInput = document.getElementById('photo');
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPreviewImg = document.getElementById('photo-preview-img');
+    
+    if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photoPreviewImg.src = e.target.result;
+                    photoPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                photoPreview.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
 @endsection

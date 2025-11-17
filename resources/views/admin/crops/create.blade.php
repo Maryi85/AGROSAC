@@ -24,7 +24,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.crops.store') }}" class="space-y-6" id="createCropForm">
+    <form method="POST" action="{{ route('admin.crops.store') }}" class="space-y-6" id="createCropForm" enctype="multipart/form-data">
         @csrf
         
         <!-- Información básica -->
@@ -86,12 +86,26 @@
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
+
+            <!-- Foto -->
+            <div class="mt-6">
+                <label for="photo" class="block text-sm font-medium text-emerald-800 mb-2">Foto del Cultivo</label>
+                <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/jpg,image/gif" 
+                       class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB</p>
+                @error('photo')
+                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                @enderror
+                <div id="photo-preview" class="mt-3 hidden">
+                    <img id="photo-preview-img" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
+                </div>
+            </div>
         </div>
 
 
         <!-- Botones -->
         <div class="flex items-center gap-4 pt-6 border-t">
-            <button type="submit" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+            <button type="submit" class="px-6 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>Crear Cultivo</span>
             </button>
@@ -122,8 +136,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Auto-ocultar mensajes de éxito después de 5 segundos
-    const successMessage = document.querySelector('.bg-emerald-100');
-    if (successMessage) {
+    const successMessage = document.querySelector('.bg-white.border.rounded.p-4 > .bg-emerald-100.border.border-emerald-300.text-emerald-700.rounded');
+    if (successMessage && successMessage.tagName === 'DIV' && !successMessage.querySelector('button')) {
         setTimeout(() => {
             successMessage.style.transition = 'opacity 0.5s ease-out';
             successMessage.style.opacity = '0';
@@ -136,8 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Auto-ocultar mensajes de error después de 7 segundos
-    const errorMessage = document.querySelector('.bg-red-100');
-    if (errorMessage) {
+    const errorMessage = document.querySelector('.bg-white.border.rounded.p-4 > .bg-red-100.border.border-red-300.text-red-700.rounded');
+    if (errorMessage && errorMessage.tagName === 'DIV') {
         setTimeout(() => {
             errorMessage.style.transition = 'opacity 0.5s ease-out';
             errorMessage.style.opacity = '0';
@@ -147,6 +161,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 500);
         }, 7000);
+    }
+    
+    // Vista previa de la foto
+    const photoInput = document.getElementById('photo');
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPreviewImg = document.getElementById('photo-preview-img');
+    
+    if (photoInput && photoPreview && photoPreviewImg) {
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validar tamaño del archivo (2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('El archivo es demasiado grande. El tamaño máximo es 2MB.');
+                    e.target.value = '';
+                    photoPreview.classList.add('hidden');
+                    return;
+                }
+                
+                // Validar tipo de archivo
+                const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Tipo de archivo no válido. Solo se permiten JPG, PNG y GIF.');
+                    e.target.value = '';
+                    photoPreview.classList.add('hidden');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photoPreviewImg.src = e.target.result;
+                    photoPreview.classList.remove('hidden');
+                };
+                reader.onerror = function() {
+                    alert('Error al leer el archivo.');
+                    photoPreview.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                photoPreview.classList.add('hidden');
+            }
+        });
     }
 });
 </script>

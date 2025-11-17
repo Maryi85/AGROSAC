@@ -48,7 +48,7 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <span>Total:</span>
-                                    <span class="font-medium">{{ $tool->total_qty }}</span>
+                                    <span class="font-medium">{{ $tool->total_entries }}</span>
                                 </div>
                                 @if($tool->description)
                                     <div class="mt-2 p-2 bg-emerald-50 rounded text-xs">
@@ -90,16 +90,37 @@
                                     <div class="flex items-center gap-3 mb-2">
                                         <h4 class="font-semibold text-emerald-800">{{ $loan->tool->name }}</h4>
                                         <span class="px-2 py-1 text-xs rounded-full 
-                                            {{ $loan->status === 'out' ? 'bg-blue-100 text-blue-800' : 
-                                               ($loan->status === 'returned' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800') }}">
-                                            {{ $loan->status === 'out' ? 'Prestada' : ucfirst($loan->status) }}
+                                            {{ $loan->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                               ($loan->status === 'approved' ? 'bg-blue-100 text-blue-800' : 
+                                               ($loan->status === 'rejected' ? 'bg-red-100 text-red-800' : 
+                                               ($loan->status === 'out' ? 'bg-blue-100 text-blue-800' : 
+                                               ($loan->status === 'returned' || $loan->status === 'returned_by_worker' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')))) }}">
+                                            @if($loan->status === 'pending')
+                                                Pendiente
+                                            @elseif($loan->status === 'approved')
+                                                Aprobado
+                                            @elseif($loan->status === 'rejected')
+                                                Rechazado
+                                            @elseif($loan->status === 'out')
+                                                Prestada
+                                            @elseif($loan->status === 'returned_by_worker')
+                                                Devuelta (Pendiente Confirmación)
+                                            @else
+                                                {{ ucfirst($loan->status) }}
+                                            @endif
                                         </span>
                                     </div>
                                     
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-emerald-600">
-                                        <div>
-                                            <span class="font-medium">Prestada:</span> {{ $loan->out_at->format('d/m/Y H:i') }}
-                                        </div>
+                                        @if($loan->status === 'pending')
+                                            <div>
+                                                <span class="font-medium">Solicitada:</span> {{ $loan->created_at->format('d/m/Y H:i') }}
+                                            </div>
+                                        @elseif($loan->out_at)
+                                            <div>
+                                                <span class="font-medium">Prestada:</span> {{ $loan->out_at->format('d/m/Y H:i') }}
+                                            </div>
+                                        @endif
                                         @if($loan->due_at)
                                             <div>
                                                 <span class="font-medium">Vence:</span> {{ $loan->due_at->format('d/m/Y H:i') }}
@@ -110,7 +131,26 @@
                                                 <span class="font-medium">Devuelta:</span> {{ $loan->returned_at->format('d/m/Y H:i') }}
                                             </div>
                                         @endif
+                                        @if($loan->approved_at)
+                                            <div>
+                                                <span class="font-medium">Aprobada:</span> {{ $loan->approved_at->format('d/m/Y H:i') }}
+                                            </div>
+                                        @endif
                                     </div>
+                                    
+                                    @if($loan->request_notes)
+                                        <div class="mt-2 p-2 bg-emerald-50 rounded text-sm">
+                                            <span class="font-medium text-emerald-700">Notas de solicitud:</span>
+                                            <span class="text-emerald-600">{{ $loan->request_notes }}</span>
+                                        </div>
+                                    @endif
+                                    
+                                    @if($loan->admin_notes)
+                                        <div class="mt-2 p-2 bg-blue-50 rounded text-sm">
+                                            <span class="font-medium text-blue-700">Notas del administrador:</span>
+                                            <span class="text-blue-600">{{ $loan->admin_notes }}</span>
+                                        </div>
+                                    @endif
                                     
                                     @if($loan->condition_return)
                                         <div class="mt-3 p-2 bg-emerald-50 rounded text-sm">
@@ -130,6 +170,18 @@
                                                 Devolver
                                             </button>
                                         </form>
+                                    </div>
+                                @elseif($loan->status === 'pending')
+                                    <div class="ml-4">
+                                        <span class="px-3 py-2 bg-yellow-100 text-yellow-800 rounded text-sm">
+                                            Esperando aprobación
+                                        </span>
+                                    </div>
+                                @elseif($loan->status === 'rejected')
+                                    <div class="ml-4">
+                                        <span class="px-3 py-2 bg-red-100 text-red-800 rounded text-sm">
+                                            Rechazado
+                                        </span>
                                     </div>
                                 @endif
                             </div>
@@ -187,6 +239,13 @@
                         <label for="due_at" class="block text-sm font-medium text-emerald-700 mb-1">Fecha de devolución (opcional)</label>
                         <input type="date" id="due_at" name="due_at"
                                class="w-full border border-emerald-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    
+                    <div>
+                        <label for="request_notes" class="block text-sm font-medium text-emerald-700 mb-1">Notas (opcional)</label>
+                        <textarea id="request_notes" name="request_notes" rows="3"
+                                  class="w-full border border-emerald-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                  placeholder="Información adicional sobre la solicitud..."></textarea>
                     </div>
                 </div>
                 

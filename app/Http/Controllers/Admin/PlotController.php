@@ -9,6 +9,7 @@ use App\Models\Plot;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PlotController extends Controller
 {
@@ -89,6 +90,19 @@ class PlotController extends Controller
 
         $plot->delete();
         return redirect()->route('admin.plots.index')->with('status', 'Lote eliminado');
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $search = (string) $request->string('q');
+        $plots = Plot::query()
+            ->with('crops')
+            ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->orderBy('name')
+            ->get();
+
+        $pdf = Pdf::loadView('admin.plots.pdf', compact('plots'));
+        return $pdf->download('lotes-' . now()->format('Y-m-d') . '.pdf');
     }
 }
 

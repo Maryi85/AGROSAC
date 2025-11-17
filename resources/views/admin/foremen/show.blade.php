@@ -70,7 +70,7 @@
                     </div>
                     <p class="text-sm text-gray-600 mb-3">Modificar los datos básicos del mayordomo</p>
                     <a href="{{ route('admin.foremen.edit', $foreman) }}" 
-                       class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm">
+                       class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded text-sm transition-colors">
                         <i data-lucide="pencil" class="w-4 h-4"></i>
                         <span>Editar</span>
                     </a>
@@ -86,7 +86,7 @@
                     <p class="text-sm text-gray-600 mb-3">{{ $foreman->email_verified_at ? 'Desactivar' : 'Activar' }} la cuenta del mayordomo</p>
                     <form method="POST" action="{{ route('admin.foremen.toggle-status', $foreman) }}" class="inline" data-confirm="true" data-message="{{ $foreman->email_verified_at ? '¿Desactivar este mayordomo?' : '¿Activar este mayordomo?' }}">
                         @csrf
-                        <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 {{ $foreman->email_verified_at ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700' }} text-white rounded text-sm">
+                        <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 {{ $foreman->email_verified_at ? 'bg-red-100 hover:bg-red-200 text-red-700 border border-red-200' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200' }} rounded text-sm transition-colors">
                             <i data-lucide="{{ $foreman->email_verified_at ? 'user-x' : 'user-check' }}" class="w-4 h-4"></i>
                             <span>{{ $foreman->email_verified_at ? 'Desactivar' : 'Activar' }}</span>
                         </button>
@@ -103,7 +103,7 @@
                     <form method="POST" action="{{ route('admin.foremen.destroy', $foreman) }}" class="inline" data-confirm="true" data-message="¿Eliminar este mayordomo? Esta acción no se puede deshacer.">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm">
+                        <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded text-sm transition-colors">
                             <i data-lucide="trash" class="w-4 h-4"></i>
                             <span>Eliminar</span>
                         </button>
@@ -122,7 +122,7 @@
         </a>
         
         <a href="{{ route('admin.foremen.edit', $foreman) }}" 
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors">
             <i data-lucide="edit" class="w-4 h-4"></i>
             <span>Editar Mayordomo</span>
         </a>

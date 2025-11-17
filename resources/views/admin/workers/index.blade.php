@@ -26,21 +26,27 @@
     @endif
 
     <!-- Botones de acción principales -->
-    <div class="flex justify-between items-center mb-4">
-        <div class="flex gap-2">
-            <a href="{{ route('admin.workers.daily-tasks') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+    <div class="mb-6 flex justify-between items-center">
+        <div class="flex gap-4">
+            <a href="{{ route('admin.workers.daily-tasks') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 rounded transition-colors">
                 <i data-lucide="clock" class="w-4 h-4"></i>
                 <span>Control Tareas Diarias</span>
             </a>
-            <a href="{{ route('admin.workers.harvest-tasks') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded">
+            <a href="{{ route('admin.workers.harvest-tasks') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded transition-colors">
                 <i data-lucide="wheat" class="w-4 h-4"></i>
                 <span>Control Recolecta</span>
             </a>
+            <a href="{{ route('admin.workers.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                <span>Nuevo Trabajador</span>
+            </a>
         </div>
-        <a href="{{ route('admin.workers.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>Nuevo Trabajador</span>
-        </a>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.workers.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="file-text" class="w-5 h-5"></i>
+                <span>Descargar PDF</span>
+            </a>
+        </div>
     </div>
 
     <!-- Filtros de búsqueda -->
@@ -121,6 +127,13 @@
                                 <i data-lucide="clipboard-list" class="w-4 h-4"></i>
                             </a>
                             
+                            <!-- Generar Reporte -->
+                            <a href="{{ route('admin.workers.report', $worker) }}" 
+                               class="inline-flex items-center justify-center w-9 h-9 border-2 border-green-500 rounded-lg hover:bg-green-100 text-green-700 bg-green-50 shadow-sm" 
+                               title="Generar Reporte Automático">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                            </a>
+                            
                             <!-- Editar -->
                             <button class="edit-worker-btn inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-600" 
                                     title="Editar"
@@ -141,13 +154,19 @@
                             
                             
                             <!-- Eliminar -->
-                            <form method="POST" action="{{ route('admin.workers.destroy', $worker) }}" class="inline" data-confirm="true" data-message="¿Eliminar este trabajador? Esta acción no se puede deshacer.">
-                                @csrf
-                                @method('DELETE')
-                                <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
+                            @if($worker->email_verified_at)
+                                <button disabled class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded bg-gray-100 text-gray-400 cursor-not-allowed opacity-60" title="No se puede eliminar un trabajador activo. Debe desactivarlo primero.">
                                     <i data-lucide="trash" class="w-4 h-4"></i>
                                 </button>
-                            </form>
+                            @else
+                                <form method="POST" action="{{ route('admin.workers.destroy', $worker) }}" class="inline" data-confirm="true" data-message="¿Eliminar este trabajador? Esta acción no se puede deshacer.">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
+                                        <i data-lucide="trash" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

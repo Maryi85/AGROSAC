@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ForemanTaskController extends Controller
 {
@@ -392,5 +393,40 @@ class ForemanTaskController extends Controller
             'success' => true,
             'crops' => $crops
         ]);
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $query = Task::with(['plot', 'crop', 'assignee']);
+
+        $search = $request->get('search');
+        $status = $request->get('status');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', '%' . $search . '%')
+                  ->orWhereHas('assignee', function ($subQ) use ($search) {
+                      $subQ->where('name', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $tasks = $query->orderBy('created_at', 'desc')->get();
+
+        $statuses = [
+            'pending' => 'Pendiente',
+            'in_progress' => 'En Progreso',
+            'completed' => 'Completada',
+            'approved' => 'Aprobada',
+            'rejected' => 'Rechazada',
+            'invalid' => 'Inválida',
+        ];
+
+        $pdf = Pdf::loadView('foreman.tasks.pdf', compact('tasks', 'statuses'));
+        return $pdf->download('tareas-' . now()->format('Y-m-d') . '.pdf');
     }
 }

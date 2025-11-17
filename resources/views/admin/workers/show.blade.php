@@ -164,7 +164,7 @@
                     </div>
                     <p class="text-sm text-gray-600 mb-3">Ver todas las tareas asignadas a este trabajador</p>
                     <a href="{{ route('admin.workers.tasks', $worker) }}" 
-                       class="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm">
+                       class="inline-flex items-center gap-2 px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-200 rounded text-sm transition-colors">
                         <i data-lucide="clipboard-list" class="w-4 h-4"></i>
                         <span>Ver Tareas</span>
                     </a>
@@ -178,7 +178,7 @@
                     </div>
                     <p class="text-sm text-gray-600 mb-3">Modificar los datos básicos del trabajador</p>
                     <a href="{{ route('admin.workers.edit', $worker) }}" 
-                       class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm">
+                       class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded text-sm transition-colors">
                         <i data-lucide="pencil" class="w-4 h-4"></i>
                         <span>Editar</span>
                     </a>
@@ -193,7 +193,7 @@
                     <p class="text-sm text-gray-600 mb-3">Generar nueva contraseña temporal</p>
                     <form method="POST" action="{{ route('admin.workers.reset-password', $worker) }}" class="inline" data-confirm="true" data-message="¿Restablecer la contraseña de este trabajador? Se generará una nueva contraseña temporal.">
                         @csrf
-                        <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded text-sm">
+                        <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded text-sm transition-colors">
                             <i data-lucide="key" class="w-4 h-4"></i>
                             <span>Restablecer</span>
                         </button>

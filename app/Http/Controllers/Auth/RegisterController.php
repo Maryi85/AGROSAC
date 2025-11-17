@@ -26,6 +26,7 @@ class RegisterController extends Controller
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
             'role' => 'worker',
+            'email_verified_at' => now(), // Activar inmediatamente
         ]);
 
         auth()->login($user);

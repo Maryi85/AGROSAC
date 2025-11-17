@@ -13,26 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Usuarios de prueba por rol
+        // Usuario administrador
         User::query()->updateOrCreate(
-            ['email' => 'admin@example.com'],
-            ['name' => 'Admin', 'password' => bcrypt('password'), 'role' => 'admin']
+            ['email' => 'perdomomaryii06@gmail.com'],
+            ['name' => 'Admin', 'password' => bcrypt('Adminagrosac123'), 'role' => 'admin']
         );
-
-        User::query()->updateOrCreate(
-            ['email' => 'foreman@example.com'],
-            ['name' => 'Foreman', 'password' => bcrypt('password'), 'role' => 'foreman']
-        );
-
-        User::query()->updateOrCreate(
-            ['email' => 'worker@example.com'],
-            ['name' => 'Worker', 'password' => bcrypt('password'), 'role' => 'worker']
-        );
-
-        // Ejecutar seeder de mayordomos
-        $this->call(ForemanSeeder::class);
-        
-        // Ejecutar seeder de trabajadores
-        $this->call(WorkerSeeder::class);
     }
 }

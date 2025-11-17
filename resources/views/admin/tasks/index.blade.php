@@ -3,10 +3,6 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Gestión de Tareas</h2>
-    <a href="{{ route('admin.tasks.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-        <i data-lucide="plus" class="w-4 h-4"></i>
-        <span>Asignar Tarea</span>
-    </a>
 </div>
 @endsection
 
@@ -23,6 +19,18 @@
             {{ session('error') }}
         </div>
     @endif
+
+    <!-- Botón para asignar nueva tarea -->
+    <div class="mb-6 flex justify-between items-center">
+        <a href="{{ route('admin.tasks.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Asignar Tarea</span>
+        </a>
+        <a href="{{ route('admin.tasks.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
+        </a>
+    </div>
 
     <!-- Filtros -->
     <form method="GET" class="mb-4 flex gap-2">
@@ -49,6 +57,7 @@
                     <th class="py-3 pr-4">Trabajador</th>
                     <th class="py-3 pr-4">Lote</th>
                     <th class="py-3 pr-4">Fecha</th>
+                    <th class="py-3 pr-4">Horas</th>
                     <th class="py-3 pr-4">Pago</th>
                     <th class="py-3 pr-4">Estado</th>
                     <th class="py-3 pr-4 text-right">Acciones</th>
@@ -72,9 +81,16 @@
                     <td class="py-3 pr-4">{{ $task->scheduled_for?->format('d/m/Y') ?? '—' }}</td>
                     <td class="py-3 pr-4">
                         @if($task->hours > 0)
-                            {{ $task->hours }}h
+                            {{ number_format($task->hours, 2) }}h
                         @elseif($task->kilos > 0)
-                            {{ $task->kilos }}kg
+                            {{ number_format($task->kilos, 1) }}kg
+                        @else
+                            —
+                        @endif
+                    </td>
+                    <td class="py-3 pr-4">
+                        @if($task->total_payment > 0)
+                            <span class="font-semibold text-emerald-700">${{ number_format($task->total_payment, 2) }}</span>
                         @else
                             —
                         @endif
@@ -143,7 +159,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="py-6 text-center text-emerald-800/70">No hay tareas registradas</td>
+                    <td colspan="9" class="py-6 text-center text-emerald-800/70">No hay tareas registradas</td>
                 </tr>
                 @endforelse
             </tbody>

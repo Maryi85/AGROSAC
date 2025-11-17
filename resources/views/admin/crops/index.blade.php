@@ -1,13 +1,13 @@
+@php
+use Illuminate\Support\Facades\Storage;
+@endphp
+
 @extends('admin.layout')
 
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Gestión de Cultivos</h2>
-    <a href="{{ route('admin.crops.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-        <i data-lucide="plus" class="w-4 h-4"></i>
-        <span>Nuevo Cultivo</span>
-    </a>
-  </div>
+</div>
 @endsection
 
 @section('content')
@@ -23,6 +23,24 @@
             {{ session('error') }}
         </div>
     @endif
+
+    <!-- Botones de acción -->
+    <div class="mb-6 flex justify-between items-center">
+        <div class="flex gap-4">
+            <a href="{{ route('admin.crops.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                <span>Nuevo Cultivo</span>
+            </a>
+            <a href="{{ route('admin.crop-tracking.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="activity" class="w-5 h-5"></i>
+                <span>Seguimiento de Cultivo</span>
+            </a>
+        </div>
+        <a href="{{ route('admin.crops.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
+        </a>
+    </div>
 
     <!-- Filtros -->
     <form method="GET" class="mb-4 flex gap-2">
@@ -44,6 +62,7 @@
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
+                    <th class="py-3 pr-4">Foto</th>
                     <th class="py-3 pr-4">Nombre</th>
                     <th class="py-3 pr-4">Variedad</th>
                     <th class="py-3 pr-4">Lote</th>
@@ -56,6 +75,18 @@
             <tbody>
                 @forelse ($crops as $crop)
                 <tr class="border-b hover:bg-gray-50" data-crop-id="{{ $crop->id }}">
+                    <td class="py-3 pr-4">
+                        @if(!empty($crop->photo))
+                            <img src="{{ asset('storage/' . $crop->photo) }}" alt="{{ $crop->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            </div>
+                        @else
+                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            </div>
+                        @endif
+                    </td>
                     <td class="py-3 pr-4">
                         <div>
                             <div class="font-medium text-gray-900 crop-name">{{ $crop->name }}</div>
@@ -139,7 +170,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="py-6 text-center text-emerald-800/70">No hay cultivos registrados</td>
+                    <td colspan="8" class="py-6 text-center text-emerald-800/70">No hay cultivos registrados</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -209,7 +240,7 @@
                             <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                             Cancelar
                         </button>
-                        <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded" id="updateButton">
+                        <button type="submit" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors" id="updateButton">
                             <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
                             <span>Actualizar</span>
                         </button>
@@ -249,7 +280,7 @@
                 <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
                     Cancelar
                 </button>
-                <button type="button" onclick="confirmDelete()" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">
+                <button type="button" onclick="confirmDelete()" class="flex-1 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded transition-colors">
                     <i data-lucide="trash" class="w-4 h-4 inline mr-2"></i>
                     Eliminar
                 </button>
@@ -332,7 +363,7 @@
             
             <!-- Botón de cerrar -->
             <div class="mt-6 flex justify-end">
-                <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">
+                <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded transition-colors">
                     <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                     Cerrar
                 </button>

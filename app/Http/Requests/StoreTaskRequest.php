@@ -32,6 +32,10 @@ class StoreTaskRequest extends FormRequest
             'hours' => 'required_if:payment_type,hours|nullable|numeric|min:0',
             'days' => 'required_if:payment_type,days|nullable|integer|min:1',
             'kilos' => 'required_if:payment_type,quantity|nullable|numeric|min:0',
+            'price_per_hour' => 'required_if:payment_type,hours|nullable|numeric|min:0',
+            'price_per_day' => 'required_if:payment_type,days|nullable|numeric|min:0',
+            'price_per_kg' => 'required_if:payment_type,quantity|nullable|numeric|min:0',
+            'total_payment' => 'nullable|numeric|min:0',
         ];
     }
 

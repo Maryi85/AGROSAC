@@ -93,7 +93,7 @@
         </div>
         
         <div class="mt-4 flex gap-2">
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+            <button type="submit" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
                 <i data-lucide="search" class="w-4 h-4"></i>
                 <span>Filtrar</span>
             </button>

@@ -15,6 +15,7 @@ class Crop extends Model
         'yield_per_hectare',
         'status',
         'plot_id',
+        'photo',
     ];
 
     protected $casts = [
@@ -40,4 +41,5 @@ class Crop extends Model
     {
         return $this->belongsTo(Plot::class);
     }
+
 }

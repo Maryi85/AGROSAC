@@ -107,8 +107,8 @@
                         @endif
                     </td>
                     <td class="py-3 pr-4">
-                        <span class="px-2 py-1 text-xs rounded {{ $loan->status === 'out' ? 'bg-blue-100 text-blue-700' : ($loan->status === 'returned' ? 'bg-emerald-100 text-emerald-700' : ($loan->status === 'lost' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700')) }}">
-                            {{ $statuses[$loan->status] }}
+                        <span class="px-2 py-1 text-xs rounded {{ $loan->status === 'pending' ? 'bg-yellow-100 text-yellow-700' : ($loan->status === 'approved' ? 'bg-blue-100 text-blue-700' : ($loan->status === 'rejected' ? 'bg-red-100 text-red-700' : ($loan->status === 'out' ? 'bg-blue-100 text-blue-700' : ($loan->status === 'returned' || $loan->status === 'returned_by_worker' ? 'bg-emerald-100 text-emerald-700' : ($loan->status === 'lost' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'))))) }}">
+                            {{ $statuses[$loan->status] ?? ucfirst($loan->status) }}
                         </span>
                     </td>
                     <td class="py-3 pr-4 text-right">
@@ -120,7 +120,42 @@
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                             
-                            @if($loan->status === 'out')
+                            @if($loan->status === 'pending')
+                                <!-- Aprobar -->
+                                <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-green-200 rounded hover:bg-green-50 text-green-600 approve-loan-btn" 
+                                        data-loan-id="{{ $loan->id }}"
+                                        data-worker-name="{{ $loan->user->name }}"
+                                        data-tool-name="{{ $loan->tool->name }}"
+                                        title="Aprobar">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </button>
+                                
+                                <!-- Rechazar -->
+                                <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600 reject-loan-btn" 
+                                        data-loan-id="{{ $loan->id }}"
+                                        data-worker-name="{{ $loan->user->name }}"
+                                        data-tool-name="{{ $loan->tool->name }}"
+                                        title="Rechazar">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            @elseif($loan->status === 'approved')
+                                <!-- Procesar préstamo (Aceptar préstamo) -->
+                                <form method="POST" action="{{ route('foreman.loans.process-approved', $loan) }}" class="inline" data-confirm="true" data-message="¿Aceptar y procesar este préstamo aprobado?">
+                                    @csrf
+                                    <button class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600" title="Aceptar Préstamo">
+                                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            @elseif($loan->status === 'returned_by_worker')
+                                <!-- Confirmar devolución (Aceptar devolución) -->
+                                <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-green-200 rounded hover:bg-green-50 text-green-600 confirm-return-btn" 
+                                        data-loan-id="{{ $loan->id }}"
+                                        data-worker-name="{{ $loan->user->name }}"
+                                        data-tool-name="{{ $loan->tool->name }}"
+                                        title="Aceptar Devolución">
+                                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                </button>
+                            @elseif($loan->status === 'out')
                                 <!-- Devolver -->
                                 <button class="return-loan-btn inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-600" 
                                         title="Devolver"
@@ -506,11 +541,213 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Cerrar modal al hacer clic fuera de él
-document.getElementById('loanDetailsModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeLoanDetailsModal();
-    }
+    // Cerrar modal al hacer clic fuera de él
+    document.getElementById('loanDetailsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeLoanDetailsModal();
+        }
+    });
+
+    // Agregar eventos a los botones de aprobar
+    document.querySelectorAll('.approve-loan-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const loanId = this.getAttribute('data-loan-id');
+            const workerName = this.getAttribute('data-worker-name');
+            const toolName = this.getAttribute('data-tool-name');
+            
+            openApproveModal(loanId, workerName, toolName);
+        });
+    });
+
+    // Agregar eventos a los botones de rechazar
+    document.querySelectorAll('.reject-loan-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const loanId = this.getAttribute('data-loan-id');
+            const workerName = this.getAttribute('data-worker-name');
+            const toolName = this.getAttribute('data-tool-name');
+            
+            openRejectModal(loanId, workerName, toolName);
+        });
+    });
+
+    // Agregar eventos a los botones de confirmar devolución
+    document.querySelectorAll('.confirm-return-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const loanId = this.getAttribute('data-loan-id');
+            const workerName = this.getAttribute('data-worker-name');
+            const toolName = this.getAttribute('data-tool-name');
+            
+            openConfirmReturnModal(loanId, workerName, toolName);
+        });
+    });
 });
+
+// Funciones para el modal de aprobación
+function openApproveModal(loanId, workerName, toolName) {
+    document.getElementById('approveWorkerName').textContent = workerName;
+    document.getElementById('approveToolName').textContent = toolName;
+    document.getElementById('approveForm').action = `/foreman/loans/${loanId}/approve`;
+    document.getElementById('approveModal').style.display = 'flex';
+}
+
+function closeApproveModal() {
+    document.getElementById('approveModal').style.display = 'none';
+    document.getElementById('approveAdminNotes').value = '';
+}
+
+// Funciones para el modal de rechazo
+function openRejectModal(loanId, workerName, toolName) {
+    document.getElementById('rejectWorkerName').textContent = workerName;
+    document.getElementById('rejectToolName').textContent = toolName;
+    document.getElementById('rejectForm').action = `/foreman/loans/${loanId}/reject`;
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+    document.getElementById('rejectAdminNotes').value = '';
+}
+
+// Funciones para el modal de confirmación de devolución
+function openConfirmReturnModal(loanId, workerName, toolName) {
+    document.getElementById('confirmWorkerName').textContent = workerName;
+    document.getElementById('confirmToolName').textContent = toolName;
+    document.getElementById('confirmReturnForm').action = `/foreman/loans/${loanId}/confirm-return`;
+    document.getElementById('confirmReturnModal').style.display = 'flex';
+}
+
+function closeConfirmReturnModal() {
+    document.getElementById('confirmReturnModal').style.display = 'none';
+    document.getElementById('confirmAdminNotes').value = '';
+}
 </script>
+
+<!-- Modal de aprobación -->
+<div id="approveModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
+    <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 bg-green-100 rounded-full">
+                <i data-lucide="check" class="w-5 h-5 text-green-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800">Aprobar Préstamo</h3>
+        </div>
+        
+        <form id="approveForm" method="POST">
+            @csrf
+            <div class="mb-4">
+                <p class="text-gray-600 mb-4">
+                    ¿Está seguro de que desea aprobar este préstamo?
+                </p>
+                <div class="p-3 bg-gray-50 rounded text-sm">
+                    <p><strong>Trabajador:</strong> <span id="approveWorkerName"></span></p>
+                    <p><strong>Herramienta:</strong> <span id="approveToolName"></span></p>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="approveAdminNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                    Notas (opcional)
+                </label>
+                <textarea name="admin_notes" id="approveAdminNotes" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          placeholder="Observaciones sobre la aprobación..."></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeApproveModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-600 rounded text-white hover:bg-green-700">
+                    Aprobar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de rechazo -->
+<div id="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
+    <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 bg-red-100 rounded-full">
+                <i data-lucide="x" class="w-5 h-5 text-red-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800">Rechazar Préstamo</h3>
+        </div>
+        
+        <form id="rejectForm" method="POST">
+            @csrf
+            <div class="mb-4">
+                <p class="text-gray-600 mb-4">
+                    ¿Está seguro de que desea rechazar este préstamo?
+                </p>
+                <div class="p-3 bg-gray-50 rounded text-sm">
+                    <p><strong>Trabajador:</strong> <span id="rejectWorkerName"></span></p>
+                    <p><strong>Herramienta:</strong> <span id="rejectToolName"></span></p>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="rejectAdminNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                    Motivo del rechazo <span class="text-red-500">*</span>
+                </label>
+                <textarea name="admin_notes" id="rejectAdminNotes" rows="3" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          placeholder="Explique el motivo del rechazo..."></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeRejectModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-red-600 rounded text-white hover:bg-red-700">
+                    Rechazar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de confirmación de devolución -->
+<div id="confirmReturnModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
+    <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 bg-green-100 rounded-full">
+                <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800">Aceptar Devolución</h3>
+        </div>
+        
+        <form id="confirmReturnForm" method="POST">
+            @csrf
+            <div class="mb-4">
+                <p class="text-gray-600 mb-4">
+                    ¿Confirma que ha recibido la herramienta devuelta?
+                </p>
+                <div class="p-3 bg-gray-50 rounded text-sm">
+                    <p><strong>Trabajador:</strong> <span id="confirmWorkerName"></span></p>
+                    <p><strong>Herramienta:</strong> <span id="confirmToolName"></span></p>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="confirmAdminNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                    Notas (opcional)
+                </label>
+                <textarea name="admin_notes" id="confirmAdminNotes" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          placeholder="Observaciones sobre la devolución..."></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeConfirmReturnModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-600 rounded text-white hover:bg-green-700">
+                    Aceptar Devolución
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

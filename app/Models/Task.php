@@ -17,6 +17,10 @@ class Task extends Model
         'status',
         'hours',
         'kilos',
+        'price_per_hour',
+        'price_per_day',
+        'price_per_kg',
+        'total_payment',
         'approved_by',
         'approved_at',
     ];
@@ -26,6 +30,10 @@ class Task extends Model
         'approved_at' => 'datetime',
         'hours' => 'decimal:2',
         'kilos' => 'decimal:3',
+        'price_per_hour' => 'decimal:2',
+        'price_per_day' => 'decimal:2',
+        'price_per_kg' => 'decimal:2',
+        'total_payment' => 'decimal:2',
     ];
 
     public function plot(): BelongsTo

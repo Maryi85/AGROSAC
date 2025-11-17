@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreForemanRequest;
 use App\Http\Requests\UpdateForemanRequest;
 use App\Models\User;
+use App\Notifications\ForemanCredentialsNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ForemanController extends Controller
 {
@@ -61,8 +63,16 @@ class ForemanController extends Controller
             'email_verified_at' => now(), // Activar inmediatamente
         ]);
 
+        // Enviar correo con las credenciales
+        try {
+            $foreman->notify(new ForemanCredentialsNotification($tempPassword));
+        } catch (\Exception $e) {
+            Log::error('Error al enviar correo de credenciales al mayordomo: ' . $e->getMessage());
+            // Continuar aunque falle el envío del correo
+        }
+
         return redirect()->route('admin.foremen.index')
-            ->with('status', "Mayordomo creado correctamente. Contraseña temporal: {$tempPassword}")
+            ->with('status', "Mayordomo creado correctamente. Las credenciales han sido enviadas por correo electrónico.")
             ->with('temp_password', $tempPassword);
     }
 
@@ -177,6 +187,12 @@ class ForemanController extends Controller
             abort(404);
         }
 
+        // Verificar que el mayordomo esté inactivo
+        if ($foreman->email_verified_at) {
+            return redirect()->route('admin.foremen.index')
+                ->with('error', 'No se puede eliminar un mayordomo activo. Debe desactivarlo primero.');
+        }
+
         // Verificar que no sea el último mayordomo
         $foremanCount = User::where('role', 'foreman')->count();
         if ($foremanCount <= 1) {
@@ -244,5 +260,32 @@ class ForemanController extends Controller
 
         return redirect()->route('admin.foremen.index')
             ->with('status', $message);
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $query = User::where('role', 'foreman');
+
+        // Aplicar los mismos filtros que en index
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            if ($request->status === 'active') {
+                $query->whereNotNull('email_verified_at');
+            } else {
+                $query->whereNull('email_verified_at');
+            }
+        }
+
+        $foremen = $query->orderBy('name')->get();
+
+        $pdf = Pdf::loadView('admin.foremen.pdf', compact('foremen'));
+        return $pdf->download('mayordomos-' . now()->format('Y-m-d') . '.pdf');
     }
 }

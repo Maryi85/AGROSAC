@@ -78,7 +78,7 @@
                         </div>
                         <form method="POST" action="{{ route('admin.foremen.toggle-status', $foreman) }}" class="inline" data-confirm="true" data-message="{{ $foreman->email_verified_at ? '¿Desactivar este mayordomo?' : '¿Activar este mayordomo?' }}">
                             @csrf
-                            <button type="submit" class="px-3 py-2 {{ $foreman->email_verified_at ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700' }} text-white rounded inline-flex items-center gap-2">
+                            <button type="submit" class="px-3 py-2 {{ $foreman->email_verified_at ? 'bg-red-100 hover:bg-red-200 text-red-700 border border-red-200' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200' }} rounded inline-flex items-center gap-2 transition-colors">
                                 <i data-lucide="{{ $foreman->email_verified_at ? 'user-x' : 'user-check' }}" class="w-4 h-4"></i>
                                 <span>{{ $foreman->email_verified_at ? 'Desactivar' : 'Activar' }}</span>
                             </button>
@@ -97,7 +97,7 @@
             </a>
             
             <button type="submit" 
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+                    class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>Guardar Cambios</span>
             </button>

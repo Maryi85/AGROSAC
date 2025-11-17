@@ -18,12 +18,25 @@
         </div>
     @endif
 
-    <!-- Botón para agregar nueva herramienta -->
-    <div class="flex justify-between items-center mb-4">
-        <div></div>
-        <a href="{{ route('foreman.tools.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>Nueva Herramienta</span>
+    <!-- Botones de acción -->
+    <div class="mb-6 flex justify-between items-center">
+        <div class="flex gap-4 flex-wrap">
+            <a href="{{ route('foreman.tools.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                <span>Nueva Herramienta</span>
+            </a>
+            <a href="{{ route('foreman.tool-entries.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="package" class="w-5 h-5"></i>
+                <span>Gestionar Entradas</span>
+            </a>
+            <a href="{{ route('foreman.tool-damage.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                <span>Daños y Pérdidas</span>
+            </a>
+        </div>
+        <a href="{{ route('foreman.tools.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
         </a>
     </div>
 
@@ -55,7 +68,7 @@
                 @endforeach
             </select>
         </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
             <i data-lucide="search" class="w-4 h-4"></i>
             <span>Filtrar</span>
         </button>
@@ -66,11 +79,14 @@
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
+                    <th class="py-3 pr-4">Foto</th>
                     <th class="py-3 pr-4">Nombre</th>
                     <th class="py-3 pr-4">Categoría</th>
-                    <th class="py-3 pr-4">Estado</th>
-                    <th class="py-3 pr-4">Cantidad Total</th>
+                    <th class="py-3 pr-4">Total Entradas</th>
                     <th class="py-3 pr-4">Disponible</th>
+                    <th class="py-3 pr-4">Dañadas</th>
+                    <th class="py-3 pr-4">Perdidas</th>
+                    <th class="py-3 pr-4">Estado</th>
                     <th class="py-3 pr-4 text-right">Acciones</th>
                 </tr>
             </thead>
@@ -78,27 +94,77 @@
                 @forelse ($tools as $tool)
                 <tr class="border-b hover:bg-gray-50" data-tool-id="{{ $tool->id }}">
                     <td class="py-3 pr-4">
+                        @if(!empty($tool->photo))
+                            <img src="{{ asset('storage/' . $tool->photo) }}" alt="{{ $tool->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            </div>
+                        @else
+                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            </div>
+                        @endif
+                    </td>
+                    <td class="py-3 pr-4">
                         <div class="font-medium text-gray-900 tool-name">{{ $tool->name }}</div>
+                        @if($tool->brand)
+                            <div class="text-xs text-gray-500">{{ $tool->brand }}</div>
+                        @endif
                     </td>
                     <td class="py-3 pr-4 tool-category">
                         {{ ucfirst(str_replace('_', ' ', $tool->category)) }}
                     </td>
-                    <td class="py-3 pr-4 status-badge">
-                        <span class="px-2 py-1 text-xs rounded {{ $tool->status === 'operational' ? 'bg-emerald-100 text-emerald-700' : ($tool->status === 'damaged' ? 'bg-red-100 text-red-700' : ($tool->status === 'lost' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700')) }}">
-                            {{ $statuses[$tool->status] }}
+                    <td class="py-3 pr-4">
+                        <div class="font-semibold text-gray-900">{{ $tool->total_entries }}</div>
+                        <div class="text-xs text-gray-500">Total ingresado</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="font-semibold {{ $tool->available_qty > 0 ? 'text-green-600' : 'text-gray-500' }}">
+                            {{ $tool->available_qty }}
+                        </div>
+                        <div class="text-xs text-gray-500">Para préstamo</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="font-semibold {{ $tool->damaged_qty > 0 ? 'text-orange-600' : 'text-gray-500' }}">
+                            {{ $tool->damaged_qty }}
+                        </div>
+                        <div class="text-xs text-gray-500">Dañadas</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="font-semibold {{ $tool->lost_qty > 0 ? 'text-red-600' : 'text-gray-500' }}">
+                            {{ $tool->lost_qty }}
+                        </div>
+                        <div class="text-xs text-gray-500">Perdidas</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        @php
+                            $inventoryStatus = $tool->inventory_status ?? 'available';
+                            $statusClasses = [
+                                'available' => 'bg-green-100 text-green-700',
+                                'damaged' => 'bg-orange-100 text-orange-700',
+                                'lost' => 'bg-red-100 text-red-700',
+                                'empty' => 'bg-gray-100 text-gray-700',
+                            ];
+                            $statusLabels = [
+                                'available' => 'Disponible',
+                                'damaged' => 'Dañada',
+                                'lost' => 'Perdida',
+                                'empty' => 'Vacía',
+                            ];
+                        @endphp
+                        <span class="px-2 py-1 text-xs rounded {{ $statusClasses[$inventoryStatus] }}">
+                            {{ $statusLabels[$inventoryStatus] }}
                         </span>
                     </td>
-                    <td class="py-3 pr-4 tool-total-qty">{{ $tool->total_qty }}</td>
-                    <td class="py-3 pr-4 tool-available-qty">{{ $tool->available_qty }}</td>
                     <td class="py-3 pr-4 text-right">
                         <div class="flex items-center gap-1 justify-end">
                             <!-- Ver detalles -->
-                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600 view-tool-btn" 
+                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-100 text-blue-600 view-tool-btn" 
                                     data-tool-id="{{ $tool->id }}"
                                     data-tool-name="{{ $tool->name }}"
                                     data-tool-category="{{ $tool->category }}"
                                     data-tool-status="{{ $tool->status }}"
-                                    data-tool-total-qty="{{ $tool->total_qty }}"
+                                    data-tool-total-entries="{{ $tool->total_entries }}"
                                     data-tool-available-qty="{{ $tool->available_qty }}"
                                     data-tool-created="{{ $tool->created_at->format('d/m/Y H:i') }}"
                                     data-tool-updated="{{ $tool->updated_at->format('d/m/Y H:i') }}"
@@ -106,13 +172,27 @@
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                             
+                            <!-- Gestionar entradas -->
+                            <a href="{{ route('foreman.tool-entries.create', ['tool_id' => $tool->id]) }}" 
+                               class="inline-flex items-center justify-center w-8 h-8 border border-purple-200 rounded hover:bg-purple-100 text-purple-600" 
+                               title="Gestionar entradas">
+                                <i data-lucide="package" class="w-4 h-4"></i>
+                            </a>
+                            
+                            <!-- Registrar daño/pérdida -->
+                            <a href="{{ route('foreman.tool-damage.create', ['tool_id' => $tool->id]) }}" 
+                               class="inline-flex items-center justify-center w-8 h-8 border border-orange-200 rounded hover:bg-orange-100 text-orange-600" 
+                               title="Registrar daño o pérdida">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            </a>
+                            
                             <!-- Editar -->
-                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-600 edit-tool-btn" 
+                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-100 text-emerald-600 edit-tool-btn" 
                                     data-tool-id="{{ $tool->id }}"
                                     data-tool-name="{{ $tool->name }}"
                                     data-tool-category="{{ $tool->category }}"
                                     data-tool-status="{{ $tool->status }}"
-                                    data-tool-total-qty="{{ $tool->total_qty }}"
+                                    data-tool-total-entries="{{ $tool->total_entries }}"
                                     data-tool-available-qty="{{ $tool->available_qty }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
@@ -137,7 +217,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="py-6 text-center text-emerald-800/70">No hay herramientas registradas</td>
+                    <td colspan="9" class="py-6 text-center text-emerald-800/70">No hay herramientas registradas</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -282,14 +362,14 @@
 let currentToolId = null;
 
 // Función para abrir el modal de edición
-function openEditModal(id, name, category, status, total_qty, available_qty) {
+function openEditModal(id, name, category, status, total_entries, available_qty) {
     currentToolId = id;
     
     // Llenar los campos del formulario
     document.getElementById('editName').value = name;
     document.getElementById('editCategory').value = category;
     document.getElementById('editStatus').value = status;
-    document.getElementById('editTotalQty').value = total_qty;
+    document.getElementById('editTotalQty').value = total_entries;
     document.getElementById('editAvailableQty').value = available_qty;
     
     // Mostrar el modal
@@ -303,11 +383,11 @@ function closeEditModal() {
 }
 
 // Función para abrir el modal de detalles
-function openViewModal(id, name, category, status, total_qty, available_qty, created, updated) {
+function openViewModal(id, name, category, status, total_entries, available_qty, created, updated) {
     // Llenar los campos del modal de detalles
     document.getElementById('viewName').textContent = name;
     document.getElementById('viewCategory').textContent = category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    document.getElementById('viewTotalQty').textContent = total_qty;
+    document.getElementById('viewTotalQty').textContent = total_entries;
     document.getElementById('viewAvailableQty').textContent = available_qty;
     document.getElementById('viewCreated').textContent = created;
     document.getElementById('viewUpdated').textContent = updated;
@@ -464,10 +544,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const name = this.getAttribute('data-tool-name');
             const category = this.getAttribute('data-tool-category');
             const status = this.getAttribute('data-tool-status');
-            const total_qty = this.getAttribute('data-tool-total-qty');
+            const total_entries = this.getAttribute('data-tool-total-entries');
             const available_qty = this.getAttribute('data-tool-available-qty');
             
-            openEditModal(id, name, category, status, total_qty, available_qty);
+            openEditModal(id, name, category, status, total_entries, available_qty);
         });
     });
     
@@ -478,12 +558,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const name = this.getAttribute('data-tool-name');
             const category = this.getAttribute('data-tool-category');
             const status = this.getAttribute('data-tool-status');
-            const total_qty = this.getAttribute('data-tool-total-qty');
+            const total_entries = this.getAttribute('data-tool-total-entries');
             const available_qty = this.getAttribute('data-tool-available-qty');
             const created = this.getAttribute('data-tool-created');
             const updated = this.getAttribute('data-tool-updated');
             
-            openViewModal(id, name, category, status, total_qty, available_qty, created, updated);
+            openViewModal(id, name, category, status, total_entries, available_qty, created, updated);
         });
     });
     

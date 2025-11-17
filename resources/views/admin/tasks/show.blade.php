@@ -3,10 +3,6 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Detalles de la Tarea</h2>
-    <a href="{{ route('admin.tasks.index') }}" class="inline-flex items-center gap-2 px-3 py-2 border border-emerald-300 rounded text-emerald-700 hover:bg-emerald-100">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        <span>Volver</span>
-    </a>
 </div>
 @endsection
 
@@ -174,7 +170,7 @@
                     @if($task->status === 'completed')
                         <form method="POST" action="{{ route('admin.tasks.invalidate', $task) }}" class="w-full" data-confirm="true" data-message="¿Marcar esta tarea como inválida?">
                             @csrf
-                            <button class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded">
+                            <button class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded transition-colors">
                                 <i data-lucide="x" class="w-4 h-4"></i>
                                 <span>Invalidar Tarea</span>
                             </button>

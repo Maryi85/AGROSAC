@@ -11,7 +11,7 @@ class StoreToolRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->role === 'admin';
+        return in_array($this->user()?->role, ['admin', 'foreman']);
     }
 
     /**
@@ -25,8 +25,11 @@ class StoreToolRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'in:herramientas_manuales,herramientas_electricas,equipos_agricolas,vehiculos,otros'],
             'status' => ['required', 'string', 'in:operational,damaged,lost,retired'],
-            'total_qty' => ['required', 'integer', 'min:0'],
-            'available_qty' => ['required', 'integer', 'min:0', 'lte:total_qty'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'model' => ['nullable', 'string', 'max:255'],
+            'serial_number' => ['nullable', 'string', 'max:255'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ];
     }
 
@@ -42,13 +45,10 @@ class StoreToolRequest extends FormRequest
             'category.in' => 'La categoría seleccionada no es válida.',
             'status.required' => 'El estado es obligatorio.',
             'status.in' => 'El estado seleccionado no es válido.',
-            'total_qty.required' => 'La cantidad total es obligatoria.',
-            'total_qty.integer' => 'La cantidad total debe ser un número entero.',
-            'total_qty.min' => 'La cantidad total no puede ser negativa.',
-            'available_qty.required' => 'La cantidad disponible es obligatoria.',
-            'available_qty.integer' => 'La cantidad disponible debe ser un número entero.',
-            'available_qty.min' => 'La cantidad disponible no puede ser negativa.',
-            'available_qty.lte' => 'La cantidad disponible no puede ser mayor que la cantidad total.',
+            'description.max' => 'La descripción no puede tener más de 1000 caracteres.',
+            'brand.max' => 'La marca no puede tener más de 255 caracteres.',
+            'model.max' => 'El modelo no puede tener más de 255 caracteres.',
+            'serial_number.max' => 'El número de serie no puede tener más de 255 caracteres.',
         ];
     }
 }

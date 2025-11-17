@@ -11,6 +11,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CropController extends Controller
 {
@@ -49,6 +52,55 @@ class CropController extends Controller
         $data = $request->validated();
         $data['status'] = 'active'; // Los nuevos cultivos siempre se crean como activos
         
+        // Manejar la subida de la foto
+        if ($request->hasFile('photo')) {
+            try {
+                $photo = $request->file('photo');
+                
+                // Generar nombre de archivo seguro (sin espacios ni caracteres especiales)
+                $originalName = $photo->getClientOriginalName();
+                $extension = $photo->getClientOriginalExtension();
+                $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+                $photoName = time() . '_' . $safeName . '.' . $extension;
+                
+                // Asegurar que el directorio existe
+                $directory = storage_path('app/public/photos/crops');
+                if (!File::exists($directory)) {
+                    File::makeDirectory($directory, 0755, true);
+                }
+                
+                // Guardar la foto usando Storage directamente
+                $path = Storage::disk('public')->putFileAs('photos/crops', $photo, $photoName);
+                
+                if ($path) {
+                    $data['photo'] = $path;
+                    
+                    // Verificar que el archivo se guardó físicamente
+                    $fullPath = storage_path('app/public/' . $path);
+                    if (File::exists($fullPath)) {
+                        \Log::info('Foto guardada correctamente', [
+                            'path' => $path, 
+                            'photo' => $data['photo'], 
+                            'original' => $originalName,
+                            'full_path' => $fullPath,
+                            'file_size' => File::size($fullPath)
+                        ]);
+                    } else {
+                        \Log::error('La foto se guardó en la BD pero no existe físicamente', [
+                            'path' => $path,
+                            'full_path' => $fullPath
+                        ]);
+                    }
+                } else {
+                    \Log::error('Error al guardar la foto - putFileAs retornó false');
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error al procesar la foto: ' . $e->getMessage());
+            }
+        } else {
+            \Log::info('No se recibió archivo de foto');
+        }
+        
         Crop::create($data);
         
         return redirect()->route('admin.crops.index')
@@ -64,6 +116,19 @@ class CropController extends Controller
     public function update(UpdateCropRequest $request, Crop $crop): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
+        
+        // Manejar la subida de la foto
+        if ($request->hasFile('photo')) {
+            // Eliminar la foto anterior si existe
+            if ($crop->photo && Storage::disk('public')->exists($crop->photo)) {
+                Storage::disk('public')->delete($crop->photo);
+            }
+            
+            $photo = $request->file('photo');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photo->storeAs('public/photos/crops', $photoName);
+            $validated['photo'] = 'photos/crops/' . $photoName;
+        }
         
         \Log::info('Updating crop', [
             'crop_id' => $crop->id,
@@ -100,13 +165,25 @@ class CropController extends Controller
             ->with('status', 'Cultivo actualizado correctamente');
     }
 
-    public function destroy(Request $request, Crop $crop): RedirectResponse|JsonResponse
+    public function destroy(Request $request, $id): RedirectResponse|JsonResponse
     {
+        try {
+            $crop = Crop::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            $message = 'El cultivo no existe o ya fue eliminado.';
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 404);
+            }
+            
+            return redirect()->route('admin.crops.index')->with('error', $message);
+        }
+        
         // Verificar si el cultivo está activo
         if ($crop->status === 'active') {
             $message = 'No se puede eliminar un cultivo que está activo. Primero debe inhabilitarlo cambiando su estado a inactivo.';
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 400);
             }
             
@@ -117,7 +194,7 @@ class CropController extends Controller
         if ($crop->tasks()->count() > 0) {
             $message = 'No se puede eliminar un cultivo que tiene tareas asociadas. Primero debe inhabilitarlo.';
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 400);
             }
             
@@ -128,7 +205,7 @@ class CropController extends Controller
         if ($crop->supplyConsumptions()->count() > 0) {
             $message = 'No se puede eliminar un cultivo que tiene consumos de insumos asociados. Primero debe inhabilitarlo.';
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 400);
             }
             
@@ -139,16 +216,21 @@ class CropController extends Controller
         if ($crop->ledgerEntries()->count() > 0) {
             $message = 'No se puede eliminar un cultivo que tiene entradas contables asociadas. Primero debe inhabilitarlo.';
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 400);
             }
             
             return redirect()->route('admin.crops.index')->with('error', $message);
         }
 
+        // Eliminar la foto si existe
+        if ($crop->photo && Storage::disk('public')->exists($crop->photo)) {
+            Storage::disk('public')->delete($crop->photo);
+        }
+
         $crop->delete();
         
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Cultivo eliminado correctamente']);
         }
         
@@ -189,5 +271,22 @@ class CropController extends Controller
         $crop->load(['tasks', 'supplyConsumptions', 'ledgerEntries']);
         
         return view('admin.crops.show', compact('crop'));
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $search = (string) $request->string('q');
+        $status = (string) $request->string('status');
+        
+        $crops = Crop::query()
+            ->with('plot')
+            ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($status !== '', fn ($q) => $q->where('status', $status))
+            ->orderBy('status', 'desc')
+            ->orderBy('name')
+            ->get();
+
+        $pdf = Pdf::loadView('admin.crops.pdf', compact('crops'));
+        return $pdf->download('cultivos-' . now()->format('Y-m-d') . '.pdf');
     }
 }

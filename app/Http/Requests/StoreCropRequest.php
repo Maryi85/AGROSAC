@@ -19,6 +19,7 @@ class StoreCropRequest extends FormRequest
             'variety' => ['nullable', 'string', 'max:255'],
             'yield_per_hectare' => ['nullable', 'numeric', 'min:0'],
             'plot_id' => ['required', 'exists:plots,id'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ];
     }
 

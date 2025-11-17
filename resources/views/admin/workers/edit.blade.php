@@ -74,7 +74,7 @@
                         </div>
                         <form method="POST" action="{{ route('admin.workers.reset-password', $worker) }}" class="inline" data-confirm="true" data-message="¿Restablecer la contraseña de este trabajador? Se generará una nueva contraseña temporal.">
                             @csrf
-                            <button type="submit" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded inline-flex items-center gap-2">
+                            <button type="submit" class="px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded inline-flex items-center gap-2 transition-colors">
                                 <i data-lucide="key" class="w-4 h-4"></i>
                                 <span>Restablecer</span>
                             </button>
@@ -94,7 +94,7 @@
             </a>
             
             <button type="submit" 
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+                    class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>Guardar Cambios</span>
             </button>

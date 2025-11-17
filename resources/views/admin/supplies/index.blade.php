@@ -19,14 +19,32 @@
     @endif
 
     <!-- Botones de acción -->
-    <div class="flex justify-between items-center mb-4">
-        <a href="{{ route('admin.supply-consumptions.index') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
-            <i data-lucide="activity" class="w-4 h-4"></i>
-            <span>Ver Consumos</span>
-        </a>
-        <a href="{{ route('admin.supplies.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>Nuevo Insumo</span>
+    <div class="mb-6 flex justify-between items-center">
+        <div class="flex gap-4 flex-wrap">
+            <a href="{{ route('admin.supply-movements.create', ['type' => 'entry']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 border border-green-200 rounded">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Entrada de Insumo</span>
+            </a>
+            <a href="{{ route('admin.supply-movements.create', ['type' => 'exit']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded">
+                <i data-lucide="minus-circle" class="w-4 h-4"></i>
+                <span>Salida de Insumo</span>
+            </a>
+            <a href="{{ route('admin.supply-movements.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 rounded">
+                <i data-lucide="activity" class="w-4 h-4"></i>
+                <span>Ver Movimientos</span>
+            </a>
+            <a href="{{ route('admin.supply-consumptions.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-200 rounded">
+                <i data-lucide="bar-chart" class="w-4 h-4"></i>
+                <span>Ver Consumos</span>
+            </a>
+            <a href="{{ route('admin.supplies.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                <span>Nuevo Insumo</span>
+            </a>
+        </div>
+        <a href="{{ route('admin.supplies.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
         </a>
     </div>
 
@@ -47,7 +65,7 @@
                 @endforeach
             </select>
         </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
             <i data-lucide="search" class="w-4 h-4"></i>
             <span>Filtrar</span>
         </button>
@@ -58,8 +76,11 @@
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
+                    <th class="py-3 pr-4">Foto</th>
                     <th class="py-3 pr-4">Nombre</th>
                     <th class="py-3 pr-4">Unidad</th>
+                    <th class="py-3 pr-4">Stock Actual</th>
+                    <th class="py-3 pr-4">Stock Mínimo</th>
                     <th class="py-3 pr-4">Costo por Unidad</th>
                     <th class="py-3 pr-4">Estado</th>
                     <th class="py-3 pr-4">Consumos</th>
@@ -70,10 +91,35 @@
                 @forelse ($supplies as $supply)
                 <tr class="border-b hover:bg-gray-50" data-supply-id="{{ $supply->id }}">
                     <td class="py-3 pr-4">
+                        @if(!empty($supply->photo))
+                            <img src="{{ asset('storage/' . $supply->photo) }}" alt="{{ $supply->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            </div>
+                        @else
+                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            </div>
+                        @endif
+                    </td>
+                    <td class="py-3 pr-4">
                         <div class="font-medium text-gray-900 supply-name">{{ $supply->name }}</div>
                     </td>
                     <td class="py-3 pr-4 supply-unit">
                         {{ $supply->unit }}
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="flex items-center gap-2">
+                            <span class="font-semibold {{ $supply->isLowStock() ? 'text-red-600' : 'text-gray-900' }}">
+                                {{ number_format($supply->current_stock, 3) }}
+                            </span>
+                            @if($supply->isLowStock())
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500" title="Stock bajo"></i>
+                            @endif
+                        </div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        <span class="text-sm text-gray-600">{{ number_format($supply->min_stock, 3) }}</span>
                     </td>
                     <td class="py-3 pr-4 supply-unit-cost">
                         ${{ number_format($supply->unit_cost, 2) }}
@@ -133,7 +179,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="py-6 text-center text-emerald-800/70">No hay insumos registrados</td>
+                    <td colspan="9" class="py-6 text-center text-emerald-800/70">No hay insumos registrados</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -199,7 +245,7 @@
         
         <!-- Botón de cerrar -->
         <div class="mt-6 flex justify-end">
-            <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">
+            <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded transition-colors">
                 <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                 Cerrar
             </button>
@@ -261,7 +307,7 @@
                     <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                     Cancelar
                 </button>
-                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded" id="updateButton">
+                <button type="submit" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors" id="updateButton">
                     <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
                     <span>Actualizar</span>
                 </button>

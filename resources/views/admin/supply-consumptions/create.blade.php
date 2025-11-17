@@ -55,55 +55,73 @@
             </div>
         </div>
         
-        <!-- Cultivo -->
-        <div>
-            <label for="crop_id" class="block text-sm mb-1 text-emerald-800">Cultivo (Opcional)</label>
-            <select id="crop_id" name="crop_id" 
-                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('crop_id') border-red-500 @enderror">
-                <option value="">Seleccionar cultivo</option>
-                @foreach($crops as $crop)
-                    <option value="{{ $crop->id }}" {{ old('crop_id') == $crop->id ? 'selected' : '' }}>
-                        {{ $crop->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('crop_id')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-        
-        <!-- Lote -->
-        <div>
-            <label for="plot_id" class="block text-sm mb-1 text-emerald-800">Lote (Opcional)</label>
-            <select id="plot_id" name="plot_id" 
-                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('plot_id') border-red-500 @enderror">
-                <option value="">Seleccionar lote</option>
-                @foreach($plots as $plot)
-                    <option value="{{ $plot->id }}" {{ old('plot_id') == $plot->id ? 'selected' : '' }}>
-                        {{ $plot->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('plot_id')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-        
-        <!-- Tarea -->
-        <div>
-            <label for="task_id" class="block text-sm mb-1 text-emerald-800">Tarea (Opcional)</label>
-            <select id="task_id" name="task_id" 
-                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('task_id') border-red-500 @enderror">
-                <option value="">Seleccionar tarea</option>
-                @foreach($tasks as $task)
-                    <option value="{{ $task->id }}" {{ old('task_id') == $task->id ? 'selected' : '' }}>
-                        {{ $task->type }} - {{ $task->scheduled_for->format('d/m/Y') }}
-                    </option>
-                @endforeach
-            </select>
-            @error('task_id')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
+        <!-- Información Relacionada (Opcional) -->
+        <div class="border-t pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Información Relacionada (Opcional)</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Cultivo -->
+                <div>
+                    <label for="crop_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        Cultivo
+                    </label>
+                    <select id="crop_id" 
+                            name="crop_id" 
+                            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option value="">Seleccionar cultivo</option>
+                        @foreach($crops as $crop)
+                            <option value="{{ $crop->id }}" 
+                                    data-plot-id="{{ $crop->plot_id }}"
+                                    {{ old('crop_id') == $crop->id ? 'selected' : '' }}>
+                                {{ $crop->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('crop_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Lote -->
+                <div>
+                    <label for="plot_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        Lote
+                    </label>
+                    <select id="plot_id" 
+                            name="plot_id" 
+                            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option value="">Seleccionar lote</option>
+                        @foreach($plots as $plot)
+                            <option value="{{ $plot->id }}" {{ old('plot_id') == $plot->id ? 'selected' : '' }}>
+                                {{ $plot->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('plot_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Tarea -->
+                <div>
+                    <label for="task_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tarea
+                    </label>
+                    <select id="task_id" 
+                            name="task_id" 
+                            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option value="">Seleccionar tarea</option>
+                        @foreach($tasks as $task)
+                            <option value="{{ $task->id }}" {{ old('task_id') == $task->id ? 'selected' : '' }}>
+                                {{ $task->type }} - {{ $task->scheduled_for->format('d/m/Y') }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('task_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
         </div>
         
         <!-- Fecha de uso -->
@@ -157,13 +175,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedOption = supplySelect.options[supplySelect.selectedIndex];
         const qty = parseFloat(qtyInput.value) || 0;
         
-        if (selectedOption.value) {
-            const unit = selectedOption.getAttribute('data-unit');
-            const unitCost = parseFloat(selectedOption.getAttribute('data-unit-cost'));
+        if (selectedOption && selectedOption.value) {
+            const unit = selectedOption.getAttribute('data-unit') || '';
+            const unitCostStr = selectedOption.getAttribute('data-unit-cost');
+            const unitCost = unitCostStr ? parseFloat(unitCostStr) : 0;
             
+            if (unit) {
             unitInfo.textContent = `Unidad: ${unit}`;
+            }
+            
+            // Mostrar el precio unitario registrado en la entrada de insumos
             unitCostDisplay.textContent = `$${unitCost.toFixed(2)}`;
             
+            // Calcular y mostrar el precio total cuando se ingresa la cantidad
             const totalCost = qty * unitCost;
             totalCostDisplay.textContent = `$${totalCost.toFixed(2)}`;
         } else {
@@ -173,11 +197,54 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    supplySelect.addEventListener('change', updateCostInfo);
-    qtyInput.addEventListener('input', updateCostInfo);
+    // Actualizar cuando se seleccione un insumo
+    supplySelect.addEventListener('change', function() {
+        updateCostInfo();
+    });
+    
+    // Actualizar cuando se cambie la cantidad
+    qtyInput.addEventListener('input', function() {
+        updateCostInfo();
+    });
     
     // Actualizar al cargar la página si hay valores predefinidos
+    if (supplySelect.value) {
     updateCostInfo();
+    }
+    
+    // Función para actualizar el lote cuando se selecciona un cultivo
+    const cropSelect = document.getElementById('crop_id');
+    const plotSelect = document.getElementById('plot_id');
+    
+    if (cropSelect && plotSelect) {
+        cropSelect.addEventListener('change', function() {
+            const selectedCrop = this.options[this.selectedIndex];
+            const plotId = selectedCrop.getAttribute('data-plot-id');
+            
+            // Si no hay cultivo seleccionado, limpiar el lote
+            if (!this.value) {
+                plotSelect.value = '';
+                return;
+            }
+            
+            // Si hay un plot_id asociado al cultivo, seleccionarlo automáticamente
+            if (plotId) {
+                // Buscar la opción del lote con ese ID
+                const plotOption = Array.from(plotSelect.options).find(opt => opt.value == plotId);
+                if (plotOption) {
+                    plotSelect.value = plotId;
+                }
+            } else {
+                // Si el cultivo no tiene lote asociado, limpiar la selección
+                plotSelect.value = '';
+            }
+        });
+        
+        // Si hay un valor antiguo, disparar el evento
+        if (cropSelect.value) {
+            cropSelect.dispatchEvent(new Event('change'));
+        }
+    }
 });
 </script>
 @endsection

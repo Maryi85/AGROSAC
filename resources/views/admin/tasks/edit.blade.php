@@ -3,10 +3,6 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Editar Tarea</h2>
-    <a href="{{ route('admin.tasks.index') }}" class="inline-flex items-center gap-2 px-3 py-2 border border-emerald-300 rounded text-emerald-700 hover:bg-emerald-100">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        <span>Volver</span>
-    </a>
 </div>
 @endsection
 
@@ -219,7 +215,7 @@
 
         <!-- Botones -->
         <div class="flex items-center gap-4 pt-4">
-            <button type="submit" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+            <button type="submit" class="px-6 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>Actualizar Tarea</span>
             </button>
