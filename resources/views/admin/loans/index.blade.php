@@ -334,7 +334,7 @@
             <h3 class="text-lg font-semibold text-gray-800">Aprobar Préstamo</h3>
         </div>
         
-        <form id="approveForm" method="POST">
+        <form id="approveForm" method="POST" data-confirm="true" data-message="¿Está seguro de que desea aprobar este préstamo?" data-type="question">
             @csrf
             <div class="mb-4">
                 <p class="text-gray-600 mb-4">
@@ -377,7 +377,7 @@
             <h3 class="text-lg font-semibold text-gray-800">Rechazar Préstamo</h3>
         </div>
         
-        <form id="rejectForm" method="POST">
+        <form id="rejectForm" method="POST" data-confirm="true" data-message="¿Está seguro de que desea rechazar este préstamo?" data-type="warning">
             @csrf
             <div class="mb-4">
                 <p class="text-gray-600 mb-4">
@@ -420,7 +420,7 @@
             <h3 class="text-lg font-semibold text-gray-800">Aceptar Devolución</h3>
         </div>
         
-        <form id="confirmReturnForm" method="POST">
+        <form id="confirmReturnForm" method="POST" data-confirm="true" data-message="¿Confirma que ha recibido la herramienta devuelta?" data-type="question">
             @csrf
             <div class="mb-4">
                 <p class="text-gray-600 mb-4">

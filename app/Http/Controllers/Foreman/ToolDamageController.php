@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tool;
@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 
-class ForemanToolDamageController extends Controller
+class ToolDamageController extends Controller
 {
     public function index(Request $request): View
     {
@@ -52,7 +52,7 @@ class ForemanToolDamageController extends Controller
             'lost' => 'Solo perdidas',
         ];
 
-        return view('admin.tools.damage.index', compact('tools', 'allTools', 'statuses', 'totalTools', 'totalEntries', 'totalAvailable', 'totalDamaged', 'totalLost'))->with('routePrefix', 'foreman.');
+        return view('foreman.tools.damage.index', compact('tools', 'allTools', 'statuses', 'totalTools', 'totalEntries', 'totalAvailable', 'totalDamaged', 'totalLost'));
     }
 
     public function create(Request $request): View
@@ -70,7 +70,7 @@ class ForemanToolDamageController extends Controller
             'loss' => 'Registrar Pérdida',
         ];
 
-        return view('admin.tools.damage.create', compact('tools', 'selectedTool', 'damageTypes'))->with('routePrefix', 'foreman.');
+        return view('foreman.tools.damage.create', compact('tools', 'selectedTool', 'damageTypes'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -146,6 +146,7 @@ class ForemanToolDamageController extends Controller
             })->orderBy('entry_date', 'desc');
         }]);
 
-        return view('admin.tools.damage.show', compact('tool'))->with('routePrefix', 'foreman.');
+        return view('foreman.tools.damage.show', compact('tool'));
     }
 }
+

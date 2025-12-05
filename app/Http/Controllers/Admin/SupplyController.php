@@ -7,6 +7,7 @@ use App\Http\Requests\StoreSupplyRequest;
 use App\Http\Requests\UpdateSupplyRequest;
 use App\Models\Supply;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
@@ -113,7 +114,7 @@ class SupplyController extends Controller
         return view('admin.supplies.edit', compact('supply', 'units'));
     }
 
-    public function update(UpdateSupplyRequest $request, Supply $supply): RedirectResponse
+    public function update(UpdateSupplyRequest $request, Supply $supply): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
         
@@ -151,6 +152,24 @@ class SupplyController extends Controller
         }
         
         $supply->update($data);
+        $supply->refresh();
+        
+        // Si es una petición AJAX, devolver JSON
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Insumo actualizado correctamente',
+                'supply' => [
+                    'id' => $supply->id,
+                    'name' => $supply->name,
+                    'unit' => $supply->unit,
+                    'unit_cost' => $supply->unit_cost,
+                    'status' => $supply->status,
+                    'photo' => $supply->photo ? asset('storage/' . $supply->photo) : null
+                ]
+            ]);
+        }
+        
         return redirect()->route('admin.supplies.index')
             ->with('status', 'Insumo actualizado correctamente');
     }

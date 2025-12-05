@@ -23,18 +23,18 @@
                                     <div class="text-sm text-emerald-600 mt-1">
                                         <span class="inline-flex items-center">
                                             <i data-lucide="user" class="w-4 h-4 mr-1"></i>
-                                            {{ $loan->borrower->name ?? 'Sin asignar' }}
+                                            {{ $loan->user->name ?? 'Sin asignar' }}
                                         </span>
                                         <span class="mx-2">•</span>
                                         <span class="inline-flex items-center">
                                             <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
                                             Prestado: {{ $loan->created_at->format('d/m/Y') }}
                                         </span>
-                                        @if($loan->expected_return_date)
+                                        @if($loan->due_at)
                                             <span class="mx-2">•</span>
                                             <span class="inline-flex items-center">
                                                 <i data-lucide="calendar-days" class="w-4 h-4 mr-1"></i>
-                                                Devolución: {{ \Carbon\Carbon::parse($loan->expected_return_date)->format('d/m/Y') }}
+                                                Devolución: {{ $loan->due_at->format('d/m/Y') }}
                                             </span>
                                         @endif
                                     </div>
@@ -45,10 +45,19 @@
                                     @endif
                                 </div>
                                 <div class="flex items-center space-x-3">
-                                    <span class="px-3 py-1 text-sm rounded-full 
+                                    <span class="px-3 py-1 text-xs rounded 
                                         {{ $loan->status === 'returned' ? 'bg-green-100 text-green-800' : 
-                                           ($loan->status === 'active' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                        {{ ucfirst($loan->status) }}
+                                           ($loan->status === 'out' ? 'bg-yellow-100 text-yellow-800' : 
+                                           ($loan->status === 'pending' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800')) }}">
+                                        @if($loan->status === 'out')
+                                            Prestado
+                                        @elseif($loan->status === 'pending')
+                                            Pendiente
+                                        @elseif($loan->status === 'returned')
+                                            Devuelto
+                                        @else
+                                            {{ ucfirst($loan->status) }}
+                                        @endif
                                     </span>
                                 </div>
                             </div>

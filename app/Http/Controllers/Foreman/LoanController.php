@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
+use App\Http\Controllers\Controller;
 use App\Models\Loan;
 use App\Models\Tool;
 use App\Models\User;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class ForemanLoanController extends Controller
+class LoanController extends Controller
 {
     public function index(Request $request): View
     {
@@ -460,3 +461,7 @@ class ForemanLoanController extends Controller
         return $pdf->download('prestamos-' . now()->format('Y-m-d') . '.pdf');
     }
 }
+
+
+
+

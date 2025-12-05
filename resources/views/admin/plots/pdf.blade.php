@@ -34,12 +34,25 @@
             color: white;
             padding: 10px;
             text-align: left;
-            font-size: 11px;
+            font-size: 10px;
         }
         table td {
             padding: 8px;
             border-bottom: 1px solid #ddd;
-            font-size: 11px;
+            font-size: 10px;
+            vertical-align: top;
+        }
+        .crop-info {
+            margin-bottom: 3px;
+            line-height: 1.4;
+        }
+        .crop-name {
+            font-weight: bold;
+            color: #166534;
+        }
+        .crop-variety {
+            color: #666;
+            font-size: 9px;
         }
         table tr:nth-child(even) {
             background: #f9fafb;
@@ -80,9 +93,10 @@
             <tr>
                 <th>ID</th>
                 <th>Nombre</th>
+                <th>Ubicación</th>
                 <th>Área (hectáreas)</th>
-                <th>Estado</th>
                 <th>Cultivos</th>
+                <th>Estado</th>
             </tr>
         </thead>
         <tbody>
@@ -90,17 +104,36 @@
                 <tr>
                     <td>{{ $plot->id }}</td>
                     <td>{{ $plot->name }}</td>
+                    <td>{{ $plot->location ?? 'N/A' }}</td>
                     <td>{{ number_format($plot->area ?? 0, 2) }}</td>
+                    <td>
+                        @if($plot->crops && $plot->crops->count() > 0)
+                            @foreach($plot->crops as $crop)
+                                <div style="margin-bottom: 4px;">
+                                    <strong>{{ $crop->name }}</strong>
+                                    @if($crop->variety)
+                                        <span style="color: #666; font-size: 10px;">({{ $crop->variety }})</span>
+                                    @endif
+                                    @if($crop->status === 'active')
+                                        <span class="badge badge-success" style="margin-left: 5px;">Activo</span>
+                                    @else
+                                        <span class="badge badge-danger" style="margin-left: 5px;">Inactivo</span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        @else
+                            <span style="color: #999;">Sin cultivo</span>
+                        @endif
+                    </td>
                     <td>
                         <span class="badge {{ $plot->status === 'active' ? 'badge-success' : 'badge-danger' }}">
                             {{ $plot->status === 'active' ? 'Activo' : 'Inactivo' }}
                         </span>
                     </td>
-                    <td>{{ $plot->crops->count() }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 20px;">No hay lotes registrados</td>
+                    <td colspan="6" style="text-align: center; padding: 20px;">No hay lotes registrados</td>
                 </tr>
             @endforelse
         </tbody>

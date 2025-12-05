@@ -294,7 +294,162 @@
             @endif
         </div>
     </div>
+
+    <!-- Mapa de Ubicación de la Finca -->
+    <div class="admin-card rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-100 rounded-lg">
+                    <i data-lucide="map-pin" class="w-5 h-5 text-emerald-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">Ubicación de la Finca</h3>
+            </div>
+            <a href="{{ route('admin.farm-settings.edit') }}" class="text-sm text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+                <span>Configurar</span>
+            </a>
+        </div>
+        @if($farmSettings->latitude && $farmSettings->longitude)
+        <div class="mb-2">
+            <p class="text-sm text-gray-600"><strong>Nombre:</strong> {{ $farmSettings->name }}</p>
+            @if($farmSettings->address)
+                <p class="text-sm text-gray-600"><strong>Dirección:</strong> {{ $farmSettings->address }}</p>
+            @endif
+            <p class="text-sm text-gray-600">
+                <strong>Coordenadas:</strong> {{ number_format($farmSettings->latitude, 6) }}, {{ number_format($farmSettings->longitude, 6) }}
+            </p>
+        </div>
+        <div id="farmMap" style="width: 100%; height: 400px; border-radius: 8px; overflow: hidden;"></div>
+        @else
+        <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <i data-lucide="map-pin" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
+            <p class="text-gray-600 font-medium mb-2">No se ha configurado la ubicación de la finca</p>
+            <a href="{{ route('admin.farm-settings.edit') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg transition-colors">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+                <span>Configurar Ubicación</span>
+            </a>
+        </div>
+        @endif
+    </div>
   </div>
 @endsection
+
+@push('scripts')
+@if(config('services.mapbox.token') && $farmSettings->latitude && $farmSettings->longitude)
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mapboxToken = '{{ config('services.mapbox.token') }}';
+        const farmMapContainer = document.getElementById('farmMap');
+        
+        if (!mapboxToken) {
+            console.error('Mapbox token no configurado');
+            if (farmMapContainer) {
+                farmMapContainer.innerHTML = '<div class="p-4 bg-yellow-50 border border-yellow-200 rounded"><p class="text-yellow-800">Error: No se ha configurado el token de Mapbox. Verifica tu archivo .env</p></div>';
+            }
+            return;
+        }
+
+        if (!farmMapContainer) {
+            console.error('Contenedor del mapa no encontrado');
+            return;
+        }
+
+        mapboxgl.accessToken = mapboxToken;
+        
+        try {
+            const farmLocation = [{{ $farmSettings->longitude }}, {{ $farmSettings->latitude }}];
+            const farmBoundary = @json($farmSettings->boundary ?? null);
+            
+            const map = new mapboxgl.Map({
+                container: 'farmMap',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: farmLocation,
+                zoom: 15
+            });
+
+            // Agregar controles de navegación
+            map.addControl(new mapboxgl.NavigationControl());
+
+            // Crear marcador
+            const marker = new mapboxgl.Marker()
+                .setLngLat(farmLocation)
+                .setPopup(
+                    new mapboxgl.Popup({ offset: 25 })
+                        .setHTML(`
+                            <div style="padding: 10px;">
+                                <h3 style="margin: 0 0 5px 0; font-weight: bold;">{{ $farmSettings->name }}</h3>
+                                @if($farmSettings->address)
+                                    <p style="margin: 0; color: #666;">{{ $farmSettings->address }}</p>
+                                @endif
+                                <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;">
+                                    Lat: {{ number_format($farmSettings->latitude, 6) }}, 
+                                    Lng: {{ number_format($farmSettings->longitude, 6) }}
+                                </p>
+                            </div>
+                        `)
+                )
+                .addTo(map);
+
+            // Abrir popup al hacer clic en el marcador
+            marker.togglePopup();
+
+            // Agregar el polígono de la finca si existe
+            map.on('load', () => {
+                if (farmBoundary && farmBoundary.type === 'Polygon') {
+                    map.addSource('farm-boundary', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'geometry': farmBoundary
+                        }
+                    });
+
+                    map.addLayer({
+                        'id': 'farm-boundary-fill',
+                        'type': 'fill',
+                        'source': 'farm-boundary',
+                        'layout': {},
+                        'paint': {
+                            'fill-color': '#10b981',
+                            'fill-opacity': 0.2
+                        }
+                    });
+
+                    map.addLayer({
+                        'id': 'farm-boundary-stroke',
+                        'type': 'line',
+                        'source': 'farm-boundary',
+                        'layout': {},
+                        'paint': {
+                            'line-color': '#10b981',
+                            'line-width': 3,
+                            'line-dasharray': [2, 2]
+                        }
+                    });
+
+                    // Ajustar el mapa para mostrar el polígono
+                    const coordinates = farmBoundary.coordinates[0];
+                    const bounds = coordinates.reduce((bounds, coord) => {
+                        return bounds.extend(coord);
+                    }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+                    
+                    map.fitBounds(bounds, {
+                        padding: 50
+                    });
+                }
+            });
+
+        } catch (error) {
+            console.error('Error inicializando mapa:', error);
+            if (farmMapContainer) {
+                farmMapContainer.innerHTML = '<div class="p-4 bg-red-50 border border-red-200 rounded"><p class="text-red-800">Error al cargar el mapa. Por favor, recarga la página.</p></div>';
+            }
+        }
+    });
+</script>
+@endif
+@endpush
 
 

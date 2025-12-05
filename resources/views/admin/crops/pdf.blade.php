@@ -80,8 +80,10 @@
             <tr>
                 <th>ID</th>
                 <th>Nombre</th>
+                <th>Descripción</th>
                 <th>Variedad</th>
                 <th>Lote</th>
+                <th>Rendimiento</th>
                 <th>Estado</th>
                 <th>Fecha de Siembra</th>
             </tr>
@@ -91,8 +93,10 @@
                 <tr>
                     <td>{{ $crop->id }}</td>
                     <td>{{ $crop->name }}</td>
+                    <td>{{ $crop->description ? \Illuminate\Support\Str::limit($crop->description, 50) : 'N/A' }}</td>
                     <td>{{ $crop->variety ?? 'N/A' }}</td>
                     <td>{{ $crop->plot->name ?? 'Sin lote' }}</td>
+                    <td>{{ $crop->yield_per_hectare ? number_format($crop->yield_per_hectare, 2) . ' kg/ha' : 'N/A' }}</td>
                     <td>
                         <span class="badge {{ $crop->status === 'active' ? 'badge-success' : 'badge-danger' }}">
                             {{ $crop->status === 'active' ? 'Activo' : 'Inactivo' }}
@@ -102,7 +106,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px;">No hay cultivos registrados</td>
+                    <td colspan="8" style="text-align: center; padding: 20px;">No hay cultivos registrados</td>
                 </tr>
             @endforelse
         </tbody>

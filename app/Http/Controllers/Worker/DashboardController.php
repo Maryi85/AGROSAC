@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Worker;
 
+use App\Http\Controllers\Controller;
 use App\Models\Plot;
 use App\Models\Crop;
 use App\Models\Task;
@@ -14,7 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class WorkerController extends Controller
+class DashboardController extends Controller
 {
     public function index(): View
     {
@@ -393,3 +394,7 @@ class WorkerController extends Controller
         return $pdf->download('reporte-trabajador-' . $user->name . '-' . now()->format('Y-m-d') . '.pdf');
     }
 }
+
+
+
+

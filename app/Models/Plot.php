@@ -10,12 +10,18 @@ class Plot extends Model
     protected $fillable = [
         'name',
         'location',
+        'latitude',
+        'longitude',
+        'boundary',
         'area',
         'status',
     ];
 
     protected $casts = [
         'area' => 'decimal:2',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
+        'boundary' => 'array',
     ];
 
     public function tasks(): HasMany

@@ -71,7 +71,13 @@
                             </option>
                         @endforeach
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">Lote donde se sembrará este cultivo</p>
+                    <p class="text-xs text-gray-500 mt-1">Lote donde se sembrará este cultivo. <span class="text-emerald-600 font-semibold">Solo se muestran lotes disponibles (sin cultivos activos).</span></p>
+                    @if($plots->isEmpty())
+                        <p class="text-yellow-600 text-sm mt-1">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 inline"></i>
+                            No hay lotes disponibles. Todos los lotes activos ya tienen un cultivo activo asignado.
+                        </p>
+                    @endif
                     @error('plot_id')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -90,9 +96,9 @@
             <!-- Foto -->
             <div class="mt-6">
                 <label for="photo" class="block text-sm font-medium text-emerald-800 mb-2">Foto del Cultivo</label>
-                <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/jpg,image/gif" 
+                <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif,.JPG,.JPEG,.PNG,.GIF" 
                        class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB</p>
+                <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, JPEG, PNG, GIF (mayúsculas o minúsculas). Tamaño máximo: 2MB</p>
                 @error('photo')
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror

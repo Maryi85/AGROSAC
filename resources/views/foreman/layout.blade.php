@@ -97,8 +97,18 @@
     if (window.lucide) {
         window.lucide.createIcons();
     }
-    // SweetAlert2 - Confirmaciones genéricas para formularios con data-confirm
+    // SweetAlert2 - Sistema centralizado de confirmaciones y alertas
     document.addEventListener('DOMContentLoaded', () => {
+        // Configuración global de SweetAlert2
+        const swalConfig = {
+            buttonsStyling: false,
+            customClass: {
+                popup: 'rounded-lg bg-white',
+                confirmButton: 'px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 transition-colors',
+                cancelButton: 'px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 ml-2',
+            },
+        };
+
         // Interceptar botón de logout
         const logoutBtn = document.getElementById('logout-btn');
         const logoutForm = document.getElementById('logout-form');
@@ -114,12 +124,9 @@
                     confirmButtonText: 'Sí, cerrar sesión',
                     cancelButtonText: 'Cancelar',
                     reverseButtons: true,
-                    buttonsStyling: false,
-                    customClass: {
-                        popup: 'rounded-lg bg-white',
-                        confirmButton: 'px-4 py-2 rounded bg-red-500 hover:bg-red-600 text-white border border-red-600 transition-colors',
-                        cancelButton: 'px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 ml-2',
-                    },
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    ...swalConfig,
                 }).then((result) => {
                     if (result.isConfirmed) {
                         logoutForm.submit();
@@ -128,30 +135,85 @@
             });
         }
         
+        // Confirmaciones para formularios con data-confirm
         document.querySelectorAll('form[data-confirm="true"]').forEach((form) => {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const message = form.getAttribute('data-message') || '¿Confirmar acción?';
+                const type = form.getAttribute('data-type') || 'warning';
+                const confirmText = form.getAttribute('data-confirm-text') || 'Aceptar';
+                const cancelText = form.getAttribute('data-cancel-text') || 'Cancelar';
+                
                 Swal.fire({
                     title: message,
-                    icon: 'warning',
+                    icon: type,
                     showCancelButton: true,
-                    confirmButtonText: 'Aceptar',
-                    cancelButtonText: 'Cancelar',
+                    confirmButtonText: confirmText,
+                    cancelButtonText: cancelText,
                     reverseButtons: true,
-                    buttonsStyling: false,
-                    customClass: {
-                        popup: 'rounded-lg bg-white',
-                        confirmButton: 'px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 transition-colors',
-                        cancelButton: 'px-4 py-2 rounded border border-emerald-300 text-emerald-700 hover:bg-emerald-100 ml-2',
-                    },
+                    ...swalConfig,
                 }).then((result) => {
                     if (result.isConfirmed) form.submit();
                 });
             });
         });
 
-        // Toast de estado
+        // Confirmaciones para botones con data-confirm-action
+        document.querySelectorAll('[data-confirm-action]').forEach((button) => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const message = this.getAttribute('data-confirm-message') || '¿Confirmar acción?';
+                const action = this.getAttribute('data-confirm-action');
+                const type = this.getAttribute('data-confirm-type') || 'warning';
+                
+                Swal.fire({
+                    title: message,
+                    icon: type,
+                    showCancelButton: true,
+                    confirmButtonText: 'Aceptar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    ...swalConfig,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (action === 'submit' && this.form) {
+                            this.form.submit();
+                        } else if (action === 'click' && this.onclick) {
+                            this.onclick();
+                        } else if (this.href) {
+                            window.location.href = this.href;
+                        }
+                    }
+                });
+            });
+        });
+
+        // Reemplazar alert() nativos por SweetAlert2
+        window.originalAlert = window.alert;
+        window.alert = function(message, type = 'info') {
+            Swal.fire({
+                title: message,
+                icon: type,
+                confirmButtonText: 'Aceptar',
+                ...swalConfig,
+            });
+        };
+
+        // Reemplazar confirm() nativos por SweetAlert2
+        window.originalConfirm = window.confirm;
+        window.confirm = function(message) {
+            return Swal.fire({
+                title: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Aceptar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                ...swalConfig,
+            }).then((result) => result.isConfirmed);
+        };
+
+        // Toast de estado exitoso
         const status = document.querySelector('meta[name="app-status"]')?.getAttribute('content');
         if (status) {
             const Toast = Swal.mixin({
@@ -164,5 +226,55 @@
             });
             Toast.fire({ icon: 'success', title: status });
         }
+
+        // Toast de error
+        const error = document.querySelector('meta[name="app-error"]')?.getAttribute('content');
+        if (error) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                customClass: { popup: 'rounded-lg border border-red-200 bg-white' },
+            });
+            Toast.fire({ icon: 'error', title: error });
+        }
+
+        // Función global para mostrar alertas de éxito
+        window.showSuccessAlert = function(message) {
+            Swal.fire({
+                icon: 'success',
+                title: message,
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                customClass: { popup: 'rounded-lg border border-emerald-200 bg-white' },
+            });
+        };
+
+        // Función global para mostrar alertas de error
+        window.showErrorAlert = function(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: message,
+                confirmButtonText: 'Aceptar',
+                customClass: { popup: 'rounded-lg border border-red-200 bg-white' },
+            });
+        };
+
+        // Función global para confirmaciones
+        window.showConfirmDialog = function(message, type = 'warning') {
+            return Swal.fire({
+                title: message,
+                icon: type,
+                showCancelButton: true,
+                confirmButtonText: 'Aceptar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                ...swalConfig,
+            });
+        };
     });
 </script>

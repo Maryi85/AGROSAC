@@ -18,8 +18,23 @@ class StoreCropRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'variety' => ['nullable', 'string', 'max:255'],
             'yield_per_hectare' => ['nullable', 'numeric', 'min:0'],
-            'plot_id' => ['required', 'exists:plots,id'],
-            'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'plot_id' => [
+                'required', 
+                'exists:plots,id',
+                function ($attribute, $value, $fail) {
+                    // Verificar que el lote no tenga un cultivo activo
+                    $hasActiveCrop = \App\Models\Crop::where('plot_id', $value)
+                        ->where('status', 'active')
+                        ->exists();
+                    
+                    if ($hasActiveCrop) {
+                        $plot = \App\Models\Plot::find($value);
+                        $plotName = $plot ? $plot->name : 'el lote seleccionado';
+                        $fail("El lote '{$plotName}' ya tiene un cultivo activo. Solo se permite un cultivo activo por lote.");
+                    }
+                }
+            ],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,gif', 'max:2048'],
         ];
     }
 
@@ -35,6 +50,9 @@ class StoreCropRequest extends FormRequest
             'yield_per_hectare.min' => 'El rendimiento por hectárea no puede ser negativo.',
             'plot_id.required' => 'Debe seleccionar un lote.',
             'plot_id.exists' => 'El lote seleccionado no es válido.',
+            'photo.image' => 'El archivo debe ser una imagen válida.',
+            'photo.mimes' => 'La imagen debe ser de tipo: JPEG, JPG, PNG o GIF.',
+            'photo.max' => 'La imagen no puede ser mayor a 2MB (2048 KB).',
         ];
     }
 }

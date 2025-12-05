@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
 use App\Http\Controllers\Controller;
 use App\Models\SupplyMovement;
@@ -8,7 +8,7 @@ use App\Models\Supply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class ForemanSupplyMovementController extends Controller
+class SupplyMovementController extends Controller
 {
     public function index()
     {
@@ -187,3 +187,7 @@ class ForemanSupplyMovementController extends Controller
         }
     }
 }
+
+
+
+

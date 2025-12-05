@@ -43,7 +43,14 @@ class CropController extends Controller
 
     public function create(): View
     {
-        $plots = Plot::where('status', 'active')->orderBy('name')->get();
+        // Obtener solo los lotes activos que NO tienen un cultivo activo
+        $plots = Plot::where('status', 'active')
+            ->whereDoesntHave('crops', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->orderBy('name')
+            ->get();
+        
         return view('admin.crops.create', compact('plots'));
     }
 
@@ -109,13 +116,52 @@ class CropController extends Controller
 
     public function edit(Crop $crop): View
     {
-        $plots = Plot::where('status', 'active')->orderBy('name')->get();
+        // Obtener lotes activos que NO tienen un cultivo activo, 
+        // o el lote actual del cultivo (para permitir mantenerlo)
+        $plots = Plot::where('status', 'active')
+            ->where(function ($query) use ($crop) {
+                $query->whereDoesntHave('crops', function ($q) {
+                    $q->where('status', 'active');
+                })
+                ->orWhere('id', $crop->plot_id); // Incluir el lote actual del cultivo
+            })
+            ->orderBy('name')
+            ->get();
+        
         return view('admin.crops.edit', compact('crop', 'plots'));
     }
 
     public function update(UpdateCropRequest $request, Crop $crop): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
+        
+        // Validar que si se está activando el cultivo, el lote no tenga otro cultivo activo
+        $plotId = $validated['plot_id'] ?? $crop->plot_id;
+        $newStatus = $validated['status'] ?? $crop->status;
+        
+        if ($newStatus === 'active' && $plotId) {
+            $hasActiveCrop = Crop::where('plot_id', $plotId)
+                ->where('status', 'active')
+                ->where('id', '!=', $crop->id)
+                ->exists();
+            
+            if ($hasActiveCrop) {
+                $plot = Plot::find($plotId);
+                $plotName = $plot ? $plot->name : 'el lote seleccionado';
+                $message = "No se puede activar este cultivo porque el lote '{$plotName}' ya tiene un cultivo activo. Solo se permite un cultivo activo por lote.";
+                
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $message
+                    ], 422);
+                }
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['status' => $message]);
+            }
+        }
         
         // Manejar la subida de la foto
         if ($request->hasFile('photo')) {
@@ -145,7 +191,7 @@ class CropController extends Controller
         $crop->load('plot');
         
         // Si es una petición AJAX, devolver JSON
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Cultivo actualizado correctamente',
@@ -156,7 +202,8 @@ class CropController extends Controller
                     'yield_per_hectare' => $crop->yield_per_hectare,
                     'status' => $crop->status,
                     'plot_id' => $crop->plot_id,
-                    'plot_name' => $crop->plot ? $crop->plot->name : null
+                    'plot_name' => $crop->plot ? $crop->plot->name : null,
+                    'photo' => $crop->photo ? asset('storage/' . $crop->photo) : null
                 ]
             ]);
         }
@@ -260,6 +307,20 @@ class CropController extends Controller
                 ->with('error', 'Solo se pueden habilitar cultivos que están inactivos.');
         }
 
+        // Verificar que el lote no tenga otro cultivo activo
+        if ($crop->plot_id) {
+            $hasActiveCrop = Crop::where('plot_id', $crop->plot_id)
+                ->where('status', 'active')
+                ->where('id', '!=', $crop->id)
+                ->exists();
+            
+            if ($hasActiveCrop) {
+                $plotName = $crop->plot ? $crop->plot->name : 'el lote asignado';
+                return redirect()->route('admin.crops.index')
+                    ->with('error', "No se puede habilitar este cultivo porque el lote '{$plotName}' ya tiene un cultivo activo. Solo se permite un cultivo activo por lote.");
+            }
+        }
+
         $crop->update(['status' => 'active']);
         
         return redirect()->route('admin.crops.index')
@@ -275,8 +336,8 @@ class CropController extends Controller
 
     public function downloadPdf(Request $request)
     {
-        $search = (string) $request->string('q');
-        $status = (string) $request->string('status');
+        $search = $request->input('q', '');
+        $status = $request->input('status', '');
         
         $crops = Crop::query()
             ->with('plot')

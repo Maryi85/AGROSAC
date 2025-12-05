@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -9,7 +10,7 @@ use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class ForemanWorkerController extends Controller
+class WorkerController extends Controller
 {
     public function index(Request $request): View
     {
@@ -252,3 +253,7 @@ class ForemanWorkerController extends Controller
         return $pdf->download('trabajadores-' . now()->format('Y-m-d') . '.pdf');
     }
 }
+
+
+
+

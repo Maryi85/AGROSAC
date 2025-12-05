@@ -17,8 +17,11 @@ class UpdatePlotRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255', 'unique:plots,name,' . $plotId],
-            'location' => ['required', 'string', 'max:255'],
-            'area' => ['required', 'numeric', 'min:1'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'boundary' => ['nullable'],
+            'area' => ['required', 'numeric', 'min:0.01'],
             'status' => ['required', 'in:active,inactive'],
         ];
     }
@@ -33,7 +36,7 @@ class UpdatePlotRequest extends FormRequest
             'location.max' => 'La ubicación no puede tener más de 255 caracteres.',
             'area.required' => 'El área del lote es obligatoria.',
             'area.numeric' => 'El área debe ser un número.',
-            'area.min' => 'El valor debe ser superior o igual a 1.',
+            'area.min' => 'El valor debe ser superior a 0.',
             'status.required' => 'El estado del lote es obligatorio.',
             'status.in' => 'El estado debe ser activo o inactivo.',
         ];

@@ -10,6 +10,7 @@ use App\Models\Task;
 use App\Models\Loan;
 use App\Models\Supply;
 use App\Models\LedgerEntry;
+use App\Models\FarmSetting;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
@@ -73,6 +74,9 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Configuración de la finca para el mapa
+        $farmSettings = FarmSetting::getFarmSettings();
+
         return view('admin.index', compact(
             'totalUsers',
             'activeUsers',
@@ -91,7 +95,8 @@ class DashboardController extends Controller
             'plotsByStatus',
             'cropsByStatus',
             'recentTasks',
-            'recentLedgerEntries'
+            'recentLedgerEntries',
+            'farmSettings'
         ));
     }
 }

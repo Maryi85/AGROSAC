@@ -15,7 +15,10 @@ class StorePlotRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:plots,name'],
-            'location' => ['required', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'boundary' => ['nullable', 'json'],
             'area' => ['required', 'numeric', 'min:1'],
             'status' => ['required', 'in:active,inactive'],
         ];
@@ -27,7 +30,6 @@ class StorePlotRequest extends FormRequest
             'name.required' => 'El nombre del lote es obligatorio.',
             'name.unique' => 'Ya existe un lote con este nombre.',
             'name.max' => 'El nombre no puede tener más de 255 caracteres.',
-            'location.required' => 'La ubicación del lote es obligatoria.',
             'location.max' => 'La ubicación no puede tener más de 255 caracteres.',
             'area.required' => 'El área del lote es obligatoria.',
             'area.numeric' => 'El área debe ser un número.',

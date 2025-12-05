@@ -1,20 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
-use App\Models\Plot;
-use App\Models\Crop;
+use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Loan;
 use App\Models\Supply;
-use App\Models\SupplyConsumption;
-use App\Models\LedgerEntry;
 use App\Models\User;
 use App\Models\Tool;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class ForemanController extends Controller
+class DashboardController extends Controller
 {
     public function index(): View
     {
@@ -73,10 +69,11 @@ class ForemanController extends Controller
 
     public function loans(): View
     {
-        $loans = Loan::with(['tool', 'borrower'])
+        $loans = Loan::with(['tool', 'user'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         return view('foreman.loans', compact('loans'));
     }
 }
+

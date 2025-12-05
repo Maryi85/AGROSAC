@@ -147,6 +147,7 @@ use Illuminate\Support\Facades\Storage;
                                     data-crop-yield="{{ $crop->yield_per_hectare ?? '' }}"
                                     data-crop-status="{{ $crop->status }}"
                                     data-crop-plot-id="{{ $crop->plot_id ?? '' }}"
+                                    data-crop-photo="{{ $crop->photo ? asset('storage/' . $crop->photo) : '' }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
@@ -178,15 +179,15 @@ use Illuminate\Support\Facades\Storage;
     </div>
 
         <!-- Modal de edición -->
-    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-        <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto" style="display: none;">
+        <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4 my-8">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-emerald-700">Editar Cultivo</h3>
                 <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <form id="editForm" class="space-y-4">
+            <form id="editForm" class="space-y-4" enctype="multipart/form-data">
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="_method" value="PUT">
                     
@@ -223,6 +224,22 @@ use Illuminate\Support\Facades\Storage;
                                 <option value="{{ $plot->id }}">{{ $plot->name }} - {{ $plot->location }} ({{ $plot->area }} ha)</option>
                             @endforeach
                         </select>
+                    </div>
+                    
+                    <!-- Foto -->
+                    <div>
+                        <label class="block text-sm mb-1 text-emerald-800">Foto del Cultivo</label>
+                        <div id="editPhotoPreview" class="mb-3">
+                            <p class="text-sm text-gray-600 mb-2">Foto actual:</p>
+                            <img id="editCurrentPhoto" src="" alt="Foto actual" class="max-w-xs rounded border border-emerald-200" style="display: none;">
+                        </div>
+                        <input type="file" name="photo" id="editPhoto" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif,.JPG,.JPEG,.PNG,.GIF" 
+                               class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, JPEG, PNG, GIF. Tamaño máximo: 2MB. Dejar vacío para mantener la foto actual.</p>
+                        <div id="editPhotoNewPreview" class="mt-3 hidden">
+                            <p class="text-sm text-gray-600 mb-2">Nueva foto:</p>
+                            <img id="editPhotoNewPreviewImg" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
+                        </div>
                     </div>
                     
                     <!-- Estado -->
@@ -379,11 +396,11 @@ let currentCropId = null;
 let deleteCropId = null;
 
 // Función para abrir el modal de edición
-function openEditModal(id, name, description, variety, yield_per_hectare, status, plot_id) {
+function openEditModal(id, name, description, variety, yield_per_hectare, status, plot_id, photo) {
     currentCropId = id;
     
     console.log('Opening edit modal with data:', {
-        id, name, description, variety, yield_per_hectare, status, plot_id
+        id, name, description, variety, yield_per_hectare, status, plot_id, photo
     });
     
     // Llenar los campos del formulario
@@ -393,6 +410,85 @@ function openEditModal(id, name, description, variety, yield_per_hectare, status
     document.getElementById('editYield').value = yield_per_hectare;
     document.getElementById('editStatus').value = status;
     document.getElementById('editPlotId').value = plot_id || '';
+    
+    // Manejar la foto
+    const photoPreview = document.getElementById('editPhotoPreview');
+    const currentPhoto = document.getElementById('editCurrentPhoto');
+    const photoInput = document.getElementById('editPhoto');
+    const newPhotoPreview = document.getElementById('editPhotoNewPreview');
+    
+    console.log('Photo recibida:', photo);
+    
+    if (photo && photo !== '' && photo !== 'null') {
+        currentPhoto.src = photo;
+        currentPhoto.style.display = 'block';
+        currentPhoto.onerror = function() {
+            console.log('Error cargando imagen:', photo);
+            this.style.display = 'none';
+            photoPreview.querySelector('p').textContent = 'Foto actual: (No se pudo cargar la imagen)';
+        };
+        currentPhoto.onload = function() {
+            console.log('Imagen cargada correctamente');
+            photoPreview.querySelector('p').textContent = 'Foto actual:';
+        };
+        photoPreview.style.display = 'block';
+    } else {
+        photoPreview.style.display = 'none';
+    }
+    
+    // Limpiar preview de nueva foto y el input
+    photoInput.value = '';
+    newPhotoPreview.classList.add('hidden');
+    
+    // Listener para preview de nueva foto
+    photoInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validar tamaño del archivo (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                if (window.showErrorAlert) {
+                    showErrorAlert('El archivo es demasiado grande. El tamaño máximo es 2MB.');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'El archivo es demasiado grande. El tamaño máximo es 2MB.',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+                e.target.value = '';
+                newPhotoPreview.classList.add('hidden');
+                return;
+            }
+            
+            // Validar tipo de archivo
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                if (window.showErrorAlert) {
+                    showErrorAlert('Tipo de archivo no válido. Solo se permiten JPG, PNG y GIF.');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Tipo de archivo no válido. Solo se permiten JPG, PNG y GIF.',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+                e.target.value = '';
+                newPhotoPreview.classList.add('hidden');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editPhotoNewPreviewImg').src = e.target.result;
+                newPhotoPreview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            newPhotoPreview.classList.add('hidden');
+        }
+    };
     
     // Debug: verificar que los valores se establecieron correctamente
     console.log('Modal values set:');
@@ -438,6 +534,27 @@ function closeViewModal() {
 
 // Función para actualizar el cultivo
 async function updateCrop() {
+    // Confirmar antes de actualizar
+    const confirmResult = await Swal.fire({
+        title: '¿Actualizar cultivo?',
+        text: '¿Estás seguro de que deseas guardar los cambios?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, actualizar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-lg bg-white',
+            confirmButton: 'px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 transition-colors',
+            cancelButton: 'px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 ml-2',
+        },
+    });
+    
+    if (!confirmResult.isConfirmed) {
+        return;
+    }
+    
     const updateButton = document.getElementById('updateButton');
     const originalText = updateButton.innerHTML;
     
@@ -455,29 +572,38 @@ async function updateCrop() {
         console.log('Plot select element:', plotSelect);
         console.log('Plot select value:', plotSelect ? plotSelect.value : 'NOT FOUND');
         
-        const formData = {
-            _token: '{{ csrf_token() }}',
-            _method: 'PUT',
-            name: document.getElementById('editName').value,
-            description: document.getElementById('editDescription').value,
-            variety: document.getElementById('editVariety').value,
-            yield_per_hectare: document.getElementById('editYield').value,
-            plot_id: plotSelect ? plotSelect.value : '',
-            status: statusSelect ? statusSelect.value : ''
-        };
+        const formData = new FormData();
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('_method', 'PUT');
+        formData.append('name', document.getElementById('editName').value);
+        formData.append('description', document.getElementById('editDescription').value);
+        formData.append('variety', document.getElementById('editVariety').value);
+        formData.append('yield_per_hectare', document.getElementById('editYield').value);
+        formData.append('plot_id', plotSelect ? plotSelect.value : '');
+        formData.append('status', statusSelect ? statusSelect.value : '');
+        
+        // Agregar la foto si se seleccionó una nueva
+        const photoInput = document.getElementById('editPhoto');
+        if (photoInput.files.length > 0) {
+            formData.append('photo', photoInput.files[0]);
+        }
         
         // Debug: mostrar los datos que se están enviando
-        console.log('Sending data:', formData);
+        console.log('Sending data:', {
+            name: formData.get('name'),
+            status: formData.get('status'),
+            plot_id: formData.get('plot_id'),
+            hasPhoto: photoInput.files.length > 0
+        });
         console.log('Current crop ID:', currentCropId);
-        console.log('Status being sent:', formData.status);
         
         const response = await fetch(`/admin/crops/${currentCropId}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
-            body: new URLSearchParams(formData)
+            body: formData
         });
         
         console.log('Response status:', response.status);
@@ -497,16 +623,43 @@ async function updateCrop() {
                 // Mostrar mensaje de éxito
                 showSuccessMessage();
             } else {
-                alert('Error al actualizar el cultivo: ' + result.message);
+                if (window.showErrorAlert) {
+                    showErrorAlert(result.message || 'Error al actualizar el cultivo');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Error al actualizar el cultivo',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
             }
         } else {
             const errorText = await response.text();
             console.error('Error response:', errorText);
-            alert('Error al actualizar el cultivo. Status: ' + response.status);
+            if (window.showErrorAlert) {
+                showErrorAlert('Error al actualizar el cultivo. Status: ' + response.status);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al actualizar el cultivo. Status: ' + response.status,
+                    confirmButtonText: 'Aceptar',
+                });
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al actualizar el cultivo: ' + error.message);
+        if (window.showErrorAlert) {
+            showErrorAlert('Error al actualizar el cultivo: ' + error.message);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al actualizar el cultivo: ' + error.message,
+                confirmButtonText: 'Aceptar',
+            });
+        }
     } finally {
         // Restaurar el botón
         updateButton.innerHTML = originalText;
@@ -556,6 +709,35 @@ function updateTableRowWithServerData(cropData) {
             }
         }
         
+        // Actualizar foto
+        const photoCell = row.querySelector('td:first-child');
+        if (photoCell && cropData.photo) {
+            const existingImg = photoCell.querySelector('img');
+            const existingPlaceholder = photoCell.querySelector('.photo-placeholder');
+            if (existingImg) {
+                existingImg.src = cropData.photo;
+                existingImg.style.display = 'block';
+                if (existingPlaceholder) {
+                    existingPlaceholder.style.display = 'none';
+                }
+            } else if (!existingImg && !existingPlaceholder) {
+                // Si no hay imagen ni placeholder, crear uno
+                photoCell.innerHTML = `<img src="${cropData.photo}" alt="${cropData.name}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="photo-placeholder w-16 h-16 bg-gray-100 rounded border border-emerald-200 flex items-center justify-center text-gray-400 text-xs" style="display: none;"><i data-lucide="image" class="w-6 h-6"></i></div>`;
+            }
+        } else if (photoCell && !cropData.photo) {
+            // Si no hay foto, mostrar placeholder
+            const existingImg = photoCell.querySelector('img');
+            const existingPlaceholder = photoCell.querySelector('.photo-placeholder');
+            if (existingImg) {
+                existingImg.style.display = 'none';
+            }
+            if (existingPlaceholder) {
+                existingPlaceholder.style.display = 'flex';
+            } else {
+                photoCell.innerHTML = `<div class="photo-placeholder w-16 h-16 bg-gray-100 rounded border border-emerald-200 flex items-center justify-center text-gray-400 text-xs"><i data-lucide="image" class="w-6 h-6"></i></div>`;
+            }
+        }
+        
         // Actualizar data attributes del botón de editar
         const editButton = row.querySelector('.edit-crop-btn');
         if (editButton) {
@@ -564,6 +746,12 @@ function updateTableRowWithServerData(cropData) {
             editButton.setAttribute('data-crop-yield', cropData.yield_per_hectare || '');
             editButton.setAttribute('data-crop-status', cropData.status);
             editButton.setAttribute('data-crop-plot-id', cropData.plot_id || '');
+            editButton.setAttribute('data-crop-photo', cropData.photo || '');
+        }
+        
+        // Re-inicializar Lucide icons si es necesario
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
         }
     }
 }
@@ -729,8 +917,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const yield_per_hectare = this.getAttribute('data-crop-yield');
             const status = this.getAttribute('data-crop-status');
             const plot_id = this.getAttribute('data-crop-plot-id');
+            const photo = this.getAttribute('data-crop-photo');
             
-            openEditModal(id, name, description, variety, yield_per_hectare, status, plot_id);
+            openEditModal(id, name, description, variety, yield_per_hectare, status, plot_id, photo);
         });
     });
     

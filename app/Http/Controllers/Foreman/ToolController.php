@@ -1,15 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
+use App\Http\Controllers\Controller;
 use App\Models\Tool;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class ForemanToolController extends Controller
+class ToolController extends Controller
 {
     public function index(Request $request): View
     {
@@ -60,13 +63,18 @@ class ForemanToolController extends Controller
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:255',
             'status' => 'required|string|in:operational,lost,damaged,retired',
-            'total_qty' => 'required|integer|min:0',
-            'available_qty' => 'required|integer|min:0|lte:total_qty',
+            'description' => 'nullable|string',
+            'brand' => 'nullable|string|max:255',
+            'model' => 'nullable|string|max:255',
+            'serial_number' => 'nullable|string|max:255',
         ]);
 
-        $tool = Tool::create($request->all());
+        $tool = Tool::create($request->only([
+            'name', 'category', 'status', 'description', 'brand', 'model', 'serial_number'
+        ]));
+        
         return redirect()->route('foreman.tools.index')
-            ->with('status', 'Herramienta registrada correctamente');
+            ->with('status', 'Herramienta registrada correctamente. Ahora puedes agregar entradas de inventario desde la sección de entradas.');
     }
 
     public function show(Tool $tool): View
@@ -88,15 +96,58 @@ class ForemanToolController extends Controller
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:255',
             'status' => 'required|string|in:operational,lost,damaged,retired',
-            'total_qty' => 'required|integer|min:0',
-            'available_qty' => 'required|integer|min:0|lte:total_qty',
+            'description' => 'nullable|string',
+            'brand' => 'nullable|string|max:255',
+            'model' => 'nullable|string|max:255',
+            'serial_number' => 'nullable|string|max:255',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'total_qty' => 'nullable|integer|min:0',
+            'available_qty' => 'nullable|integer|min:0',
         ]);
 
         try {
-            $tool->update($request->all());
+            $data = $request->only([
+                'name', 'category', 'status', 'description', 'brand', 'model', 'serial_number', 'total_qty', 'available_qty'
+            ]);
+            
+            // Manejar la subida de la foto
+            if ($request->hasFile('photo')) {
+                try {
+                    // Eliminar la foto anterior si existe
+                    if ($tool->photo && Storage::disk('public')->exists($tool->photo)) {
+                        Storage::disk('public')->delete($tool->photo);
+                    }
+                    
+                    $photo = $request->file('photo');
+                    
+                    // Generar nombre de archivo seguro (sin espacios ni caracteres especiales)
+                    $originalName = $photo->getClientOriginalName();
+                    $extension = $photo->getClientOriginalExtension();
+                    $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+                    $photoName = time() . '_' . $safeName . '.' . $extension;
+                    
+                    // Asegurar que el directorio existe
+                    $directory = storage_path('app/public/photos/tools');
+                    if (!File::exists($directory)) {
+                        File::makeDirectory($directory, 0755, true);
+                    }
+                    
+                    // Guardar la foto usando Storage directamente
+                    $path = Storage::disk('public')->putFileAs('photos/tools', $photo, $photoName);
+                    
+                    if ($path) {
+                        $data['photo'] = $path;
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Error al procesar la foto de herramienta: ' . $e->getMessage());
+                }
+            }
+            
+            $tool->update($data);
+            $tool->refresh();
 
             // Si es una petición AJAX, devolver JSON
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Herramienta actualizada correctamente',
@@ -105,8 +156,9 @@ class ForemanToolController extends Controller
                         'name' => $tool->name,
                         'category' => $tool->category,
                         'status' => $tool->status,
-                        'total_qty' => $tool->total_qty,
-                        'available_qty' => $tool->available_qty
+                        'total_entries' => $tool->total_entries,
+                        'available_qty' => $tool->available_qty,
+                        'photo' => $tool->photo ? asset('storage/' . $tool->photo) : null
                     ]
                 ]);
             }
@@ -114,7 +166,7 @@ class ForemanToolController extends Controller
                 ->with('status', 'Herramienta actualizada correctamente');
         } catch (\Exception $e) {
             // Si es una petición AJAX, devolver error JSON
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error al actualizar la herramienta: ' . $e->getMessage()
@@ -167,3 +219,4 @@ class ForemanToolController extends Controller
         return $pdf->download('herramientas-' . now()->format('Y-m-d') . '.pdf');
     }
 }
+

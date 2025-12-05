@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSupplyConsumptionRequest;
@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class ForemanSupplyConsumptionController extends Controller
+class SupplyConsumptionController extends Controller
 {
     public function index(Request $request): View
     {
@@ -89,7 +89,7 @@ class ForemanSupplyConsumptionController extends Controller
     public function show(SupplyConsumption $supplyConsumption): View
     {
         $supplyConsumption->load(['supply', 'crop', 'plot', 'task']);
-        return view('admin.supply-consumptions.show', compact('supplyConsumption'))->with('routePrefix', 'foreman.');
+        return view('foreman.supplies.consumptions.show', compact('supplyConsumption'));
     }
 
     public function edit(SupplyConsumption $supplyConsumption): View
@@ -101,7 +101,7 @@ class ForemanSupplyConsumptionController extends Controller
         $plots = Plot::orderBy('name')->get();
         $tasks = Task::orderBy('scheduled_for')->get();
 
-        return view('admin.supply-consumptions.edit', compact('supplyConsumption', 'supplies', 'crops', 'plots', 'tasks'))->with('routePrefix', 'foreman.');
+        return view('foreman.supplies.consumptions.edit', compact('supplyConsumption', 'supplies', 'crops', 'plots', 'tasks'));
     }
 
     public function update(UpdateSupplyConsumptionRequest $request, SupplyConsumption $supplyConsumption): RedirectResponse
@@ -133,3 +133,4 @@ class ForemanSupplyConsumptionController extends Controller
             ->with('status', 'Consumo de insumo eliminado correctamente');
     }
 }
+

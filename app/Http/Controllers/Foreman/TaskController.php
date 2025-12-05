@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
+use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Plot;
 use App\Models\Crop;
@@ -12,7 +13,7 @@ use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class ForemanTaskController extends Controller
+class TaskController extends Controller
 {
     public function index(Request $request): View
     {
@@ -430,3 +431,7 @@ class ForemanTaskController extends Controller
         return $pdf->download('tareas-' . now()->format('Y-m-d') . '.pdf');
     }
 }
+
+
+
+

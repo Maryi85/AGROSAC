@@ -7,6 +7,7 @@ use App\Http\Requests\StoreToolRequest;
 use App\Http\Requests\UpdateToolRequest;
 use App\Models\Tool;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
@@ -137,7 +138,7 @@ class ToolController extends Controller
         return view('admin.tools.edit', compact('tool', 'categories', 'statuses'))->with('layout', $layout);
     }
 
-    public function update(UpdateToolRequest $request, Tool $tool): RedirectResponse
+    public function update(UpdateToolRequest $request, Tool $tool): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
         
@@ -175,6 +176,23 @@ class ToolController extends Controller
         }
         
         $tool->update($data);
+        $tool->refresh();
+
+        // Si es una petición AJAX, devolver JSON
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Herramienta actualizada correctamente',
+                'tool' => [
+                    'id' => $tool->id,
+                    'name' => $tool->name,
+                    'category' => $tool->category,
+                    'total_qty' => $tool->total_qty,
+                    'status' => $tool->status,
+                    'photo' => $tool->photo ? asset('storage/' . $tool->photo) : null
+                ]
+            ]);
+        }
 
         return redirect()->route(route_prefix() . 'tools.index')
             ->with('status', 'Herramienta actualizada correctamente');

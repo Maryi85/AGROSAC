@@ -156,6 +156,7 @@
                                     data-supply-unit="{{ $supply->unit }}"
                                     data-supply-unit-cost="{{ $supply->unit_cost }}"
                                     data-supply-status="{{ $supply->status }}"
+                                    data-supply-photo="{{ $supply->photo ? asset('storage/' . $supply->photo) : '' }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
@@ -254,15 +255,15 @@
 </div>
 
 <!-- Modal de edición -->
-<div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+<div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto" style="display: none;">
+    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4 my-8">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Editar Insumo</h3>
             <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
-        <form id="editForm" class="space-y-4">
+        <form id="editForm" class="space-y-4" enctype="multipart/form-data">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <input type="hidden" name="_method" value="PUT">
             
@@ -289,6 +290,22 @@
                 <div>
                     <label class="block text-sm mb-1 text-emerald-800">Costo por Unidad</label>
                     <input type="number" step="0.01" min="0" name="unit_cost" id="editUnitCost" class="w-full border border-emerald-200 rounded px-3 py-2" required />
+                </div>
+            </div>
+            
+            <!-- Foto -->
+            <div>
+                <label class="block text-sm mb-1 text-emerald-800">Foto del Insumo</label>
+                <div id="editPhotoPreview" class="mb-3">
+                    <p class="text-sm text-gray-600 mb-2">Foto actual:</p>
+                    <img id="editCurrentPhoto" src="" alt="Foto actual" class="max-w-xs rounded border border-emerald-200" style="display: none;">
+                </div>
+                <input type="file" name="photo" id="editPhoto" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif,.JPG,.JPEG,.PNG,.GIF" 
+                       class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, JPEG, PNG, GIF. Tamaño máximo: 2MB. Dejar vacío para mantener la foto actual.</p>
+                <div id="editPhotoNewPreview" class="mt-3 hidden">
+                    <p class="text-sm text-gray-600 mb-2">Nueva foto:</p>
+                    <img id="editPhotoNewPreviewImg" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
                 </div>
             </div>
             
@@ -320,7 +337,7 @@
 let currentSupplyId = null;
 
 // Función para abrir el modal de edición
-function openEditModal(id, name, unit, unit_cost, status) {
+function openEditModal(id, name, unit, unit_cost, status, photo) {
     currentSupplyId = id;
     
     // Llenar los campos del formulario
@@ -328,6 +345,83 @@ function openEditModal(id, name, unit, unit_cost, status) {
     document.getElementById('editUnit').value = unit;
     document.getElementById('editUnitCost').value = unit_cost;
     document.getElementById('editStatus').value = status;
+    
+    // Manejar la foto
+    const photoPreview = document.getElementById('editPhotoPreview');
+    const currentPhoto = document.getElementById('editCurrentPhoto');
+    const photoInput = document.getElementById('editPhoto');
+    const newPhotoPreview = document.getElementById('editPhotoNewPreview');
+    
+    if (photo && photo !== '' && photo !== 'null') {
+        currentPhoto.src = photo;
+        currentPhoto.style.display = 'block';
+        currentPhoto.onerror = function() {
+            console.log('Error cargando imagen:', photo);
+            this.style.display = 'none';
+            photoPreview.querySelector('p').textContent = 'Foto actual: (No se pudo cargar la imagen)';
+        };
+        currentPhoto.onload = function() {
+            console.log('Imagen cargada correctamente');
+            photoPreview.querySelector('p').textContent = 'Foto actual:';
+        };
+        photoPreview.style.display = 'block';
+    } else {
+        photoPreview.style.display = 'none';
+    }
+    
+    // Limpiar preview de nueva foto y el input
+    photoInput.value = '';
+    newPhotoPreview.classList.add('hidden');
+    
+    // Listener para preview de nueva foto
+    photoInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validar tamaño del archivo (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                if (window.showErrorAlert) {
+                    showErrorAlert('El archivo es demasiado grande. El tamaño máximo es 2MB.');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'El archivo es demasiado grande. El tamaño máximo es 2MB.',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+                e.target.value = '';
+                newPhotoPreview.classList.add('hidden');
+                return;
+            }
+            
+            // Validar tipo de archivo
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                if (window.showErrorAlert) {
+                    showErrorAlert('Tipo de archivo no válido. Solo se permiten JPG, PNG y GIF.');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Tipo de archivo no válido. Solo se permiten JPG, PNG y GIF.',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+                e.target.value = '';
+                newPhotoPreview.classList.add('hidden');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editPhotoNewPreviewImg').src = e.target.result;
+                newPhotoPreview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            newPhotoPreview.classList.add('hidden');
+        }
+    };
     
     // Mostrar el modal
     document.getElementById('editModal').style.display = 'flex';
@@ -368,6 +462,27 @@ function closeViewModal() {
 
 // Función para actualizar el insumo
 async function updateSupply() {
+    // Confirmar antes de actualizar
+    const confirmResult = await Swal.fire({
+        title: '¿Actualizar insumo?',
+        text: '¿Estás seguro de que deseas guardar los cambios?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, actualizar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-lg bg-white',
+            confirmButton: 'px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 transition-colors',
+            cancelButton: 'px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 ml-2',
+        },
+    });
+    
+    if (!confirmResult.isConfirmed) {
+        return;
+    }
+    
     const updateButton = document.getElementById('updateButton');
     const originalText = updateButton.innerHTML;
     
@@ -384,29 +499,72 @@ async function updateSupply() {
         formData.append('unit_cost', document.getElementById('editUnitCost').value);
         formData.append('status', document.getElementById('editStatus').value);
         
+        // Agregar la foto si se seleccionó una nueva
+        const photoInput = document.getElementById('editPhoto');
+        if (photoInput.files.length > 0) {
+            formData.append('photo', photoInput.files[0]);
+        }
+        
         const response = await fetch(`/admin/supplies/${currentSupplyId}`, {
             method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
         
         if (response.ok) {
-            // Actualizar la tabla en tiempo real
-            updateTableRow();
+            const result = await response.json();
+            console.log('Response data:', result);
             
-            // Cerrar el modal
-            closeEditModal();
-            
-            // Mostrar mensaje de éxito
-            showSuccessMessage();
+            if (result.success) {
+                // Actualizar la tabla en tiempo real con los datos del servidor
+                updateTableRowWithServerData(result.supply);
+                
+                // Cerrar el modal
+                closeEditModal();
+                
+                // Mostrar mensaje de éxito
+                showSuccessMessage();
+            } else {
+                if (window.showErrorAlert) {
+                    showErrorAlert(result.message || 'Error al actualizar el insumo');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Error al actualizar el insumo',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+            }
         } else {
-            alert('Error al actualizar el insumo');
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            if (window.showErrorAlert) {
+                showErrorAlert('Error al actualizar el insumo. Status: ' + response.status);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al actualizar el insumo. Status: ' + response.status,
+                    confirmButtonText: 'Aceptar',
+                });
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al actualizar el insumo');
+        if (window.showErrorAlert) {
+            showErrorAlert('Error al actualizar el insumo: ' + error.message);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al actualizar el insumo: ' + error.message,
+                confirmButtonText: 'Aceptar',
+            });
+        }
     } finally {
         // Restaurar el botón
         updateButton.innerHTML = originalText;
@@ -414,7 +572,83 @@ async function updateSupply() {
     }
 }
 
-// Función para actualizar la fila en la tabla
+// Función para actualizar la fila en la tabla con datos del servidor
+function updateTableRowWithServerData(supplyData) {
+    const row = document.querySelector(`tr[data-supply-id='${supplyData.id}']`);
+    if (row) {
+        // Actualizar estado
+        const statusCell = row.querySelector('.status-badge');
+        if (statusCell) {
+            if (supplyData.status === 'active') {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700">Activo</span>';
+            } else {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">Inactivo</span>';
+            }
+        }
+        
+        // Actualizar nombre
+        const nameCell = row.querySelector('.supply-name');
+        if (nameCell) {
+            nameCell.textContent = supplyData.name;
+        }
+        
+        // Actualizar unidad
+        const unitCell = row.querySelector('.supply-unit');
+        if (unitCell) {
+            unitCell.textContent = supplyData.unit;
+        }
+        
+        // Actualizar costo unitario
+        const unitCostCell = row.querySelector('.supply-unit-cost');
+        if (unitCostCell) {
+            unitCostCell.textContent = '$' + parseFloat(supplyData.unit_cost).toFixed(2);
+        }
+        
+        // Actualizar foto
+        const photoCell = row.querySelector('td:first-child');
+        if (photoCell && supplyData.photo) {
+            const existingImg = photoCell.querySelector('img');
+            const existingPlaceholder = photoCell.querySelector('.photo-placeholder');
+            if (existingImg) {
+                existingImg.src = supplyData.photo;
+                existingImg.style.display = 'block';
+                if (existingPlaceholder) {
+                    existingPlaceholder.style.display = 'none';
+                }
+            } else if (!existingImg && !existingPlaceholder) {
+                photoCell.innerHTML = `<img src="${supplyData.photo}" alt="${supplyData.name}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="photo-placeholder w-16 h-16 bg-gray-100 rounded border border-emerald-200 flex items-center justify-center text-gray-400 text-xs" style="display: none;"><i data-lucide="image" class="w-6 h-6"></i></div>`;
+            }
+        } else if (photoCell && !supplyData.photo) {
+            const existingImg = photoCell.querySelector('img');
+            const existingPlaceholder = photoCell.querySelector('.photo-placeholder');
+            if (existingImg) {
+                existingImg.style.display = 'none';
+            }
+            if (existingPlaceholder) {
+                existingPlaceholder.style.display = 'flex';
+            } else {
+                photoCell.innerHTML = `<div class="photo-placeholder w-16 h-16 bg-gray-100 rounded border border-emerald-200 flex items-center justify-center text-gray-400 text-xs"><i data-lucide="image" class="w-6 h-6"></i></div>`;
+            }
+        }
+        
+        // Actualizar data attributes del botón de editar
+        const editButton = row.querySelector('.edit-supply-btn');
+        if (editButton) {
+            editButton.setAttribute('data-supply-name', supplyData.name);
+            editButton.setAttribute('data-supply-unit', supplyData.unit);
+            editButton.setAttribute('data-supply-unit-cost', supplyData.unit_cost);
+            editButton.setAttribute('data-supply-status', supplyData.status);
+            editButton.setAttribute('data-supply-photo', supplyData.photo || '');
+        }
+        
+        // Re-inicializar Lucide icons si es necesario
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+}
+
+// Función para actualizar la fila en la tabla (versión anterior - mantener por compatibilidad)
 function updateTableRow() {
     const row = document.querySelector(`tr[data-supply-id='${currentSupplyId}']`);
     if (row) {
@@ -481,8 +715,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const unit = this.getAttribute('data-supply-unit');
             const unit_cost = this.getAttribute('data-supply-unit-cost');
             const status = this.getAttribute('data-supply-status');
+            const photo = this.getAttribute('data-supply-photo');
             
-            openEditModal(id, name, unit, unit_cost, status);
+            openEditModal(id, name, unit, unit_cost, status, photo);
         });
     });
     

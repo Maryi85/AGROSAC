@@ -194,6 +194,7 @@
                                     data-tool-status="{{ $tool->status }}"
                                     data-tool-total-entries="{{ $tool->total_entries }}"
                                     data-tool-available-qty="{{ $tool->available_qty }}"
+                                    data-tool-photo="{{ $tool->photo ? asset('storage/' . $tool->photo) : '' }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
@@ -292,15 +293,15 @@
 </div>
 
 <!-- Modal de edición -->
-<div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+<div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto" style="display: none;">
+    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4 my-8">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Editar Herramienta</h3>
             <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
-        <form id="editForm" class="space-y-4">
+        <form id="editForm" class="space-y-4" enctype="multipart/form-data">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <input type="hidden" name="_method" value="PUT">
             
@@ -343,6 +344,20 @@
                 </div>
             </div>
             
+            <!-- Foto -->
+            <div>
+                <label class="block text-sm mb-1 text-emerald-800">Foto de la Herramienta</label>
+                <div id="editPhotoPreview" class="mb-3">
+                    <p class="text-sm text-gray-600 mb-2">Foto actual:</p>
+                    <img id="editCurrentPhoto" src="" alt="Foto actual" class="max-w-xs rounded border border-emerald-200" style="display: none;">
+                </div>
+                <input type="file" name="photo" id="editPhoto" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif,.JPG,.JPEG,.PNG,.GIF" class="w-full border border-emerald-200 rounded px-3 py-2">
+                <div id="editPhotoNewPreview" class="mt-3 hidden">
+                    <p class="text-sm text-gray-600 mb-2">Nueva foto:</p>
+                    <img id="editPhotoNewPreviewImg" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
+                </div>
+            </div>
+            
             <!-- Botones -->
             <div class="flex items-center gap-2">
                 <button type="button" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50" onclick="closeEditModal()">
@@ -362,7 +377,7 @@
 let currentToolId = null;
 
 // Función para abrir el modal de edición
-function openEditModal(id, name, category, status, total_entries, available_qty) {
+function openEditModal(id, name, category, status, total_entries, available_qty, photo) {
     currentToolId = id;
     
     // Llenar los campos del formulario
@@ -371,6 +386,63 @@ function openEditModal(id, name, category, status, total_entries, available_qty)
     document.getElementById('editStatus').value = status;
     document.getElementById('editTotalQty').value = total_entries;
     document.getElementById('editAvailableQty').value = available_qty;
+    
+    // Manejar la foto
+    const photoPreview = document.getElementById('editPhotoPreview');
+    const currentPhoto = document.getElementById('editCurrentPhoto');
+    const photoInput = document.getElementById('editPhoto');
+    const newPhotoPreview = document.getElementById('editPhotoNewPreview');
+    
+    if (photo && photo !== '' && photo !== 'null') {
+        currentPhoto.src = photo;
+        currentPhoto.style.display = 'block';
+        currentPhoto.onerror = function() {
+            this.style.display = 'none';
+            photoPreview.querySelector('p').textContent = 'Foto actual: (No se pudo cargar la imagen)';
+        };
+        currentPhoto.onload = function() {
+            photoPreview.querySelector('p').textContent = 'Foto actual:';
+        };
+        photoPreview.style.display = 'block';
+    } else {
+        photoPreview.style.display = 'none';
+    }
+    
+    // Limpiar preview de nueva foto y el input
+    photoInput.value = '';
+    newPhotoPreview.classList.add('hidden');
+    
+    // Listener para preview de nueva foto
+    photoInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validar tamaño del archivo (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                if (window.showErrorAlert) {
+                    showErrorAlert('El archivo es demasiado grande. El tamaño máximo es 2MB.');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'El archivo es demasiado grande. El tamaño máximo es 2MB.',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+                e.target.value = '';
+                newPhotoPreview.classList.add('hidden');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editPhotoNewPreviewImg').src = e.target.result;
+                newPhotoPreview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            newPhotoPreview.classList.add('hidden');
+        }
+    };
     
     // Mostrar el modal
     document.getElementById('editModal').style.display = 'flex';
@@ -422,6 +494,27 @@ function closeViewModal() {
 
 // Función para actualizar la herramienta
 async function updateTool() {
+    // Confirmar antes de actualizar
+    const confirmResult = await Swal.fire({
+        title: '¿Actualizar herramienta?',
+        text: '¿Estás seguro de que deseas guardar los cambios?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, actualizar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-lg bg-white',
+            confirmButton: 'px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 transition-colors',
+            cancelButton: 'px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 ml-2',
+        },
+    });
+    
+    if (!confirmResult.isConfirmed) {
+        return;
+    }
+    
     const updateButton = document.getElementById('updateButton');
     const originalText = updateButton.innerHTML;
     
@@ -439,29 +532,72 @@ async function updateTool() {
         formData.append('total_qty', document.getElementById('editTotalQty').value);
         formData.append('available_qty', document.getElementById('editAvailableQty').value);
         
+        // Agregar la foto si se seleccionó una nueva
+        const photoInput = document.getElementById('editPhoto');
+        if (photoInput.files.length > 0) {
+            formData.append('photo', photoInput.files[0]);
+        }
+        
         const response = await fetch(`/foreman/tools/${currentToolId}`, {
             method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
         
         if (response.ok) {
-            // Actualizar la tabla en tiempo real
-            updateTableRow();
+            const result = await response.json();
+            console.log('Response data:', result);
             
-            // Cerrar el modal
-            closeEditModal();
-            
-            // Mostrar mensaje de éxito
-            showSuccessMessage();
+            if (result.success) {
+                // Actualizar la tabla en tiempo real con los datos del servidor
+                updateTableRowWithServerData(result.tool);
+                
+                // Cerrar el modal
+                closeEditModal();
+                
+                // Mostrar mensaje de éxito
+                showSuccessMessage();
+            } else {
+                if (window.showErrorAlert) {
+                    showErrorAlert(result.message || 'Error al actualizar la herramienta');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Error al actualizar la herramienta',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+            }
         } else {
-            alert('Error al actualizar la herramienta');
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            if (window.showErrorAlert) {
+                showErrorAlert('Error al actualizar la herramienta. Status: ' + response.status);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al actualizar la herramienta. Status: ' + response.status,
+                    confirmButtonText: 'Aceptar',
+                });
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al actualizar la herramienta');
+        if (window.showErrorAlert) {
+            showErrorAlert('Error al actualizar la herramienta: ' + error.message);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al actualizar la herramienta: ' + error.message,
+                confirmButtonText: 'Aceptar',
+            });
+        }
     } finally {
         // Restaurar el botón
         updateButton.innerHTML = originalText;
@@ -469,7 +605,82 @@ async function updateTool() {
     }
 }
 
-// Función para actualizar la fila en la tabla
+// Función para actualizar la fila en la tabla con datos del servidor
+function updateTableRowWithServerData(toolData) {
+    const row = document.querySelector(`tr[data-tool-id='${toolData.id}']`);
+    if (row) {
+        // Actualizar estado
+        const statusCell = row.querySelector('.status-badge');
+        if (statusCell) {
+            if (toolData.status === 'operational') {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700">Operacional</span>';
+            } else if (toolData.status === 'damaged') {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">Dañado</span>';
+            } else if (toolData.status === 'lost') {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700">Perdido</span>';
+            } else {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">Retirado</span>';
+            }
+        }
+        
+        // Actualizar nombre
+        const nameCell = row.querySelector('.tool-name');
+        if (nameCell) {
+            nameCell.textContent = toolData.name;
+        }
+        
+        // Actualizar categoría
+        const categoryCell = row.querySelector('.tool-category');
+        if (categoryCell) {
+            categoryCell.textContent = toolData.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+        
+        // Actualizar foto
+        const photoCell = row.querySelector('td:first-child');
+        if (photoCell && toolData.photo) {
+            const existingImg = photoCell.querySelector('img');
+            const existingPlaceholder = photoCell.querySelector('div.w-16.h-16.bg-gray-100');
+            if (existingImg) {
+                existingImg.src = toolData.photo;
+                existingImg.style.display = 'block';
+                if (existingPlaceholder) {
+                    existingPlaceholder.style.display = 'none';
+                }
+            } else if (!existingImg && !existingPlaceholder) {
+                photoCell.innerHTML = `<img src="${toolData.photo}" alt="${toolData.name}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>`;
+            }
+        } else if (photoCell && !toolData.photo) {
+            const existingImg = photoCell.querySelector('img');
+            const existingPlaceholder = photoCell.querySelector('div.w-16.h-16.bg-gray-100');
+            if (existingImg) {
+                existingImg.style.display = 'none';
+            }
+            if (existingPlaceholder) {
+                existingPlaceholder.style.display = 'flex';
+            } else {
+                photoCell.innerHTML = `<div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>`;
+            }
+        }
+        
+        // Actualizar data attributes del botón de editar
+        const editButton = row.querySelector('.edit-tool-btn');
+        if (editButton) {
+            editButton.setAttribute('data-tool-name', toolData.name);
+            editButton.setAttribute('data-tool-category', toolData.category);
+            editButton.setAttribute('data-tool-status', toolData.status);
+            editButton.setAttribute('data-tool-total-entries', toolData.total_entries);
+            editButton.setAttribute('data-tool-available-qty', toolData.available_qty);
+            editButton.setAttribute('data-tool-photo', toolData.photo || '');
+        }
+        
+        // Re-inicializar Lucide icons si es necesario
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+}
+
+// Función para actualizar la fila en la tabla (versión anterior - mantener por compatibilidad)
 function updateTableRow() {
     const row = document.querySelector(`tr[data-tool-id='${currentToolId}']`);
     if (row) {
@@ -547,7 +758,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const total_entries = this.getAttribute('data-tool-total-entries');
             const available_qty = this.getAttribute('data-tool-available-qty');
             
-            openEditModal(id, name, category, status, total_entries, available_qty);
+            const photo = this.getAttribute('data-tool-photo');
+            openEditModal(id, name, category, status, total_entries, available_qty, photo);
         });
     });
     

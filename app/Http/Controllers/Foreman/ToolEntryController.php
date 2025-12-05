@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Foreman;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tool;
@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-class ForemanToolEntryController extends Controller
+class ToolEntryController extends Controller
 {
     public function index(Request $request): View
     {
@@ -47,7 +47,7 @@ class ForemanToolEntryController extends Controller
             'repair' => 'Reparación',
         ];
 
-        return view('admin.tools.entries.index', compact('entries', 'tools', 'types'));
+        return view('foreman.tools.entries.index', compact('entries', 'tools', 'types'));
     }
 
     public function create(Request $request): View
@@ -67,7 +67,7 @@ class ForemanToolEntryController extends Controller
             'repair' => 'Reparación',
         ];
 
-        return view('admin.tools.entries.create', compact('tools', 'selectedTool', 'types'));
+        return view('foreman.tools.entries.create', compact('tools', 'selectedTool', 'types'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -103,7 +103,7 @@ class ForemanToolEntryController extends Controller
     {
         $tool_entry->load(['tool', 'createdBy']);
         $entry = $tool_entry; // Alias para compatibilidad con la vista
-        return view('admin.tools.entries.show', compact('entry'));
+        return view('foreman.tools.entries.show', compact('entry'));
     }
 
     public function edit(ToolEntry $tool_entry): View
@@ -117,7 +117,7 @@ class ForemanToolEntryController extends Controller
             'repair' => 'Reparación',
         ];
 
-        return view('admin.tools.entries.edit', compact('tool_entry', 'tools', 'types'));
+        return view('foreman.tools.entries.edit', compact('tool_entry', 'tools', 'types'));
     }
 
     public function update(Request $request, ToolEntry $tool_entry): RedirectResponse
@@ -147,3 +147,4 @@ class ForemanToolEntryController extends Controller
             ->with('status', 'Entrada de herramienta eliminada correctamente');
     }
 }
+
