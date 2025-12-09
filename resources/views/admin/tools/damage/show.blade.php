@@ -141,7 +141,9 @@
                     <th class="py-3 px-4">Cantidad Dañada</th>
                     <th class="py-3 px-4">Cantidad Perdida</th>
                     <th class="py-3 px-4">Notas</th>
+                    <th class="py-3 px-4">Evidencia</th>
                     <th class="py-3 px-4">Registrado por</th>
+                    <th class="py-3 px-4 text-right">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -182,7 +184,30 @@
                         </div>
                     </td>
                     <td class="py-3 px-4">
+                        @if($entry->damage_photo)
+                            <a href="{{ asset('storage/' . $entry->damage_photo) }}" target="_blank" title="Ver foto completa">
+                                <img src="{{ asset('storage/' . $entry->damage_photo) }}" alt="Foto evidencia" class="h-10 w-10 object-cover rounded border border-gray-200">
+                            </a>
+                        @else
+                            <span class="text-gray-400">—</span>
+                        @endif
+                    </td>
+                    <td class="py-3 px-4">
                         <div class="text-sm text-gray-600">{{ $entry->createdBy->name }}</div>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            <a href="{{ route('admin.tool-damage.show', $tool->id) }}" 
+                               class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600"
+                               title="Ver detalles">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </a>
+                            <a href="{{ route('admin.tool-damage.edit', $entry->id) }}" 
+                               class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-700"
+                               title="Editar">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 @endforeach

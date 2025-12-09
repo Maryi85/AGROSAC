@@ -28,6 +28,7 @@
                     <option value="{{ $tool->id }}" 
                             data-available="{{ $tool->available_qty }}"
                             data-category="{{ $tool->category }}"
+                            data-photo="{{ $tool->photo ? asset('storage/' . $tool->photo) : '' }}"
                             {{ old('tool_id') == $tool->id ? 'selected' : '' }}>
                         {{ $tool->name }} ({{ $tool->category }}) - Disponible: {{ $tool->available_qty }}
                     </option>
@@ -50,6 +51,10 @@
                     <span class="text-gray-600">Disponible:</span>
                     <span id="tool-available" class="font-medium text-gray-900"></span>
                 </div>
+            </div>
+            <div id="tool-photo-wrapper" class="mt-3 hidden">
+                <p class="text-xs text-gray-600 mb-1">Foto de referencia:</p>
+                <img id="tool-photo" src="" alt="Foto de herramienta" class="h-24 w-24 object-cover rounded border border-gray-200">
             </div>
         </div>
 
@@ -119,10 +124,13 @@ function updateToolInfo() {
     const toolInfo = document.getElementById('tool-info');
     const quantityInput = document.getElementById('quantity');
     const maxQuantitySpan = document.getElementById('max-quantity');
+    const photoWrapper = document.getElementById('tool-photo-wrapper');
+    const photoImg = document.getElementById('tool-photo');
     
     if (option.value) {
         const available = parseInt(option.getAttribute('data-available'));
         const category = option.getAttribute('data-category');
+        const photo = option.getAttribute('data-photo');
         
         document.getElementById('tool-category').textContent = category;
         document.getElementById('tool-available').textContent = available;
@@ -132,11 +140,20 @@ function updateToolInfo() {
         quantityInput.value = Math.min(parseInt(quantityInput.value) || 1, available);
         
         toolInfo.classList.remove('hidden');
+        if (photo) {
+            photoImg.src = photo;
+            photoWrapper.classList.remove('hidden');
+        } else {
+            photoImg.src = '';
+            photoWrapper.classList.add('hidden');
+        }
         validateQuantity();
     } else {
         toolInfo.classList.add('hidden');
         quantityInput.max = 1;
         maxQuantitySpan.textContent = '1';
+        photoWrapper.classList.add('hidden');
+        photoImg.src = '';
     }
 }
 

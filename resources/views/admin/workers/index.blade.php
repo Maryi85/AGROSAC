@@ -74,8 +74,10 @@
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
+                    <th class="py-3 pr-4">Foto</th>
                     <th class="py-3 pr-4">Nombre</th>
                     <th class="py-3 pr-4">Email</th>
+                    <th class="py-3 pr-4">Teléfono</th>
                     <th class="py-3 pr-4">Estado</th>
                     <th class="py-3 pr-4">Tareas Completadas</th>
                     <th class="py-3 pr-4">Fecha de Registro</th>
@@ -86,10 +88,20 @@
                 @forelse ($workers as $worker)
                 <tr class="border-b hover:bg-gray-50" data-worker-id="{{ $worker->id }}">
                     <td class="py-3 pr-4">
+                        @if($worker->photo)
+                            <img src="{{ asset('storage/' . $worker->photo) }}" alt="Foto" class="h-10 w-10 rounded-full object-cover border border-gray-200">
+                        @else
+                            <div class="h-10 w-10 rounded-full border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-xs text-gray-400">—</div>
+                        @endif
+                    </td>
+                    <td class="py-3 pr-4">
                         <div class="font-medium text-gray-900 worker-name">{{ $worker->name }}</div>
                     </td>
                     <td class="py-3 pr-4 worker-email">
                         {{ $worker->email }}
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="text-sm text-gray-800">{{ $worker->phone ?? '—' }}</div>
                     </td>
                     <td class="py-3 pr-4 status-badge">
                         @if($worker->email_verified_at)

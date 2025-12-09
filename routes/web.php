@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FarmSettingController;
 use App\Http\Controllers\Worker\DashboardController as WorkerDashboardController;
 use App\Http\Controllers\Worker\LoanController as WorkerLoanController;
+use App\Http\Controllers\Worker\ProfileController as WorkerProfileController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 
@@ -99,7 +100,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('tools/pdf', [ToolController::class, 'downloadPdf'])->name('tools.pdf');
     Route::resource('tools', ToolController::class);
     Route::resource('tool-entries', ToolEntryController::class);
-    Route::resource('tool-damage', ToolDamageController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('tool-damage', ToolDamageController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
     // Loan management routes (admin only manages approvals, not creates loans)
     Route::get('loans', [LoanController::class, 'index'])->name('loans.index');
     Route::get('loans/{loan}', [LoanController::class, 'show'])->name('loans.show');
@@ -170,7 +171,7 @@ Route::middleware(['auth', 'user.active', 'role:foreman'])->prefix('foreman')->n
     
     // Inventory management routes (tool entries and damage)
     Route::resource('tool-entries', ForemanToolEntryController::class);
-    Route::resource('tool-damage', ForemanToolDamageController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('tool-damage', ForemanToolDamageController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
     
     // Loan management routes (all admin functionalities)
     Route::resource('loans', ForemanLoanController::class)->only(['index', 'show', 'create', 'store', 'destroy']);
@@ -210,4 +211,8 @@ Route::middleware(['auth', 'user.active', 'role:worker'])->prefix('worker')->nam
     Route::resource('loans', WorkerLoanController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('loans/{loan}/return', [WorkerLoanController::class, 'returnForm'])->name('loans.return-form');
     Route::post('loans/{loan}/return', [WorkerLoanController::class, 'processReturn'])->name('loans.process-return');
+
+    // Perfil del trabajador
+    Route::get('profile', [WorkerProfileController::class, 'edit'])->name('profile');
+    Route::put('profile', [WorkerProfileController::class, 'update'])->name('profile.update');
 });

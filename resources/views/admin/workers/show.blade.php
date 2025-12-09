@@ -12,14 +12,26 @@
             <h3 class="text-md font-semibold text-emerald-700 mb-4">Información Básica</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                    <p class="text-sm text-gray-900 mt-1">{{ $worker->name }}</p>
+                <div class="flex items-center gap-3">
+                    @if($worker->photo)
+                        <img src="{{ asset('storage/' . $worker->photo) }}" alt="Foto" class="h-16 w-16 rounded-full object-cover border border-gray-200">
+                    @else
+                        <div class="h-16 w-16 rounded-full border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-400">Sin foto</div>
+                    @endif
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                        <p class="text-sm text-gray-900 mt-1">{{ $worker->name }}</p>
+                    </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
                     <p class="text-sm text-gray-900 mt-1">{{ $worker->email }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <p class="text-sm text-gray-900 mt-1">{{ $worker->phone ?? '—' }}</p>
                 </div>
                 
                 <div>

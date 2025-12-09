@@ -13,6 +13,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -55,10 +57,32 @@ class WorkerController extends Controller
     {
         // Generar contraseña temporal
         $tempPassword = Str::random(8);
-        
+        $data = $request->validated();
+
+        // Procesar foto si se envía
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $originalName = $photo->getClientOriginalName();
+            $extension = $photo->getClientOriginalExtension();
+            $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+            $photoName = time() . '_' . $safeName . '.' . $extension;
+
+            $directory = storage_path('app/public/photos/users');
+            if (!File::exists($directory)) {
+                File::makeDirectory($directory, 0755, true);
+            }
+
+            $path = Storage::disk('public')->putFileAs('photos/users', $photo, $photoName);
+            if ($path) {
+                $data['photo'] = $path;
+            }
+        }
+
         $worker = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'photo' => $data['photo'] ?? null,
             'password' => Hash::make($tempPassword),
             'role' => 'worker',
             'email_verified_at' => now(), // Activar inmediatamente
@@ -119,6 +143,29 @@ class WorkerController extends Controller
                 unset($validated['status']);
             }
             
+            // Manejo de foto
+            if ($request->hasFile('photo')) {
+                // eliminar anterior
+                if ($worker->photo && Storage::disk('public')->exists($worker->photo)) {
+                    Storage::disk('public')->delete($worker->photo);
+                }
+                $photo = $request->file('photo');
+                $originalName = $photo->getClientOriginalName();
+                $extension = $photo->getClientOriginalExtension();
+                $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+                $photoName = time() . '_' . $safeName . '.' . $extension;
+
+                $directory = storage_path('app/public/photos/users');
+                if (!File::exists($directory)) {
+                    File::makeDirectory($directory, 0755, true);
+                }
+
+                $path = Storage::disk('public')->putFileAs('photos/users', $photo, $photoName);
+                if ($path) {
+                    $validated['photo'] = $path;
+                }
+            }
+
             $worker->update($validated);
 
             // Si es una petición AJAX, devolver JSON

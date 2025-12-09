@@ -30,39 +30,51 @@
             </div>
 
             @if($availableTools->count() > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     @foreach($availableTools as $tool)
-                        <div class="border border-emerald-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div class="flex items-start justify-between mb-3">
-                                <h4 class="font-semibold text-emerald-800">{{ $tool->name }}</h4>
-                                <span class="px-2 py-1 text-xs rounded-full 
-                                    {{ $tool->status === 'operational' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                    {{ ucfirst($tool->status) }}
-                                </span>
-                            </div>
-                            
-                            <div class="space-y-2 text-sm text-emerald-600">
-                                <div class="flex justify-between">
-                                    <span>Disponibles:</span>
-                                    <span class="font-medium">{{ $tool->available_qty }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Total:</span>
-                                    <span class="font-medium">{{ $tool->total_entries }}</span>
-                                </div>
-                                @if($tool->description)
-                                    <div class="mt-2 p-2 bg-emerald-50 rounded text-xs">
-                                        {{ $tool->description }}
+                        <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 bg-white">
+                            <!-- Imagen -->
+                            <div class="relative h-40 bg-gray-100 overflow-hidden">
+                                @if($tool->photo)
+                                    <img src="{{ asset('storage/' . $tool->photo) }}" 
+                                         alt="{{ $tool->name }}" 
+                                         class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                                        <i data-lucide="image" class="w-12 h-12 text-gray-300"></i>
                                     </div>
                                 @endif
+                                <!-- Badge de estado -->
+                                <div class="absolute top-2 right-2">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-md shadow-sm
+                                        {{ $tool->status === 'operational' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white' }}">
+                                        {{ ucfirst($tool->status) }}
+                                    </span>
+                                </div>
                             </div>
                             
-                            <button onclick="openRequestModal()" 
-                                    data-tool-id="{{ $tool->id }}"
-                                    data-tool-name="{{ $tool->name }}"
-                                    class="w-full mt-3 px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors text-sm">
-                                Solicitar
-                            </button>
+                            <!-- Contenido -->
+                            <div class="p-3">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm truncate">{{ $tool->name }}</h4>
+                                
+                                <div class="space-y-1.5 mb-3">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-gray-600">Disponibles:</span>
+                                        <span class="font-semibold text-emerald-600">{{ $tool->available_qty }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-gray-600">Total:</span>
+                                        <span class="font-semibold text-gray-700">{{ $tool->total_entries }}</span>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="openRequestModal()" 
+                                        data-tool-id="{{ $tool->id }}"
+                                        data-tool-name="{{ $tool->name }}"
+                                        class="w-full px-3 py-1.5 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors text-xs font-medium shadow-sm">
+                                    Solicitar
+                                </button>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -82,108 +94,85 @@
             <h3 class="text-lg font-semibold text-emerald-700 mb-6">Mis Préstamos de Herramientas</h3>
 
             @if($myLoans->count() > 0)
-                <div class="space-y-4">
+                <div class="space-y-3">
                     @foreach($myLoans as $loan)
-                        <div class="border border-emerald-200 rounded-lg p-4">
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h4 class="font-semibold text-emerald-800">{{ $loan->tool->name }}</h4>
-                                        <span class="px-2 py-1 text-xs rounded-full 
-                                            {{ $loan->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                               ($loan->status === 'approved' ? 'bg-blue-100 text-blue-800' : 
-                                               ($loan->status === 'rejected' ? 'bg-red-100 text-red-800' : 
-                                               ($loan->status === 'out' ? 'bg-blue-100 text-blue-800' : 
-                                               ($loan->status === 'returned' || $loan->status === 'returned_by_worker' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')))) }}">
-                                            @if($loan->status === 'pending')
-                                                Pendiente
-                                            @elseif($loan->status === 'approved')
-                                                Aprobado
-                                            @elseif($loan->status === 'rejected')
-                                                Rechazado
-                                            @elseif($loan->status === 'out')
-                                                Prestada
-                                            @elseif($loan->status === 'returned_by_worker')
-                                                Devuelta (Pendiente Confirmación)
-                                            @else
-                                                {{ ucfirst($loan->status) }}
-                                            @endif
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-emerald-600">
-                                        @if($loan->status === 'pending')
-                                            <div>
-                                                <span class="font-medium">Solicitada:</span> {{ $loan->created_at->format('d/m/Y H:i') }}
-                                            </div>
-                                        @elseif($loan->out_at)
-                                            <div>
-                                                <span class="font-medium">Prestada:</span> {{ $loan->out_at->format('d/m/Y H:i') }}
-                                            </div>
-                                        @endif
-                                        @if($loan->due_at)
-                                            <div>
-                                                <span class="font-medium">Vence:</span> {{ $loan->due_at->format('d/m/Y H:i') }}
-                                            </div>
-                                        @endif
-                                        @if($loan->returned_at)
-                                            <div>
-                                                <span class="font-medium">Devuelta:</span> {{ $loan->returned_at->format('d/m/Y H:i') }}
-                                            </div>
-                                        @endif
-                                        @if($loan->approved_at)
-                                            <div>
-                                                <span class="font-medium">Aprobada:</span> {{ $loan->approved_at->format('d/m/Y H:i') }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                    
-                                    @if($loan->request_notes)
-                                        <div class="mt-2 p-2 bg-emerald-50 rounded text-sm">
-                                            <span class="font-medium text-emerald-700">Notas de solicitud:</span>
-                                            <span class="text-emerald-600">{{ $loan->request_notes }}</span>
-                                        </div>
-                                    @endif
-                                    
-                                    @if($loan->admin_notes)
-                                        <div class="mt-2 p-2 bg-blue-50 rounded text-sm">
-                                            <span class="font-medium text-blue-700">Notas del administrador:</span>
-                                            <span class="text-blue-600">{{ $loan->admin_notes }}</span>
-                                        </div>
-                                    @endif
-                                    
-                                    @if($loan->condition_return)
-                                        <div class="mt-3 p-2 bg-emerald-50 rounded text-sm">
-                                            <span class="font-medium text-emerald-700">Condición al devolver:</span>
-                                            <span class="text-emerald-600">{{ $loan->condition_return }}</span>
+                        <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white">
+                            <div class="flex">
+                                <!-- Imagen -->
+                                <div class="w-24 h-24 flex-shrink-0 bg-gray-100 overflow-hidden">
+                                    @if($loan->tool->photo)
+                                        <img src="{{ asset('storage/' . $loan->tool->photo) }}" 
+                                             alt="{{ $loan->tool->name }}" 
+                                             class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                                            <i data-lucide="image" class="w-8 h-8 text-gray-300"></i>
                                         </div>
                                     @endif
                                 </div>
                                 
-                                @if($loan->status === 'out')
-                                    <div class="ml-4">
-                                        <form method="POST" action="{{ route('worker.tools.return', $loan) }}" 
-                                              data-confirm="true" data-message="¿Confirmar devolución de esta herramienta?">
-                                            @csrf
-                                            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors">
-                                                <i data-lucide="undo" class="w-4 h-4 inline mr-1"></i>
-                                                Devolver
-                                            </button>
-                                        </form>
+                                <!-- Contenido -->
+                                <div class="flex-1 p-3">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <h4 class="font-semibold text-gray-900 text-sm">{{ $loan->tool->name }}</h4>
+                                                <span class="px-2 py-0.5 text-xs font-medium rounded-md
+                                                    {{ $loan->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                                       ($loan->status === 'approved' ? 'bg-blue-100 text-blue-800' : 
+                                                       ($loan->status === 'rejected' ? 'bg-red-100 text-red-800' : 
+                                                       ($loan->status === 'out' ? 'bg-blue-100 text-blue-800' : 
+                                                       ($loan->status === 'returned' || $loan->status === 'returned_by_worker' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')))) }}">
+                                                    @if($loan->status === 'pending')
+                                                        Pendiente
+                                                    @elseif($loan->status === 'approved')
+                                                        Aprobado
+                                                    @elseif($loan->status === 'rejected')
+                                                        Rechazado
+                                                    @elseif($loan->status === 'out')
+                                                        Prestada
+                                                    @elseif($loan->status === 'returned_by_worker')
+                                                        Devuelta (Pendiente)
+                                                    @else
+                                                        {{ ucfirst($loan->status) }}
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mb-2">
+                                                @if($loan->status === 'pending')
+                                                    <span><span class="font-medium">Solicitada:</span> {{ $loan->created_at->format('d/m/Y H:i') }}</span>
+                                                @elseif($loan->out_at)
+                                                    <span><span class="font-medium">Prestada:</span> {{ $loan->out_at->format('d/m/Y H:i') }}</span>
+                                                @endif
+                                                @if($loan->due_at)
+                                                    <span><span class="font-medium">Vence:</span> {{ $loan->due_at->format('d/m/Y') }}</span>
+                                                @endif
+                                                @if($loan->returned_at)
+                                                    <span><span class="font-medium">Devuelta:</span> {{ $loan->returned_at->format('d/m/Y H:i') }}</span>
+                                                @endif
+                                            </div>
+                                            
+                                            @if($loan->request_notes)
+                                                <p class="text-xs text-gray-600 line-clamp-2">{{ $loan->request_notes }}</p>
+                                            @endif
+                                        </div>
+                                        
+                                        <!-- Acciones -->
+                                        <div class="flex-shrink-0 ml-3">
+                                            @if($loan->status === 'out')
+                                                <form method="POST" action="{{ route('worker.tools.return', $loan) }}" 
+                                                      data-confirm="true" data-message="¿Confirmar devolución de esta herramienta?">
+                                                    @csrf
+                                                    <button type="submit" class="px-3 py-1.5 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors text-xs font-medium shadow-sm">
+                                                        <i data-lucide="undo" class="w-3 h-3 inline mr-1"></i>
+                                                        Devolver
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </div>
-                                @elseif($loan->status === 'pending')
-                                    <div class="ml-4">
-                                        <span class="px-3 py-2 bg-yellow-100 text-yellow-800 rounded text-sm">
-                                            Esperando aprobación
-                                        </span>
-                                    </div>
-                                @elseif($loan->status === 'rejected')
-                                    <div class="ml-4">
-                                        <span class="px-3 py-2 bg-red-100 text-red-800 rounded text-sm">
-                                            Rechazado
-                                        </span>
-                                    </div>
-                                @endif
+                                </div>
                             </div>
                         </div>
                     @endforeach

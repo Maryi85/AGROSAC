@@ -30,6 +30,14 @@
                     <label class="block text-sm font-medium text-gray-700">Cantidad Solicitada</label>
                     <p class="text-sm text-gray-900 font-semibold">{{ $loan->quantity }}</p>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Foto</label>
+                    @if($loan->tool->photo)
+                        <img src="{{ asset('storage/' . $loan->tool->photo) }}" alt="Foto herramienta" class="h-24 w-24 object-cover rounded border border-gray-200">
+                    @else
+                        <span class="text-gray-400 text-sm">Sin foto</span>
+                    @endif
+                </div>
             </div>
         </div>
 

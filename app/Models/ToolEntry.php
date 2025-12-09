@@ -25,6 +25,7 @@ class ToolEntry extends Model
         'damage_date',
         'loss_date',
         'created_by',
+        'damage_photo',
     ];
 
     protected $casts = [

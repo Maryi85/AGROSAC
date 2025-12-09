@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <form method="POST" action="{{ route('admin.workers.store') }}">
+    <form method="POST" action="{{ route('admin.workers.store') }}" enctype="multipart/form-data">
         @csrf
         
         <div class="space-y-6">
@@ -33,6 +33,27 @@
                                class="w-full border border-emerald-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('email') border-red-500 @enderror" 
                                placeholder="correo@ejemplo.com" required>
                         @error('email')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input type="text" id="phone" name="phone" value="{{ old('phone') }}" 
+                               class="w-full border border-emerald-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('phone') border-red-500 @enderror" 
+                               placeholder="Ej: +57 300 000 0000">
+                        @error('phone')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Foto -->
+                    <div>
+                        <label for="photo" class="block text-sm font-medium text-gray-700 mb-1">Foto (opcional)</label>
+                        <input type="file" id="photo" name="photo" accept="image/*"
+                               class="w-full text-sm @error('photo') border-red-500 @enderror">
+                        @error('photo')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>

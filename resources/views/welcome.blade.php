@@ -185,7 +185,7 @@
                 opacity: 0.3;
             }
             
-            .features-grid {
+            .features-grid-container {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                 gap: 1.5rem;
@@ -194,7 +194,7 @@
                 z-index: 2;
             }
             
-            .feature-card {
+            .feature-item {
                 background: linear-gradient(145deg, #ffffff, #f8f9fa);
                 padding: 2rem 1.5rem;
                 border-radius: 18px;
@@ -207,7 +207,7 @@
                 backdrop-filter: blur(10px);
             }
             
-            .feature-card::before {
+            .feature-item::before {
                 content: '';
                 position: absolute;
                 top: 0;
@@ -219,7 +219,7 @@
                 box-shadow: 0 1px 4px rgba(76, 175, 80, 0.3);
             }
             
-            .feature-card::after {
+            .feature-item::after {
                 content: '';
                 position: absolute;
                 top: -50%;
@@ -232,17 +232,24 @@
                 pointer-events: none;
             }
             
-            .feature-card:hover {
+            .feature-item:hover {
                 transform: translateY(-12px) scale(1.03);
                 box-shadow: 0 30px 60px rgba(76, 175, 80, 0.2), 0 15px 30px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9);
                 border-color: rgba(76, 175, 80, 0.4);
             }
             
-            .feature-card:hover::after {
+            .feature-item:hover::after {
                 opacity: 1;
             }
             
-            .feature-icon {
+            .feature-header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 1.5rem;
+            }
+            
+            .feature-icon-wrapper {
                 width: 70px;
                 height: 70px;
                 margin: 0 auto 1.5rem;
@@ -259,13 +266,13 @@
                 border: 2px solid rgba(255,255,255,0.2);
             }
             
-            .feature-icon svg {
+            .feature-icon-wrapper svg {
                 width: 32px;
                 height: 32px;
                 stroke: white;
             }
             
-            .feature-icon::before {
+            .feature-icon-wrapper::before {
                 content: '';
                 position: absolute;
                 top: -2px;
@@ -279,16 +286,16 @@
                 transition: opacity 0.3s ease;
             }
             
-            .feature-card:hover .feature-icon {
+            .feature-item:hover .feature-icon-wrapper {
                 transform: scale(1.1) rotate(5deg);
                 box-shadow: 0 12px 35px rgba(76, 175, 80, 0.4);
             }
             
-            .feature-card:hover .feature-icon::before {
+            .feature-item:hover .feature-icon-wrapper::before {
                 opacity: 0.3;
             }
             
-            .feature-card h3 {
+            .feature-title {
                 font-size: 1.3rem;
                 margin-bottom: 1rem;
                 color: #2c3e50;
@@ -298,12 +305,12 @@
                 text-shadow: 0 1px 2px rgba(0,0,0,0.1);
             }
             
-            .feature-card:hover h3 {
+            .feature-item:hover .feature-title {
                 color: #4CAF50;
                 transform: translateY(-1px);
             }
             
-            .feature-card p {
+            .feature-description {
                 color: #5a6c7d;
                 line-height: 1.6;
                 font-size: 0.9rem;
@@ -312,9 +319,15 @@
                 text-shadow: 0 1px 2px rgba(0,0,0,0.05);
             }
             
-            .feature-card:hover p {
+            .feature-item:hover .feature-description {
                 color: #34495e;
                 transform: translateY(-1px);
+            }
+            
+            @media (max-width: 768px) {
+                .features-grid-container {
+                    grid-template-columns: 1fr;
+                }
             }
             
             .stats {
@@ -514,70 +527,78 @@
     <!-- Features Section -->
     <section class="features" id="features">
         <div class="container">
-            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 1rem; color: #333;">Características Principales</h2>
-            <p style="text-align: center; font-size: 1.2rem; color: #666; margin-bottom: 3rem;">Herramientas completas para la administración contable rural</p>
+            <div style="text-align: center; margin-bottom: 4rem;">
+                <h2 style="font-size: 2.75rem; font-weight: 700; margin-bottom: 0.75rem; color: #1a202c; letter-spacing: -1px;">Características Principales</h2>
+                <p style="font-size: 1.125rem; color: #64748b; max-width: 700px; margin: 0 auto; line-height: 1.6;">Herramientas completas para la administración contable rural</p>
+            </div>
             
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
+            <div class="features-grid-container">
+                <!-- Control de Ingresos -->
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
                         <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
                     </div>
-                    <h3>Control de Ingresos</h3>
-                    <p>Registra y controla todos los ingresos de tu finca agrícola de manera organizada y eficiente.</p>
+                    <h3 class="feature-title">Control de Ingresos</h3>
+                    <p class="feature-description">Registra y controla todos los ingresos de tu finca agrícola de manera organizada y eficiente.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="feature-icon">
+                <!-- Control de Egresos -->
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
                         <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M12 2v20M6 5h5.5a3.5 3.5 0 0 1 0 7H6M18 12h-5.5a3.5 3.5 0 0 0 0 7H18"></path>
                         </svg>
                     </div>
-                    <h3>Control de Egresos</h3>
-                    <p>Gestiona todos los gastos y egresos de tu operación rural con herramientas especializadas.</p>
+                    <h3 class="feature-title">Control de Egresos</h3>
+                    <p class="feature-description">Gestiona todos los gastos y egresos de tu operación rural con herramientas especializadas.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="feature-icon">
+                <!-- Gestión de Inventarios -->
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
                         <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M20 7h-4M4 7h4m-4 0v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2m-6 0V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path>
                         </svg>
                     </div>
-                    <h3>Gestión de Inventarios</h3>
-                    <p>Controla inventarios de insumos, herramientas y productos agrícolas de forma centralizada.</p>
+                    <h3 class="feature-title">Gestión de Inventarios</h3>
+                    <p class="feature-description">Controla inventarios de insumos, herramientas y productos agrícolas de forma centralizada.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="feature-icon">
+                <!-- Análisis Financiero -->
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
                         <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M3 3v18h18M7 16l4-4 4 4 6-6"></path>
                         </svg>
                     </div>
-                    <h3>Análisis Financiero</h3>
-                    <p>Optimiza recursos y mejora la toma de decisiones con análisis financieros detallados.</p>
+                    <h3 class="feature-title">Análisis Financiero</h3>
+                    <p class="feature-description">Optimiza recursos y mejora la toma de decisiones con análisis financieros detallados.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="feature-icon">
+                <!-- Administración Rural -->
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
                         <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
                         </svg>
                     </div>
-                    <h3>Administración Rural</h3>
-                    <p>Herramientas especializadas para la gestión administrativa en entornos rurales.</p>
+                    <h3 class="feature-title">Administración Rural</h3>
+                    <p class="feature-description">Herramientas especializadas para la gestión administrativa en entornos rurales.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="feature-icon">
+                <!-- Reportes Contables -->
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
                         <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <polyline points="22 6 13.5 15.5 8.5 10.5 2 17"></polyline>
                             <polyline points="16 6 22 6 22 12"></polyline>
                         </svg>
                     </div>
-                    <h3>Reportes Contables</h3>
-                    <p>Genera reportes contables completos para una gestión financiera transparente.</p>
+                    <h3 class="feature-title">Reportes Contables</h3>
+                    <p class="feature-description">Genera reportes contables completos para una gestión financiera transparente.</p>
                 </div>
             </div>
         </div>
@@ -585,35 +606,35 @@
 
 
     <!-- Footer -->
-    <footer style="background: linear-gradient(135deg, #1a365d, #2d3748); color: white; padding: 2rem 0 1.5rem; position: relative;">
+    <footer style="background: linear-gradient(135deg, #2d5016, #4CAF50); color: white; padding: 1.5rem 0 1rem; position: relative;">
         <div class="container" style="text-align: center;">
-            <div style="margin-bottom: 1rem;">
-                <h3 style="color: #68d391; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <svg style="width: 24px; height: 24px; stroke: #68d391;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <div style="margin-bottom: 0.75rem;">
+                <h3 style="color: #ffffff; font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem; letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg style="width: 24px; height: 24px; stroke: #ffffff;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
                     </svg>
                     AGROSAC
                 </h3>
-                <p style="color: #a0aec0; font-size: 0.9rem; margin: 0; font-weight: 400;">Transformando la gestión agrícola con tecnología moderna</p>
+                <p style="color: rgba(255, 255, 255, 0.9); font-size: 0.85rem; margin: 0; font-weight: 400;">Transformando la gestión agrícola con tecnología moderna</p>
             </div>
             
-            <div style="display: flex; justify-content: center; gap: 3rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <div style="display: flex; justify-content: center; gap: 3rem; margin-bottom: 1rem; flex-wrap: wrap;">
                 <div style="text-align: center;">
-                    <h4 style="color: #68d391; font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem;">Innovación</h4>
-                    <p style="color: #a0aec0; font-size: 0.8rem; margin: 0;">Tecnología de vanguardia</p>
+                    <h4 style="color: #ffffff; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem;">Innovación</h4>
+                    <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.75rem; margin: 0;">Tecnología de vanguardia</p>
                 </div>
                 <div style="text-align: center;">
-                    <h4 style="color: #68d391; font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem;">Confiabilidad</h4>
-                    <p style="color: #a0aec0; font-size: 0.8rem; margin: 0;">Sistema seguro y estable</p>
+                    <h4 style="color: #ffffff; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem;">Confiabilidad</h4>
+                    <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.75rem; margin: 0;">Sistema seguro y estable</p>
                 </div>
                 <div style="text-align: center;">
-                    <h4 style="color: #68d391; font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem;">Eficiencia</h4>
-                    <p style="color: #a0aec0; font-size: 0.8rem; margin: 0;">Optimización de recursos</p>
+                    <h4 style="color: #ffffff; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem;">Eficiencia</h4>
+                    <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.75rem; margin: 0;">Optimización de recursos</p>
                 </div>
         </div>
 
-            <div style="border-top: 1px solid rgba(104, 211, 145, 0.2); padding-top: 1rem;">
-                <p style="color: #718096; font-size: 0.8rem; margin: 0; font-weight: 400;">
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 0.75rem;">
+                <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.75rem; margin: 0; font-weight: 400;">
                     &copy; {{ date('Y') }} AGROSAC - Software de Administración Contable Rural Organizado. Todos los derechos reservados.
                 </p>
             </div>

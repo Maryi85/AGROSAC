@@ -181,14 +181,33 @@
                         </span>
                     </td>
                     <td class="py-3 px-4 text-right">
+                        @php
+                            $latestDamageEntry = $tool->entries
+                                ->filter(function($entry){
+                                    return ($entry->damaged_qty > 0) || ($entry->lost_qty > 0);
+                                })
+                                ->sortByDesc('entry_date')
+                                ->first();
+                        @endphp
                         <div class="flex items-center gap-1 justify-end">
-                            <!-- Ver detalles -->
+                            <!-- Ver historial -->
                             <a href="{{ route('foreman.tool-damage.show', $tool) }}" 
                                class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600" 
-                               title="Ver detalles">
+                               title="Ver historial de daños/pérdidas">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </a>
-                            
+                            <!-- Editar último registro -->
+                            @if($latestDamageEntry)
+                            <a href="{{ route('foreman.tool-damage.edit', $latestDamageEntry->id) }}" 
+                               class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-700" 
+                               title="Editar último daño/pérdida">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </a>
+                            @else
+                            <span class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded text-gray-300 cursor-not-allowed" title="Sin registros para editar">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </span>
+                            @endif
                             <!-- Registrar daño/pérdida -->
                             <a href="{{ route('foreman.tool-damage.create', ['tool_id' => $tool->id]) }}" 
                                class="inline-flex items-center justify-center w-8 h-8 border border-orange-200 rounded hover:bg-orange-50 text-orange-600" 

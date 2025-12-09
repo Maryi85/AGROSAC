@@ -11,7 +11,7 @@
 @endsection
 
 @section('content')
-<form method="POST" action="{{ route('foreman.tool-damage.store') }}" class="space-y-6">
+<form method="POST" action="{{ route('foreman.tool-damage.store') }}" class="space-y-6" enctype="multipart/form-data">
     @csrf
     
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -84,6 +84,23 @@
                 @enderror
             </div>
 
+            <!-- Foto del daño/pérdida -->
+            <div class="md:col-span-2">
+                <label for="photo" class="block text-sm font-medium text-gray-700 mb-2">
+                    Foto (opcional)
+                </label>
+                <input type="file" name="photo" id="photo" accept="image/*"
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('photo') border-red-500 @enderror">
+                <p class="mt-1 text-xs text-gray-500">Adjunta evidencia fotográfica si está disponible.</p>
+                @error('photo')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+                <div id="photo-preview-wrapper" class="mt-3 hidden">
+                    <p class="text-xs text-gray-500 mb-1">Vista previa:</p>
+                    <img id="photo-preview" src="" alt="Vista previa de la imagen seleccionada" class="max-h-48 rounded border border-gray-200">
+                </div>
+            </div>
+
             <!-- Notas -->
             <div class="md:col-span-2">
                 <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
@@ -133,6 +150,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     toolSelect.addEventListener('change', updateAvailableInfo);
     updateAvailableInfo(); // Inicializar
+
+    // Vista previa de imagen
+    const photoInput = document.getElementById('photo');
+    const previewWrapper = document.getElementById('photo-preview-wrapper');
+    const previewImg = document.getElementById('photo-preview');
+
+    function updatePhotoPreview() {
+        const file = photoInput.files && photoInput.files[0];
+        if (!file) {
+            previewWrapper.classList.add('hidden');
+            previewImg.src = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+            previewImg.src = e.target.result;
+            previewWrapper.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    photoInput.addEventListener('change', updatePhotoPreview);
 });
 </script>
 @endsection

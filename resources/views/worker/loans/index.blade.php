@@ -57,8 +57,17 @@
                 @forelse ($loans as $loan)
                 <tr class="border-b hover:bg-gray-50" data-status="{{ $loan->status }}">
                     <td class="py-3 pr-4">
-                        <div class="font-medium text-gray-900">{{ $loan->tool->name }}</div>
-                        <div class="text-xs text-gray-500">{{ $loan->tool->category }}</div>
+                        <div class="flex items-center gap-3">
+                            @if($loan->tool->photo)
+                                <img src="{{ asset('storage/' . $loan->tool->photo) }}" alt="Foto" class="h-10 w-10 object-cover rounded border border-gray-200">
+                            @else
+                                <div class="h-10 w-10 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-xs text-gray-400">Sin foto</div>
+                            @endif
+                            <div>
+                                <div class="font-medium text-gray-900">{{ $loan->tool->name }}</div>
+                                <div class="text-xs text-gray-500">{{ $loan->tool->category }}</div>
+                            </div>
+                        </div>
                     </td>
                     <td class="py-3 pr-4">
                         <span class="font-medium text-gray-900">{{ $loan->quantity }}</span>

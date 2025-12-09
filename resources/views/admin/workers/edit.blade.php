@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <form method="POST" action="{{ route('admin.workers.update', $worker) }}">
+    <form method="POST" action="{{ route('admin.workers.update', $worker) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         
@@ -36,6 +36,33 @@
                         @error('email')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input type="text" id="phone" name="phone" value="{{ old('phone', $worker->phone) }}" 
+                               class="w-full border border-emerald-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('phone') border-red-500 @enderror" 
+                               placeholder="Ej: +57 300 000 0000">
+                        @error('phone')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Foto -->
+                    <div>
+                        <label for="photo" class="block text-sm font-medium text-gray-700 mb-1">Foto (opcional)</label>
+                        <input type="file" id="photo" name="photo" accept="image/*"
+                               class="w-full text-sm @error('photo') border-red-500 @enderror">
+                        @error('photo')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        @if($worker->photo)
+                            <div class="mt-2">
+                                <p class="text-xs text-gray-500 mb-1">Foto actual:</p>
+                                <img src="{{ asset('storage/' . $worker->photo) }}" alt="Foto actual" class="h-16 w-16 object-cover rounded border border-gray-200">
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

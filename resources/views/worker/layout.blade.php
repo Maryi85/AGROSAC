@@ -42,6 +42,12 @@
                         <span>Herramientas</span>
                     </span>
                 </a>
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.profile*') ? 'border-gray-300 bg-gray-100' : '' }}" href="{{ route('worker.profile') }}">
+                    <span class="inline-flex items-center gap-2">
+                        <i data-lucide="user-circle" class="w-5 h-5 text-black"></i>
+                        <span>Perfil</span>
+                    </span>
+                </a>
                 <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.reports.*') ? 'border-gray-300 bg-gray-100' : '' }}" href="{{ route('worker.reports') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="file-text" class="w-5 h-5 text-black"></i>
@@ -59,7 +65,15 @@
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="flex items-center gap-2 text-sm text-black">
-                            <i data-lucide="user" class="w-4 h-4"></i>
+                            @if(auth()->user()->photo)
+                                <img src="{{ asset('storage/' . auth()->user()->photo) }}" 
+                                     alt="{{ auth()->user()->name }}" 
+                                     class="w-8 h-8 rounded-full object-cover border-2 border-gray-200">
+                            @else
+                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+                                    <i data-lucide="user" class="w-4 h-4 text-gray-600"></i>
+                                </div>
+                            @endif
                             <span>{{ auth()->user()->name ?? 'Trabajador' }}</span>
                         </div>
                         <form method="POST" action="{{ route('logout') }}" id="logout-form">
