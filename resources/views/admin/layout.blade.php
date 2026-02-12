@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('AGROSACLOGO.png') }}">
     <title>Admin | AGROSAC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -12,14 +13,19 @@
     @if (session('status'))
         <meta name="app-status" content="{{ session('status') }}">
     @endif
+    @if (session('error'))
+        <meta name="app-error" content="{{ session('error') }}">
+    @endif
 </head>
 <body class="min-h-screen bg-gray-50 text-[#1b1b18]">
     <div class="min-h-screen flex">
-        <aside class="w-64 bg-white border-r border-gray-200 p-4 flex flex-col shadow-sm">
+        <aside class="w-64 bg-white border-r border-gray-200 p-4 flex flex-col shadow-sm fixed left-0 top-0 bottom-0 overflow-y-auto">
+
             
-            <div class="mb-4 px-2 text-center">
-                <div class="uppercase tracking-wide text-black font-extrabold text-2xl">AGROSAC</div>
-                <div class="text-sm font-medium text-black">Administrador</div>
+            <div class="mb-6 px-2 text-center">
+                <div class="flex flex-col items-center gap-1">
+                    <img src="{{ asset('AGROSACLOGO.png') }}" alt="AGROSAC Logo" class="w-28 h-28 object-contain">
+                </div>
             </div>
             <nav class="space-y-1 flex-1">
                 <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.index') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-gray-300 hover:bg-gray-100 text-black' }}" href="{{ route('admin.index') }}">
@@ -46,46 +52,129 @@
                         <span>Lotes</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.crops.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('admin.crops.index') }}">
-                    <span class="inline-flex items-center gap-2">
-                        <i data-lucide="sprout" class="w-5 h-5 text-black"></i>
-                        <span>Cultivos</span>
-                    </span>
-                </a>
+                <div x-data="{ open: {{ request()->routeIs('admin.crops.*') || request()->routeIs('admin.crop-tracking.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.crops.*') || request()->routeIs('admin.crop-tracking.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}">
+                        <span class="inline-flex items-center gap-2">
+                            <i data-lucide="sprout" class="w-5 h-5 text-black"></i>
+                            <span>Cultivos</span>
+                        </span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.crops.index') || (request()->routeIs('admin.crops.*') && !request()->routeIs('admin.crop-tracking.*')) ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.crops.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="list" class="w-4 h-4 text-black"></i>
+                                <span>Lista de Cultivos</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.crop-tracking.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.crop-tracking.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="activity" class="w-4 h-4 text-black"></i>
+                                <span>Seguimiento</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
                 <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.tasks.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('admin.tasks.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="clipboard-check" class="w-5 h-5 text-black"></i>
                         <span>Tareas</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.tools.*') || request()->routeIs('admin.tool-entries.*') || request()->routeIs('admin.tool-damage.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('admin.tools.index') }}">
-                    <span class="inline-flex items-center gap-2">
-                        <i data-lucide="wrench" class="w-5 h-5 text-black"></i>
-                        <span>Inventario</span>
-                    </span>
-                </a>
+                <div x-data="{ open: {{ request()->routeIs('admin.tools.*') || request()->routeIs('admin.tool-entries.*') || request()->routeIs('admin.tool-damage.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.tools.*') || request()->routeIs('admin.tool-entries.*') || request()->routeIs('admin.tool-damage.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}">
+                        <span class="inline-flex items-center gap-2">
+                            <i data-lucide="wrench" class="w-5 h-5 text-black"></i>
+                            <span>Inventario</span>
+                        </span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.tools.index') || (request()->routeIs('admin.tools.*') && !request()->routeIs('admin.tool-entries.*') && !request()->routeIs('admin.tool-damage.*')) ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.tools.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="list" class="w-4 h-4 text-black"></i>
+                                <span>Lista de Herramientas</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.tool-entries.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.tool-entries.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="package" class="w-4 h-4 text-black"></i>
+                                <span>Gestionar Entradas</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.tool-damage.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.tool-damage.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-black"></i>
+                                <span>Daños y Pérdidas</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
                 <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.loans.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('admin.loans.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="arrow-left-right" class="w-5 h-5 text-black"></i>
                         <span>Préstamos</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.supplies.*') || request()->routeIs('admin.supply-movements.*') || request()->routeIs('admin.supply-consumptions.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('admin.supplies.index') }}">
-                    <span class="inline-flex items-center gap-2">
-                        <i data-lucide="flask-round" class="w-5 h-5 text-black"></i>
-                        <span>Insumos</span>
-                    </span>
-                </a>
-                <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.ledger.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('admin.ledger.index') }}">
-                    <span class="inline-flex items-center gap-2">
-                        <i data-lucide="banknote" class="w-5 h-5 text-black"></i>
-                        <span>Contable</span>
-                    </span>
-                </a>
+                
+                <!-- Insumos Dropdown -->
+                <div x-data="{ open: {{ request()->routeIs('admin.supplies.*') || request()->routeIs('admin.supply-movements.*') || request()->routeIs('admin.supply-consumptions.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.supplies.*') || request()->routeIs('admin.supply-movements.*') || request()->routeIs('admin.supply-consumptions.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}">
+                        <span class="inline-flex items-center gap-2">
+                            <i data-lucide="flask-round" class="w-5 h-5 text-black"></i>
+                            <span>Insumos</span>
+                        </span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.supplies.index') || (request()->routeIs('admin.supplies.*') && !request()->routeIs('admin.supply-movements.*') && !request()->routeIs('admin.supply-consumptions.*')) ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.supplies.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="list" class="w-4 h-4 text-black"></i>
+                                <span>Lista de Insumos</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.supply-movements.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.supply-movements.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="arrow-right-left" class="w-4 h-4 text-black"></i>
+                                <span>Entradas/Salidas</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.supply-consumptions.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.supply-consumptions.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="bar-chart" class="w-4 h-4 text-black"></i>
+                                <span>Ver Consumos</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+                <!-- Contable Dropdown -->
+                <div x-data="{ open: {{ request()->routeIs('admin.ledger.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded border transition-colors {{ request()->routeIs('admin.ledger.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}">
+                        <span class="inline-flex items-center gap-2">
+                            <i data-lucide="banknote" class="w-5 h-5 text-black"></i>
+                            <span>Contable</span>
+                        </span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.ledger.dashboard') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.ledger.dashboard') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="bar-chart-2" class="w-4 h-4 text-black"></i>
+                                <span>Dashboard</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('admin.ledger.index') || (request()->routeIs('admin.ledger.*') && !request()->routeIs('admin.ledger.dashboard')) ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('admin.ledger.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="list" class="w-4 h-4 text-black"></i>
+                                <span>Movimientos</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
             </nav>
         </aside>
 
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col ml-64">
             <header class="border-b border-gray-200 bg-white backdrop-blur text-black shadow-sm">
                 <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
                     <div class="flex-1">
@@ -265,16 +354,17 @@
             Toast.fire({ icon: 'error', title: error });
         }
 
-        // Función global para mostrar alertas de éxito
+        // Función global para mostrar alertas de éxito (como toast)
         window.showSuccessAlert = function(message) {
-            Swal.fire({
-                icon: 'success',
-                title: message,
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 2500,
                 timerProgressBar: true,
                 customClass: { popup: 'rounded-lg border border-emerald-200 bg-white' },
             });
+            Toast.fire({ icon: 'success', title: message });
         };
 
         // Función global para mostrar alertas de error

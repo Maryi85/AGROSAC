@@ -45,6 +45,7 @@ class ToolEntryController extends Controller
             'donation' => 'Donación',
             'transfer' => 'Transferencia',
             'repair' => 'Reparación',
+            'damage' => 'Daño',
         ];
 
         return view('foreman.tools.entries.index', compact('entries', 'tools', 'types'));
@@ -65,6 +66,7 @@ class ToolEntryController extends Controller
             'donation' => 'Donación',
             'transfer' => 'Transferencia',
             'repair' => 'Reparación',
+            'damage' => 'Daño',
         ];
 
         return view('foreman.tools.entries.create', compact('tools', 'selectedTool', 'types'));
@@ -75,7 +77,7 @@ class ToolEntryController extends Controller
         $request->validate([
             'tool_id' => 'required|exists:tools,id',
             'quantity' => 'required|integer|min:1',
-            'type' => 'required|in:purchase,donation,transfer,repair',
+            'type' => 'required|in:purchase,donation,transfer,repair,damage',
             'unit_cost' => 'nullable|numeric|min:0',
             'entry_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',
@@ -115,6 +117,7 @@ class ToolEntryController extends Controller
             'donation' => 'Donación',
             'transfer' => 'Transferencia',
             'repair' => 'Reparación',
+            'damage' => 'Daño',
         ];
 
         return view('foreman.tools.entries.edit', compact('tool_entry', 'tools', 'types'));
@@ -125,7 +128,7 @@ class ToolEntryController extends Controller
         $request->validate([
             'tool_id' => 'required|exists:tools,id',
             'quantity' => 'required|integer|min:1',
-            'type' => 'required|in:purchase,donation,transfer,repair',
+            'type' => 'required|in:purchase,donation,transfer,repair,damage',
             'unit_cost' => 'nullable|numeric|min:0',
             'entry_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',

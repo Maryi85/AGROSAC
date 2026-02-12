@@ -6,78 +6,14 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    <!-- Botones de acción -->
-    <div class="flex justify-between items-center mb-4">
-        <a href="{{ route('admin.supplies.index') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
-            <i data-lucide="flask-round" class="w-4 h-4"></i>
-            <span>Ver Insumos</span>
-        </a>
-        <a href="{{ route('admin.supply-consumptions.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
+    <!-- Barra de búsqueda y botón de acción -->
+    <div class="flex justify-between items-center mb-6 gap-4">
+        <x-search-bar placeholder="Buscar por insumo, cultivo o lote..." />
+        <a href="{{ route('admin.supply-consumptions.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg whitespace-nowrap">
             <i data-lucide="plus" class="w-4 h-4"></i>
             <span>Registrar Consumo</span>
         </a>
     </div>
-
-    <!-- Filtros de búsqueda -->
-    <form method="GET" class="mb-4 flex gap-2 items-end flex-wrap">
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Insumo</label>
-            <select name="supply_id" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los insumos</option>
-                @foreach($supplies as $supply)
-                    <option value="{{ $supply->id }}" {{ request('supply_id') == $supply->id ? 'selected' : '' }}>
-                        {{ $supply->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Cultivo</label>
-            <select name="crop_id" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los cultivos</option>
-                @foreach($crops as $crop)
-                    <option value="{{ $crop->id }}" {{ request('crop_id') == $crop->id ? 'selected' : '' }}>
-                        {{ $crop->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Lote</label>
-            <select name="plot_id" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los lotes</option>
-                @foreach($plots as $plot)
-                    <option value="{{ $plot->id }}" {{ request('plot_id') == $plot->id ? 'selected' : '' }}>
-                        {{ $plot->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Desde</label>
-            <input type="date" name="date_from" value="{{ request('date_from') }}" class="border border-emerald-200 rounded px-3 py-2" />
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Hasta</label>
-            <input type="date" name="date_to" value="{{ request('date_to') }}" class="border border-emerald-200 rounded px-3 py-2" />
-        </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
-            <i data-lucide="search" class="w-4 h-4"></i>
-            <span>Filtrar</span>
-        </button>
-    </form>
 
     <!-- Tabla de consumos -->
     <div class="overflow-x-auto">

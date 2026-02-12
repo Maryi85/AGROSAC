@@ -5,10 +5,6 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Nueva Entrada de Herramienta</h2>
-    <a href="{{ route('admin.tool-entries.index') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-emerald-300 rounded text-emerald-700 hover:bg-emerald-100">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        <span>Volver</span>
-    </a>
 </div>
 @endsection
 
@@ -17,7 +13,13 @@
     @csrf
     
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Información de la Entrada</h3>
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Información de la Entrada</h3>
+            <a href="{{ route('admin.tool-entries.index') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-emerald-300 rounded text-emerald-700 hover:bg-emerald-100 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Volver</span>
+            </a>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Herramienta -->

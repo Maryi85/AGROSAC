@@ -14,6 +14,7 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -60,9 +61,34 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Datos para el gráfico de rendimiento semanal
+        $weeklyPerformance = [
+            'dates' => [],
+            'assigned' => [],
+            'completed' => []
+        ];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dateString = $date->format('Y-m-d');
+            
+            $weeklyPerformance['dates'][] = $date->format('d/m');
+            
+            // Tareas asignadas en esta fecha (usando scheduled_for)
+            $weeklyPerformance['assigned'][] = Task::where('assigned_to', $user->id)
+                ->whereDate('scheduled_for', $dateString)
+                ->count();
+            
+            // Tareas completadas en esta fecha
+            $weeklyPerformance['completed'][] = Task::where('assigned_to', $user->id)
+                ->where('status', 'completed')
+                ->whereDate('updated_at', $dateString)
+                ->count();
+        }
+
         return view('worker.dashboard', compact(
             'pendingTasks', 'completedTasks', 'activeLoans', 'totalTasks',
-            'myPendingTasks', 'recentCompletedTasks', 'myLoans'
+            'myPendingTasks', 'recentCompletedTasks', 'myLoans', 'weeklyPerformance'
         ));
     }
 
@@ -87,16 +113,53 @@ class DashboardController extends Controller
             return redirect()->back()->with('error', 'No tienes permisos para completar esta tarea.');
         }
 
-        $request->validate([
+        // Determinar el tipo de pago basado en los precios configurados
+        $isHourlyTask = $task->price_per_hour > 0 || $task->price_per_day > 0;
+        $isQuantityTask = $task->price_per_kg > 0;
+
+        // Validación condicional estricta
+        $rules = [
             'completion_notes' => 'nullable|string|max:1000',
-            'hours_worked' => 'nullable|numeric|min:0',
-            'quantity_harvested' => 'nullable|numeric|min:0',
+        ];
+
+        if ($isHourlyTask) {
+            // Para tareas por horas: hours_worked es obligatorio y debe ser > 0
+            $rules['hours_worked'] = [
+                'required',
+                'numeric',
+                'min:0.1',
+                'max:24',
+            ];
+            $rules['quantity_harvested'] = 'nullable|numeric|min:0';
+        } elseif ($isQuantityTask) {
+            // Para tareas por cantidad: quantity_harvested es obligatorio y debe ser > 0
+            $rules['quantity_harvested'] = [
+                'required',
+                'numeric',
+                'min:0.1',
+                'max:100000',
+            ];
+            $rules['hours_worked'] = 'nullable|numeric|min:0|max:24';
+        } else {
+            // Si no tiene precio configurado, permitir ambos pero al menos uno debe tener valor
+            $rules['hours_worked'] = 'nullable|numeric|min:0|max:24';
+            $rules['quantity_harvested'] = 'nullable|numeric|min:0|max:100000';
+        }
+
+        $validated = $request->validate($rules, [
+            'hours_worked.required' => 'Debes registrar las horas trabajadas para finalizar la tarea.',
+            'hours_worked.min' => 'Las horas trabajadas deben ser mayor a 0 para finalizar la tarea.',
+            'hours_worked.max' => 'Las horas trabajadas no pueden exceder 24 horas.',
+            'quantity_harvested.required' => 'Debes registrar la cantidad recolectada para finalizar la tarea.',
+            'quantity_harvested.min' => 'La cantidad recolectada debe ser mayor a 0 para finalizar la tarea.',
+            'quantity_harvested.max' => 'La cantidad recolectada excede el límite permitido.',
         ]);
 
+        // Actualizar la tarea
         $task->update([
             'status' => 'completed',
-            'hours' => $request->hours_worked ?? $task->hours,
-            'kilos' => $request->quantity_harvested ?? $task->kilos,
+            'hours' => $validated['hours_worked'] ?? $task->hours,
+            'kilos' => $validated['quantity_harvested'] ?? $task->kilos,
         ]);
 
         return redirect()->back()->with('status', 'Tarea completada exitosamente.');

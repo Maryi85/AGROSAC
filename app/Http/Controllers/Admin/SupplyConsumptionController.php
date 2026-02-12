@@ -20,38 +20,25 @@ class SupplyConsumptionController extends Controller
     {
         $query = SupplyConsumption::with(['supply', 'crop', 'plot', 'task']);
 
-        // Filtro por insumo
-        if ($request->filled('supply_id') && $request->supply_id !== 'all') {
-            $query->where('supply_id', $request->supply_id);
-        }
-
-        // Filtro por cultivo
-        if ($request->filled('crop_id') && $request->crop_id !== 'all') {
-            $query->where('crop_id', $request->crop_id);
-        }
-
-        // Filtro por lote
-        if ($request->filled('plot_id') && $request->plot_id !== 'all') {
-            $query->where('plot_id', $request->plot_id);
-        }
-
-        // Filtro por fecha
-        if ($request->filled('date_from')) {
-            $query->where('used_at', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->where('used_at', '<=', $request->date_to);
+        // Búsqueda general
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->whereHas('supply', function($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'like', '%' . $searchTerm . '%');
+                })
+                ->orWhereHas('crop', function($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'like', '%' . $searchTerm . '%');
+                })
+                ->orWhereHas('plot', function($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'like', '%' . $searchTerm . '%');
+                });
+            });
         }
 
         $consumptions = $query->orderBy('used_at', 'desc')->paginate(10);
 
-        // Obtener datos para los filtros
-        $supplies = Supply::where('status', 'active')->orderBy('name')->get();
-        $crops = Crop::where('status', 'active')->orderBy('name')->get();
-        $plots = Plot::orderBy('name')->get();
-
-        return view('admin.supply-consumptions.index', compact('consumptions', 'supplies', 'crops', 'plots'));
+        return view('admin.supply-consumptions.index', compact('consumptions'));
     }
 
     public function create(): View

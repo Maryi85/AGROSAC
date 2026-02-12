@@ -12,30 +12,12 @@ use Illuminate\Support\Facades\Storage;
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
     <!-- Botones de acción -->
     <div class="mb-6 flex justify-between items-center">
-        <div class="flex gap-4">
-            <a href="{{ route('admin.crops.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-                <span>Nuevo Cultivo</span>
-            </a>
-            <a href="{{ route('admin.crop-tracking.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="activity" class="w-5 h-5"></i>
-                <span>Seguimiento de Cultivo</span>
-            </a>
-        </div>
+        <a href="{{ route('admin.crops.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Nuevo Cultivo</span>
+        </a>
         <a href="{{ route('admin.crops.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
             <i data-lucide="file-text" class="w-5 h-5"></i>
             <span>Descargar PDF</span>
@@ -44,7 +26,9 @@ use Illuminate\Support\Facades\Storage;
 
     <!-- Filtros -->
     <form method="GET" class="mb-4 flex gap-2">
-        <input type="text" name="q" value="{{ $search }}" placeholder="Buscar por nombre" class="border border-emerald-200 rounded px-3 py-2 flex-1" />
+        <div class="flex-1">
+            <x-search-bar placeholder="Buscar por nombre" :with-form="false" />
+        </div>
         <select name="status" class="border border-emerald-200 rounded px-3 py-2">
             <option value="">Todos los estados</option>
             @foreach($statuses as $key => $label)
@@ -803,20 +787,9 @@ function updateTableRow() {
 
 // Función para mostrar mensaje de éxito
 function showSuccessMessage(message = 'Cultivo actualizado correctamente') {
-    const messageElement = document.createElement('div');
-    messageElement.className = 'mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded';
-    messageElement.textContent = message;
-    
-    const content = document.querySelector('.bg-white.border.rounded.p-4');
-    if (content) {
-        content.insertBefore(messageElement, content.firstChild);
-        
-        // Remover el mensaje después de 4 segundos
-        setTimeout(() => {
-            if (messageElement.parentNode) {
-                messageElement.parentNode.removeChild(messageElement);
-            }
-        }, 4000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert) {
+        window.showSuccessAlert(message);
     }
 }
 

@@ -1,29 +1,11 @@
 @extends('admin.layout')
 
 @section('header')
-<div class="flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-emerald-700">Movimientos de Inventario</h2>
-    <a href="{{ route('admin.supplies.index') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-emerald-300 rounded text-emerald-700 hover:bg-emerald-100">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        <span>Volver a Insumos</span>
-    </a>
-</div>
+<h2 class="text-lg font-semibold text-emerald-700">Movimientos de Inventario</h2>
 @endsection
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
     <!-- Botones de acción -->
     <div class="mb-6 flex justify-start gap-4">
         <a href="{{ route('admin.supply-movements.create', ['type' => 'entry']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 border border-green-200 rounded">
@@ -72,16 +54,16 @@
                     <td class="py-3 pr-4">
                         <div class="flex items-center gap-2">
                             <span class="font-semibold {{ $movement->supply->isLowStock() ? 'text-red-600' : 'text-gray-900' }}">
-                                {{ number_format($movement->supply->current_stock, 3) }}
+                                {{ rtrim(rtrim(number_format($movement->supply->current_stock, 2, '.', ','), '0'), '.') }}
                             </span>
                             @if($movement->supply->isLowStock())
                                 <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500" title="Stock bajo"></i>
                             @endif
                         </div>
-                        <div class="text-xs text-gray-500">Mín: {{ number_format($movement->supply->min_stock, 3) }}</div>
+                        <div class="text-xs text-gray-500">Mín: {{ rtrim(rtrim(number_format($movement->supply->min_stock, 2, '.', ','), '0'), '.') }}</div>
                     </td>
                     <td class="py-3 pr-4">
-                        <div class="font-medium text-gray-900">{{ number_format($movement->quantity, 3) }}</div>
+                        <div class="font-medium text-gray-900">{{ rtrim(rtrim(number_format($movement->quantity, 2, '.', ','), '0'), '.') }}</div>
                     </td>
                     <td class="py-3 pr-4">
                         <div class="text-sm text-gray-600">${{ number_format($movement->unit_cost, 2) }}</div>
@@ -106,7 +88,7 @@
                                     data-movement-type="{{ $movement->isEntry() ? 'Entrada' : 'Salida' }}"
                                     data-supply-name="{{ $movement->supply->name }}"
                                     data-supply-unit="{{ $movement->supply->unit }}"
-                                    data-quantity="{{ number_format($movement->quantity, 3) }}"
+                                    data-quantity="{{ rtrim(rtrim(number_format($movement->quantity, 2, '.', ','), '0'), '.') }}"
                                     data-unit-cost="{{ number_format($movement->unit_cost, 2) }}"
                                     data-total-cost="{{ number_format($movement->total_cost, 2) }}"
                                     data-reason="{{ $movement->reason ?? '' }}"
@@ -350,20 +332,9 @@ async function confirmDelete() {
 
 // Función para mostrar mensaje de éxito
 function showSuccessMessage(message = 'Operación realizada correctamente') {
-    const messageElement = document.createElement('div');
-    messageElement.className = 'mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded';
-    messageElement.textContent = message;
-    
-    const content = document.querySelector('.bg-white.border.rounded.p-4');
-    if (content) {
-        content.insertBefore(messageElement, content.firstChild);
-        
-        // Remover el mensaje después de 4 segundos
-        setTimeout(() => {
-            if (messageElement.parentNode) {
-                messageElement.parentNode.removeChild(messageElement);
-            }
-        }, 4000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert) {
+        window.showSuccessAlert(message);
     }
 }
 

@@ -36,6 +36,9 @@ class UpdateTaskRequest extends FormRequest
             'price_per_day' => 'required_if:payment_type,days|nullable|numeric|min:0',
             'price_per_kg' => 'required_if:payment_type,quantity|nullable|numeric|min:0',
             'total_payment' => 'nullable|numeric|min:0',
+            'supplies_data' => 'nullable|array',
+            'supplies_data.*.supply_id' => 'required|exists:supplies,id',
+            'supplies_data.*.quantity' => 'required|numeric|min:0.01',
         ];
     }
 

@@ -133,14 +133,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('farm-settings', [FarmSettingController::class, 'update'])->name('farm-settings.update');
     Route::get('workers/pdf', [WorkerController::class, 'downloadPdf'])->name('workers.pdf');
     Route::resource('workers', WorkerController::class);
-    Route::post('workers/{worker}/reset-password', [WorkerController::class, 'resetPassword'])->name('workers.reset-password');
     Route::post('workers/{worker}/toggle-status', [WorkerController::class, 'toggleStatus'])->name('workers.toggle-status');
-    Route::get('workers/{worker}/tasks', [WorkerController::class, 'tasks'])->name('workers.tasks');
     Route::get('workers/{worker}/report', [WorkerController::class, 'report'])->name('workers.report');
-    Route::get('workers-daily-tasks', [WorkerController::class, 'dailyTasks'])->name('workers.daily-tasks');
-    Route::get('workers-harvest-tasks', [WorkerController::class, 'harvestTasks'])->name('workers.harvest-tasks');
-    Route::post('tasks/{task}/approve', [WorkerController::class, 'approveTask'])->name('workers.approve-task');
-    Route::post('tasks/{task}/reject', [WorkerController::class, 'rejectTask'])->name('workers.reject-task');
+    Route::get('workers/{worker}/report-data', [WorkerController::class, 'reportData'])->name('workers.report-data');
+    Route::get('workers/{worker}/report-pdf', [WorkerController::class, 'reportPdf'])->name('workers.report-pdf');
 });
 
 // Foreman routes

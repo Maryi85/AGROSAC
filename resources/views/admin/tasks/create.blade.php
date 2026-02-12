@@ -200,6 +200,107 @@
             </div>
         </div>
 
+        <!-- Insumos Requeridos -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" x-data="suppliesRepeater()">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-md font-medium text-emerald-800 flex items-center gap-2">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    Insumos Requeridos
+                </h3>
+                <button type="button" @click="addSupply()" class="text-sm text-emerald-600 hover:text-emerald-800 flex items-center gap-1">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    Agregar Insumo
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <template x-for="(row, index) in rows" :key="row.id">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-white p-3 rounded shadow-sm">
+                        
+                        <!-- Selección de Insumo -->
+                        <div class="md:col-span-7">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Insumo</label>
+                            <select :name="`supplies_data[${index}][supply_id]`" x-model="row.supply_id" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm" required>
+                                <option value="">Seleccionar...</option>
+                                @foreach($supplies as $supply)
+                                    <option value="{{ $supply->id }}" data-unit="{{ $supply->unit }}">
+                                        {{ $supply->name }} (Min: {{ $supply->min_stock }} {{ $supply->unit }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="md:col-span-4">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
+                            <div class="relative">
+                                <input type="number" :name="`supplies_data[${index}][quantity]`" x-model="row.quantity" step="0.01" min="0.01" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm" required>
+                                <span class="absolute right-8 top-1.5 text-xs text-gray-500" x-text="getUnit(row.supply_id)"></span>
+                            </div>
+                        </div>
+
+                        <!-- Botón Eliminar -->
+                        <div class="md:col-span-1 text-right">
+                            <button type="button" @click="removeSupply(index)" class="text-red-500 hover:text-red-700 p-1">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <div x-show="rows.length === 0" class="text-center py-4 text-gray-500 text-sm italic">
+                    No hay insumos asignados a esta tarea.
+                </div>
+            </div>
+            
+            @if($errors->has('supplies_data'))
+                <div class="mt-2 text-red-600 text-sm">{{ $errors->first('supplies_data') }}</div>
+            @endif
+        </div>
+
+        <script>
+            function suppliesRepeater() {
+                return {
+                    rows: [],
+                    init() {
+                        const oldSupplies = @json(old('supplies_data', []));
+                        if (oldSupplies.length > 0) {
+                            this.rows = oldSupplies.map(item => ({
+                                id: Date.now() + Math.random(),
+                                supply_id: item.supply_id,
+                                quantity: item.quantity
+                            }));
+                        }
+                    },
+                    addSupply() {
+                        this.rows.push({
+                            id: Date.now(),
+                            supply_id: '',
+                            quantity: ''
+                        });
+                    },
+                    removeSupply(index) {
+                        this.rows.splice(index, 1);
+                    },
+                    getUnit(supplyId) {
+                        if (!supplyId) return '';
+                        // Find option text logic or better yet, simple map if needed. 
+                        // For simplicity in this context, we can try to grab it from DOM if possible, 
+                        // or just not show it dynamically perfectly without a lookup map.
+                        // Let's rely on the user knowing the unit or adding a data attribute map.
+                        // Ideally we would pass a JS object with units.
+                        const supply = userSuppliesMap[supplyId];
+                        return supply ? supply.unit : '';
+                    }
+                }
+            }
+            // Create a map for quick unit lookup
+            const userSuppliesMap = {};
+            @foreach($supplies as $supply)
+                userSuppliesMap[{{ $supply->id }}] = { unit: '{{ $supply->unit }}', name: '{{ addslashes($supply->name) }}' };
+            @endforeach
+        </script>
+
         <!-- Botones -->
         <div class="flex items-center gap-4 pt-4">
             <button type="submit" class="px-6 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
@@ -416,21 +517,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Función para mostrar notificaciones
+    // Función para mostrar notificaciones usando SweetAlert2
     function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-500 text-white' : 
-            type === 'error' ? 'bg-red-500 text-white' : 
-            'bg-blue-500 text-white'
-        }`;
-        notification.textContent = message;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        if (window.showSuccessAlert && type === 'success') {
+            window.showSuccessAlert(message);
+        } else if (window.showErrorAlert && type === 'error') {
+            window.showErrorAlert(message);
+        } else if (window.showSuccessAlert) {
+            window.showSuccessAlert(message);
+        }
     }
 
     // Agregar event listeners
@@ -502,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Mostrar mensaje de éxito temporal
-                showNotification('Lista de cultivos actualizada correctamente', 'success');
+                // showNotification('Lista de cultivos actualizada correctamente', 'success');
             } else {
                 throw new Error('Error en la respuesta del servidor');
             }

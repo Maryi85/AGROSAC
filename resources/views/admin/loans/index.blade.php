@@ -9,11 +9,7 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
+
 
     @if (session('error'))
         <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
@@ -30,45 +26,9 @@
     </div>
 
     <!-- Filtros de búsqueda -->
-    <form method="GET" class="mb-4 flex gap-2 items-end">
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Estado</label>
-            <select name="status" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los estados</option>
-                @foreach($statuses as $key => $label)
-                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Herramienta</label>
-            <select name="tool_id" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todas las herramientas</option>
-                @foreach($tools as $tool)
-                    <option value="{{ $tool->id }}" {{ request('tool_id') == $tool->id ? 'selected' : '' }}>
-                        {{ $tool->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Trabajador</label>
-            <select name="user_id" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los trabajadores</option>
-                @foreach($workers as $worker)
-                    <option value="{{ $worker->id }}" {{ request('user_id') == $worker->id ? 'selected' : '' }}>
-                        {{ $worker->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
-            <i data-lucide="search" class="w-4 h-4"></i>
-            <span>Filtrar</span>
-        </button>
-    </form>
+    <div class="mb-4">
+        <x-search-bar placeholder="Buscar por herramienta o trabajador..." />
+    </div>
 
     <!-- Tabla de préstamos -->
     <div class="overflow-x-auto">

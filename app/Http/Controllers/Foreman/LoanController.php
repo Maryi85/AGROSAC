@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Foreman;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreLoanRequest;
+use App\Http\Requests\UpdateLoanRequest;
 use App\Models\Loan;
 use App\Models\Tool;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -18,7 +19,12 @@ class LoanController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Loan::with(['tool', 'user']);
+        // Verificar que el usuario tiene el rol correcto
+        $user = auth()->user();
+        if (!$user || !in_array($user->role, ['admin', 'foreman'])) {
+            abort(403, 'No tienes permisos para acceder a esta página.');
+        }
+        $query = Loan::with(['tool', 'user', 'approvedBy', 'returnedBy']);
 
         // Filtro por estado
         if ($request->filled('status') && $request->status !== 'all') {
@@ -61,100 +67,47 @@ class LoanController extends Controller
         return view('foreman.loans.index', compact('loans', 'tools', 'workers', 'statuses'));
     }
 
-    public function create(): View
-    {
-        // Obtener herramientas disponibles
-        // Usar el accessor available_qty que calcula desde tool_entries
-        $tools = Tool::with('entries')
-                    ->where('status', 'operational')
-                    ->get()
-                    ->filter(function($tool) {
-                        return $tool->available_qty > 0;
-                    })
-                    ->sortBy('name')
-                    ->values();
+    // Los métodos create y store han sido eliminados
+    // El mayordomo solo aprueba/rechaza solicitudes de trabajadores
 
-        // Obtener trabajadores
-        $workers = User::where('role', 'worker')->orderBy('name')->get();
-
-        return view('foreman.loans.create', compact('tools', 'workers'));
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'tool_id' => 'required|exists:tools,id',
-            'user_id' => 'required|exists:users,id',
-            'quantity' => 'required|integer|min:1',
-            'due_at' => 'nullable|date|after:today',
-        ]);
-
-        $tool = Tool::findOrFail($request->tool_id);
-        
-        // Verificar disponibilidad
-        if ($tool->available_qty < $request->quantity) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'No hay suficientes unidades disponibles de esta herramienta.');
-        }
-
-        // Crear el préstamo
-        $loan = Loan::create([
-            'tool_id' => $request->tool_id,
-            'user_id' => $request->user_id,
-            'quantity' => $request->quantity,
-            'out_at' => now(),
-            'due_at' => $request->due_at ? Carbon::parse($request->due_at) : null,
-            'status' => 'out',
-        ]);
-
-        // Actualizar la cantidad disponible de la herramienta
-        $tool->decrementAvailableQty($request->quantity);
-        return redirect()->route('foreman.loans.index')
-            ->with('status', 'Herramienta prestada correctamente');
-    }
-
-    public function show(Loan $loan): View|JsonResponse
+    public function show(Loan $loan): View
     {
         $loan->load(['tool', 'user']);
-        
-        // Si es una petición AJAX, devolver JSON
-        if (request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'loan' => [
-                    'id' => $loan->id,
-                    'tool_name' => $loan->tool->name,
-                    'tool_category' => $loan->tool->category,
-                    'worker_name' => $loan->user->name,
-                    'worker_email' => $loan->user->email,
-                    'quantity' => $loan->quantity,
-                    'out_at' => $loan->out_at->format('d/m/Y H:i'),
-                    'due_at' => $loan->due_at ? $loan->due_at->format('d/m/Y') : 'Sin fecha límite',
-                    'returned_at' => $loan->returned_at ? $loan->returned_at->format('d/m/Y H:i') : 'No devuelto',
-                    'status' => $loan->status,
-                    'condition' => $loan->condition_return ?? 'Sin observaciones',
-                ]
-            ]);
-        }
-        
         return view('foreman.loans.show', compact('loan'));
     }
 
-    public function return(Request $request, Loan $loan): RedirectResponse|JsonResponse
+    public function edit(Loan $loan): View
+    {
+        $loan->load(['tool', 'user']);
+        return view('foreman.loans.edit', compact('loan'));
+    }
+
+    public function update(UpdateLoanRequest $request, Loan $loan): RedirectResponse
+    {
+        $loan->update($request->validated());
+
+        return redirect()->route('foreman.loans.index')
+            ->with('status', 'Préstamo actualizado correctamente');
+    }
+
+    public function destroy(Loan $loan): RedirectResponse
+    {
+        // Si el préstamo está activo, devolver la cantidad a la herramienta
+        if ($loan->status === 'out') {
+            $loan->tool->incrementAvailableQty($loan->quantity);
+        }
+
+        $loan->delete();
+
+        return redirect()->route('foreman.loans.index')
+            ->with('status', 'Préstamo eliminado correctamente');
+    }
+
+    public function return(Loan $loan): RedirectResponse
     {
         if ($loan->status !== 'out') {
-            $errorMessage = 'Este préstamo ya ha sido procesado.';
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage
-                ], 400);
-            }
-            
             return redirect()->route('foreman.loans.index')
-                ->with('error', $errorMessage);
+                ->with('error', 'Este préstamo ya ha sido devuelto.');
         }
 
         // Marcar como devuelto
@@ -165,106 +118,65 @@ class LoanController extends Controller
 
         // Devolver la cantidad a la herramienta
         $loan->tool->incrementAvailableQty($loan->quantity);
-        $message = 'Herramienta devuelta correctamente';
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'loan' => [
-                    'id' => $loan->id,
-                    'status' => $loan->status,
-                    'returned_at' => $loan->returned_at->format('d/m/Y H:i')
-                ]
-            ]);
-        }
 
         return redirect()->route('foreman.loans.index')
-            ->with('status', $message);
+            ->with('status', 'Herramienta devuelta correctamente');
     }
 
-    public function markAsLost(Request $request, Loan $loan): RedirectResponse|JsonResponse
+    public function markAsLost(Loan $loan): RedirectResponse
     {
         if ($loan->status !== 'out') {
-            $errorMessage = 'Este préstamo ya ha sido procesado.';
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage
-                ], 400);
-            }
-            
             return redirect()->route('foreman.loans.index')
-                ->with('error', $errorMessage);
+                ->with('error', 'Este préstamo ya ha sido procesado.');
         }
 
-        // Marcar como perdido
-        $loan->update([
-            'status' => 'lost',
-            'returned_at' => now(),
-        ]);
-
-        // Marcar como perdida en el inventario
-        $loan->tool->markAsLost($loan->quantity);
-        $message = 'Herramienta marcada como perdida';
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'loan' => [
-                    'id' => $loan->id,
-                    'status' => $loan->status,
-                    'returned_at' => $loan->returned_at->format('d/m/Y H:i')
-                ]
+        DB::beginTransaction();
+        try {
+            // Marcar como perdido
+            $loan->update([
+                'status' => 'lost',
+                'returned_at' => now(),
             ]);
-        }
 
-        return redirect()->route('foreman.loans.index')
-            ->with('status', $message);
+            // Marcar como perdida en el inventario
+            $loan->tool->markAsLost($loan->quantity);
+
+            DB::commit();
+
+            return redirect()->route('foreman.loans.index')
+                ->with('status', 'Herramienta marcada como perdida');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Error al marcar como perdida: ' . $e->getMessage()]);
+        }
     }
 
-    public function markAsDamaged(Request $request, Loan $loan): RedirectResponse|JsonResponse
+    public function markAsDamaged(Loan $loan): RedirectResponse
     {
         if ($loan->status !== 'out') {
-            $errorMessage = 'Este préstamo ya ha sido procesado.';
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage
-                ], 400);
-            }
-            
             return redirect()->route('foreman.loans.index')
-                ->with('error', $errorMessage);
+                ->with('error', 'Este préstamo ya ha sido procesado.');
         }
 
-        // Marcar como dañado
-        $loan->update([
-            'status' => 'damaged',
-            'returned_at' => now(),
-        ]);
-
-        // Marcar como dañada en el inventario
-        $loan->tool->markAsDamaged($loan->quantity);
-        $message = 'Herramienta marcada como dañada';
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'loan' => [
-                    'id' => $loan->id,
-                    'status' => $loan->status,
-                    'returned_at' => $loan->returned_at->format('d/m/Y H:i')
-                ]
+        DB::beginTransaction();
+        try {
+            // Marcar como dañado
+            $loan->update([
+                'status' => 'damaged',
+                'returned_at' => now(),
             ]);
-        }
 
-        return redirect()->route('foreman.loans.index')
-            ->with('status', $message);
+            // Marcar como dañada en el inventario
+            $loan->tool->markAsDamaged($loan->quantity);
+
+            DB::commit();
+
+            return redirect()->route('foreman.loans.index')
+                ->with('status', 'Herramienta marcada como dañada');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Error al marcar como dañada: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -298,7 +210,14 @@ class LoanController extends Controller
                 'admin_notes' => $request->admin_notes,
             ]);
 
-            // NO decrementar el stock aquí, se hará cuando se procese el préstamo aprobado
+            // Actualizar la cantidad disponible de la herramienta
+            $tool->decrementAvailableQty($loan->quantity);
+
+            // Marcar como 'out' y establecer out_at
+            $loan->update([
+                'status' => 'out',
+                'out_at' => now(),
+            ]);
 
             DB::commit();
 
@@ -355,7 +274,6 @@ class LoanController extends Controller
             $loan->update([
                 'admin_notes' => $request->admin_notes,
                 'status' => 'returned', // Confirmar que está devuelto
-                'returned_by' => auth()->id(),
             ]);
 
             // Devolver la cantidad a la herramienta (si no estaba ya devuelta)
@@ -382,60 +300,20 @@ class LoanController extends Controller
                 ->with('error', 'Este préstamo no está aprobado.');
         }
 
-        DB::beginTransaction();
-        try {
-            // Verificar disponibilidad antes de procesar
-            $tool = $loan->tool;
-            if ($tool->available_qty < $loan->quantity) {
-                return redirect()->back()
-                    ->with('error', 'No hay suficientes herramientas disponibles para procesar este préstamo.');
-            }
-
-            // Decrementar el stock
-            $tool->decrementAvailableQty($loan->quantity);
-
-            // Marcar como 'out' y establecer out_at
-            $loan->update([
-                'status' => 'out',
-                'out_at' => now(),
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('foreman.loans.index')
-                ->with('status', 'Préstamo procesado correctamente');
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->withErrors(['error' => 'Error al procesar el préstamo: ' . $e->getMessage()]);
-        }
-    }
-
-    public function destroy(Loan $loan): RedirectResponse|JsonResponse
-    {
-        // Si el préstamo está activo, devolver la cantidad a la herramienta
-        if ($loan->status === 'out') {
-            $loan->tool->incrementAvailableQty($loan->quantity);
-        }
-
-        $loanInfo = $loan->tool->name . ' - ' . $loan->user->name;
-        $loan->delete();
-        $message = 'Préstamo eliminado correctamente';
-
-        if (request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => $message
-            ]);
-        }
+        $loan->update([
+            'status' => 'out',
+            'out_at' => now(),
+        ]);
 
         return redirect()->route('foreman.loans.index')
-            ->with('status', $message);
+            ->with('status', 'Préstamo procesado correctamente');
     }
 
     public function downloadPdf(Request $request)
     {
-        $query = Loan::with(['tool', 'user']);
+        $query = Loan::with(['tool', 'user', 'approvedBy', 'returnedBy']);
 
+        // Aplicar los mismos filtros que en index
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
@@ -451,8 +329,12 @@ class LoanController extends Controller
         $loans = $query->orderBy('created_at', 'desc')->get();
 
         $statuses = [
+            'pending' => 'Pendiente',
+            'approved' => 'Aprobado',
+            'rejected' => 'Rechazado',
             'out' => 'Prestado',
-            'returned' => 'Devuelto',
+            'returned_by_worker' => 'Devuelto por Trabajador',
+            'returned' => 'Devuelto y Confirmado',
             'lost' => 'Perdido',
             'damaged' => 'Dañado',
         ];
@@ -461,8 +343,3 @@ class LoanController extends Controller
         return $pdf->download('prestamos-' . now()->format('Y-m-d') . '.pdf');
     }
 }
-
-
-
-
-

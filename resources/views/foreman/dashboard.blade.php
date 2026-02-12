@@ -3,8 +3,8 @@
 @section('header')
 <div class="flex items-center justify-between">
     <div>
-        <h2 class="text-2xl font-bold text-gray-800">Dashboard Mayordomo</h2>
-        <p class="text-sm text-gray-600 mt-1">Panel de control para supervisión agrícola</p>
+        <h2 class="text-2xl font-bold text-gray-800">Dashboard Operativo</h2>
+        <p class="text-sm text-gray-600 mt-1">Supervisión de campo diaria</p>
     </div>
     <div class="flex items-center gap-2 text-sm text-gray-500">
         <i data-lucide="calendar" class="w-4 h-4"></i>
@@ -14,497 +14,360 @@
 @endsection
 
 @section('content')
-<div class="space-y-8">
-    <style>
-        .foreman-card {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s ease;
-        }
-        
-        .foreman-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        
-        .metric-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #10b981, #059669, #047857);
-        }
-        
-        .metric-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 28px -5px rgba(16, 185, 129, 0.2);
-        }
-        
-        .metric-icon {
-            background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .metric-card:hover .metric-icon {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.4);
-        }
-        
-        .action-card {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border: 1px solid rgba(16, 185, 129, 0.15);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .action-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .action-card:hover::before {
-            left: 100%;
-        }
-        
-        .action-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 28px -5px rgba(16, 185, 129, 0.2);
-            border-color: rgba(16, 185, 129, 0.3);
-        }
-        
-        .activity-card {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border: 1px solid rgba(16, 185, 129, 0.15);
-            position: relative;
-        }
-        
-        .activity-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #10b981, #059669);
-        }
-        
-        .activity-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px -3px rgba(16, 185, 129, 0.15);
-        }
-        
-        .status-badge {
-            font-weight: 600;
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            transition: all 0.2s ease;
-        }
-        
-        .status-active {
-            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        
-        .status-pending {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #92400e;
-            border: 1px solid #fde68a;
-        }
-        
-        .status-completed {
-            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        
-        .status-inactive {
-            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-            color: #374151;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .empty-state {
-            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-        }
-        
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
-        
-        .progress-ring-circle {
-            stroke-dasharray: 251.2;
-            stroke-dashoffset: 251.2;
-            transition: stroke-dashoffset 0.5s ease-in-out;
-        }
-        
-        .floating-animation {
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #10b981, #059669);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-    </style>
-    <!-- Welcome Section -->
-    <div class="foreman-card rounded-xl p-6 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full -translate-y-16 translate-x-16 opacity-50"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-100 to-emerald-200 rounded-full translate-y-12 -translate-x-12 opacity-30"></div>
-        <div class="relative z-10">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl floating-animation">
-                        <i data-lucide="user-check" class="w-7 h-7 text-white"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold gradient-text">Bienvenido, {{ auth()->user()->name ?? 'Mayordomo' }}</h3>
-                        <p class="text-sm text-gray-600 mt-1">Panel de supervisión agrícola</p>
-                        <div class="flex items-center gap-4 mt-3">
-                            <div class="flex items-center gap-2 text-sm text-gray-500">
-                                <i data-lucide="calendar" class="w-4 h-4"></i>
-                                <span>{{ now()->format('d/m/Y') }}</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-sm text-gray-500">
-                                <i data-lucide="clock" class="w-4 h-4"></i>
-                                <span>{{ now()->format('H:i') }}</span>
-                            </div>
-                        </div>
-                    </div>
+<style>
+    /* Estilos de Tarjetas estilo "Bento" adaptados del Admin */
+    .kpi-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+        border: 2px solid transparent;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 18px;
+        padding: 2px;
+        background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    
+    .kpi-card:hover::before {
+        opacity: 1;
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Variaciones de Color para KPIs Operativos */
+    .kpi-card.workers {
+        --gradient-from: #10b981; /* Emerald */
+        --gradient-to: #059669;
+        background: linear-gradient(135deg, #f0fdf9 0%, #ecfdf5 100%);
+    }
+    
+    .kpi-card.tasks {
+        --gradient-from: #f59e0b; /* Amber */
+        --gradient-to: #d97706;
+        background: linear-gradient(135deg, #fffef8 0%, #fffbf0 100%);
+    }
+    
+    .kpi-card.tools {
+        --gradient-from: #3b82f6; /* Blue */
+        --gradient-to: #2563eb;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    }
+    
+    .kpi-card.alerts {
+        --gradient-from: #ef4444; /* Red */
+        --gradient-to: #dc2626;
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    }
+    
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    .kpi-icon::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 20px;
+        padding: 4px;
+        background: linear-gradient(135deg, var(--icon-from), var(--icon-to));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0.5;
+    }
+    
+    .kpi-icon.workers-icon { --icon-from: #10b981; --icon-to: #059669; background: linear-gradient(135deg, #10b981, #059669); }
+    .kpi-icon.tasks-icon { --icon-from: #f59e0b; --icon-to: #d97706; background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .kpi-icon.tools-icon { --icon-from: #3b82f6; --icon-to: #2563eb; background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .kpi-icon.alerts-icon { --icon-from: #ef4444; --icon-to: #dc2626; background: linear-gradient(135deg, #ef4444, #dc2626); }
+    
+    .pulse-dot {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: .5; }
+    }
+</style>
+
+<div class="space-y-6">
+    {{-- Sección A: KPIs Superiores --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {{-- KPI 1: Personal Presente --}}
+        <div class="kpi-card workers p-4">
+            <div class="flex items-start justify-between mb-3">
+                <div class="kpi-icon workers-icon">
+                    <i data-lucide="users" class="w-6 h-6 text-white"></i>
                 </div>
-                <div class="hidden md:block">
-                    <div class="text-right">
-                        <div class="text-sm text-gray-500 mb-1">Estado del Sistema</div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-green-500 rounded-full pulse-animation"></div>
-                            <span class="text-sm font-medium text-green-600">Operativo</span>
-                        </div>
-                    </div>
+                <div class="flex items-center gap-1">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full pulse-dot"></div>
+                    <span class="text-xs font-medium text-emerald-700">En campo</span>
                 </div>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-600 mb-1">Personal Presente</p>
+                <p class="text-2xl font-black text-emerald-700">{{ $presentWorkers }}</p>
+                <p class="text-xs text-gray-500 mt-1">Trabajadores activos hoy</p>
+            </div>
+        </div>
+
+        {{-- KPI 2: Tareas Pendientes Hoy --}}
+        <div class="kpi-card tasks p-4">
+            <div class="flex items-start justify-between mb-3">
+                <div class="kpi-icon tasks-icon">
+                    <i data-lucide="list-todo" class="w-6 h-6 text-white"></i>
+                </div>
+                <div class="flex items-center gap-1">
+                    <div class="w-2 h-2 bg-amber-500 rounded-full pulse-dot"></div>
+                    <span class="text-xs font-medium text-amber-700">Prioridad</span>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-600 mb-1">Tareas para Hoy</p>
+                <p class="text-2xl font-black text-amber-700">{{ $pendingTasksToday }}</p>
+                <p class="text-xs text-gray-500 mt-1">Pendientes de cierre</p>
+            </div>
+        </div>
+
+        {{-- KPI 3: Herramientas en Uso --}}
+        <div class="kpi-card tools p-4">
+            <div class="flex items-start justify-between mb-3">
+                <div class="kpi-icon tools-icon">
+                    <i data-lucide="wrench" class="w-6 h-6 text-white"></i>
+                </div>
+                <div class="flex items-center gap-1">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full pulse-dot"></div>
+                    <span class="text-xs font-medium text-blue-700">En uso</span>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-600 mb-1">Herramientas Prestadas</p>
+                <p class="text-2xl font-black text-blue-700">{{ $toolsInUseCount }}</p>
+                <p class="text-xs text-gray-500 mt-1">Fuera de almacén</p>
+            </div>
+        </div>
+
+        {{-- KPI 4: Alertas de Cultivo --}}
+        <div class="kpi-card alerts p-4">
+            <div class="flex items-start justify-between mb-3">
+                <div class="kpi-icon alerts-icon">
+                    <i data-lucide="alert-circle" class="w-6 h-6 text-white"></i>
+                </div>
+                <div class="flex items-center gap-1">
+                    <div class="w-2 h-2 bg-red-500 rounded-full pulse-dot"></div>
+                    <span class="text-xs font-medium text-red-700">Atención</span>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-600 mb-1">Alertas de Cultivo</p>
+                <p class="text-2xl font-black text-red-700">{{ $cropAlerts }}</p>
+                <p class="text-xs text-gray-500 mt-1">Requieren revisión</p>
             </div>
         </div>
     </div>
 
-    <!-- Main Statistics Cards - Enfocados en responsabilidades del mayordomo -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Trabajadores Activos -->
-        <div class="metric-card rounded-xl p-6 group">
-            <div class="flex items-center justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-2">
-                        <p class="text-sm font-semibold text-gray-600">Trabajadores Activos</p>
-                        <div class="w-2 h-2 bg-green-500 rounded-full pulse-animation"></div>
-                    </div>
-                    <p class="text-4xl font-bold text-emerald-600 mb-2 group-hover:scale-105 transition-transform">{{ $activeWorkers }}</p>
-            <div class="flex items-center justify-between">
-                        <p class="text-xs text-gray-500">👥 Equipo de trabajo</p>
-                        <div class="text-xs text-emerald-600 font-medium">+12% vs mes anterior</div>
-                    </div>
-                </div>
-                <div class="p-4 metric-icon rounded-2xl group-hover:scale-110 transition-transform">
-                    <i data-lucide="users" class="w-7 h-7 text-white"></i>
-                </div>
-            </div>
-            <div class="mt-4 bg-emerald-50 rounded-lg p-3">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-600">Productividad</span>
-                    <span class="font-semibold text-emerald-600">85%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div class="bg-emerald-500 h-2 rounded-full" style="width: 85%"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tareas Pendientes -->
-        <div class="metric-card rounded-xl p-6 group">
-            <div class="flex items-center justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-2">
-                        <p class="text-sm font-semibold text-gray-600">Tareas Pendientes</p>
-                        <div class="w-2 h-2 bg-yellow-500 rounded-full pulse-animation"></div>
-                    </div>
-                    <p class="text-4xl font-bold text-emerald-600 mb-2 group-hover:scale-105 transition-transform">{{ $pendingTasks }}</p>
-            <div class="flex items-center justify-between">
-                        <p class="text-xs text-gray-500">✅ Completadas: {{ $completedTasks }}</p>
-                        <div class="text-xs text-emerald-600 font-medium">{{ $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0 }}% completado</div>
-                    </div>
-                </div>
-                <div class="p-4 metric-icon rounded-2xl group-hover:scale-110 transition-transform">
-                    <i data-lucide="clipboard-check" class="w-7 h-7 text-white"></i>
-                </div>
-            </div>
-            <div class="mt-4 bg-yellow-50 rounded-lg p-3">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-600">Progreso</span>
-                    <span class="font-semibold text-yellow-600">{{ $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0 }}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div class="bg-yellow-500 h-2 rounded-full" style="width: {{ $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0 }}%"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tareas por Aprobar -->
-        <div class="metric-card rounded-xl p-6 group">
-            <div class="flex items-center justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-2">
-                        <p class="text-sm font-semibold text-gray-600">Por Aprobar</p>
-                        <div class="w-2 h-2 bg-blue-500 rounded-full pulse-animation"></div>
-                    </div>
-                    <p class="text-4xl font-bold text-emerald-600 mb-2 group-hover:scale-105 transition-transform">{{ $tasksToApprove }}</p>
-            <div class="flex items-center justify-between">
-                        <p class="text-xs text-gray-500">⏳ Esperando validación</p>
-                        <div class="text-xs text-blue-600 font-medium">Requiere atención</div>
-                    </div>
-                </div>
-                <div class="p-4 metric-icon rounded-2xl group-hover:scale-110 transition-transform">
-                    <i data-lucide="check-circle" class="w-7 h-7 text-white"></i>
-                </div>
-            </div>
-            <div class="mt-4 bg-blue-50 rounded-lg p-3">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-600">Tiempo promedio</span>
-                    <span class="font-semibold text-blue-600">2.5 días</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div class="bg-blue-500 h-2 rounded-full" style="width: 75%"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Herramientas Disponibles -->
-        <div class="metric-card rounded-xl p-6 group">
-            <div class="flex items-center justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-2">
-                        <p class="text-sm font-semibold text-gray-600">Herramientas Disponibles</p>
-                        <div class="w-2 h-2 bg-purple-500 rounded-full pulse-animation"></div>
-                    </div>
-                    <p class="text-4xl font-bold text-emerald-600 mb-2 group-hover:scale-105 transition-transform">{{ $availableTools }}</p>
-            <div class="flex items-center justify-between">
-                        <p class="text-xs text-gray-500">🔧 Total: {{ $totalTools }}</p>
-                        <div class="text-xs text-purple-600 font-medium">{{ $totalTools > 0 ? round(($availableTools / $totalTools) * 100) : 0 }}% disponibles</div>
-                    </div>
-                </div>
-                <div class="p-4 metric-icon rounded-2xl group-hover:scale-110 transition-transform">
-                    <i data-lucide="wrench" class="w-7 h-7 text-white"></i>
-                </div>
-            </div>
-            <div class="mt-4 bg-purple-50 rounded-lg p-3">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-600">Disponibilidad</span>
-                    <span class="font-semibold text-purple-600">{{ $totalTools > 0 ? round(($availableTools / $totalTools) * 100) : 0 }}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div class="bg-purple-500 h-2 rounded-full" style="width: {{ $totalTools > 0 ? ($availableTools / $totalTools) * 100 : 0 }}%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions - Solo las funcionalidades del mayordomo -->
-    <div class="foreman-card rounded-xl p-6 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-emerald-100 to-emerald-200 rounded-full -translate-y-20 translate-x-20 opacity-30"></div>
-        <div class="relative z-10">
-            <div class="flex items-center justify-between mb-8">
-                <div class="flex items-center gap-4">
-                    <div class="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl floating-animation">
-                        <i data-lucide="zap" class="w-6 h-6 text-white"></i>
-                    </div>
-                <div>
-                        <h3 class="text-2xl font-bold gradient-text">Acciones Rápidas</h3>
-                        <p class="text-sm text-gray-600 mt-1">Gestiona las operaciones agrícolas</p>
-                    </div>
-                </div>
-                <div class="hidden md:block">
-                    <div class="text-right">
-                        <div class="text-sm text-gray-500 mb-1">Acceso Directo</div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-emerald-600">3 módulos</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <a href="{{ route('foreman.tasks.index') }}" class="action-card flex items-center p-6 rounded-xl transition-all duration-300 group">
-                    <div class="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl mr-4 group-hover:scale-110 transition-transform">
-                        <i data-lucide="clipboard-list" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-gray-800 mb-1 group-hover:text-emerald-600 transition-colors">Gestionar Tareas</div>
-                        <div class="text-sm text-gray-600 mb-2">Crear, editar y aprobar tareas</div>
-                        <div class="flex items-center gap-2 text-xs text-emerald-600">
-                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                            <span>Acceder al módulo</span>
-                        </div>
-                </div>
-            </a>
-            
-                <a href="{{ route('foreman.tools.index') }}" class="action-card flex items-center p-6 rounded-xl transition-all duration-300 group">
-                    <div class="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl mr-4 group-hover:scale-110 transition-transform">
-                        <i data-lucide="wrench" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">Inventario de Herramientas</div>
-                        <div class="text-sm text-gray-600 mb-2">Registrar y gestionar herramientas</div>
-                        <div class="flex items-center gap-2 text-xs text-blue-600">
-                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                            <span>Acceder al módulo</span>
-                        </div>
-                </div>
-            </a>
-            
-                <a href="{{ route('foreman.workers.index') }}" class="action-card flex items-center p-6 rounded-xl transition-all duration-300 group">
-                    <div class="p-4 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl mr-4 group-hover:scale-110 transition-transform">
-                        <i data-lucide="users" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-gray-800 mb-1 group-hover:text-purple-600 transition-colors">Gestionar Trabajadores</div>
-                        <div class="text-sm text-gray-600 mb-2">Ver, editar y desactivar trabajadores</div>
-                        <div class="flex items-center gap-2 text-xs text-purple-600">
-                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                            <span>Acceder al módulo</span>
-                        </div>
-                </div>
-            </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Activity - Solo información relevante para el mayordomo -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Tareas Recientes -->
-        <div class="activity-card rounded-xl p-6 group">
-            <div class="flex items-center justify-between mb-6">
+    {{-- Grid Principal: Gráfico e Insumos --}}
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {{-- Gráfico de Rendimiento (60%) --}}
+        <div class="lg:col-span-3 bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
-                    <div class="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl group-hover:scale-110 transition-transform">
-                        <i data-lucide="clipboard-check" class="w-5 h-5 text-white"></i>
+                    <div class="p-2 bg-indigo-100 rounded-lg">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-indigo-600"></i>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-gray-800">Tareas Recientes</h3>
-                        <p class="text-sm text-gray-600">Últimas actividades del equipo</p>
+                        <h3 class="text-lg font-bold text-gray-800">Rendimiento Semanal</h3>
+                        <p class="text-xs text-gray-500">Tareas Asignadas vs Completadas</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <div class="text-xs text-gray-500 mb-1">Actualizado</div>
-                    <div class="text-xs font-medium text-emerald-600">{{ now()->format('H:i') }}</div>
-                </div>
             </div>
-            @if($recentTasks->count() > 0)
-                <div class="space-y-4">
-                    @foreach($recentTasks as $task)
-                        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl transition-all duration-200 hover:shadow-md">
-                            <div>
-                                <div class="text-sm font-semibold text-gray-800 mb-1">{{ $task->description }}</div>
-                                <div class="text-xs text-gray-600">
-                                    {{ $task->plot->name ?? 'Sin lote' }} • 
-                                    {{ $task->assignee->name ?? 'Sin asignar' }}
-                                </div>
-                            </div>
-                            <span class="status-badge 
-                                {{ $task->status === 'completed' ? 'status-completed' : 
-                                   ($task->status === 'pending' ? 'status-pending' : 
-                                   ($task->status === 'approved' ? 'status-active' : 'status-inactive')) }}">
-                                {{ ucfirst($task->status) }}
-                            </span>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="empty-state text-center py-8">
-                    <i data-lucide="clipboard-check" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
-                    <p class="text-gray-500 font-medium">No hay tareas recientes</p>
-                    <p class="text-sm text-gray-400 mt-1">Las tareas aparecerán aquí cuando se asignen</p>
-                </div>
-            @endif
+            <div id="weeklyTasksChart" class="w-full h-[300px]"></div>
         </div>
 
-        <!-- Herramientas en Uso -->
-        <div class="activity-card rounded-xl p-6 group">
-            <div class="flex items-center justify-between mb-6">
+        {{-- Insumos Críticos (40%) --}}
+        <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col">
+            <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
-                    <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl group-hover:scale-110 transition-transform">
-                        <i data-lucide="wrench" class="w-5 h-5 text-white"></i>
+                    <div class="p-2 bg-orange-100 rounded-lg">
+                        <i data-lucide="package-alert" class="w-5 h-5 text-orange-600"></i>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-gray-800">Herramientas en Uso</h3>
-                        <p class="text-sm text-gray-600">Estado del inventario</p>
+                        <h3 class="text-lg font-bold text-gray-800">Insumos Críticos</h3>
+                        <p class="text-xs text-gray-500">Stock bajo necesario hoy</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <div class="text-xs text-gray-500 mb-1">Inventario</div>
-                    <div class="text-xs font-medium text-blue-600">{{ $toolsInUse->count() }} activas</div>
-                </div>
+                <a href="{{ route('foreman.supplies.index') }}" class="text-xs text-emerald-600 hover:text-emerald-700 underline">Ver inventario</a>
             </div>
-            @if($toolsInUse->count() > 0)
-                <div class="space-y-4">
-                    @foreach($toolsInUse as $tool)
-                        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl transition-all duration-200 hover:shadow-md">
-                            <div>
-                                <div class="text-sm font-semibold text-gray-800 mb-1">{{ $tool->name }}</div>
-                                <div class="text-xs text-gray-600">
-                                    {{ $tool->category ?? 'Sin categoría' }} • 
-                                    {{ $tool->available_qty }}/{{ $tool->total_qty }} disponibles
-                                </div>
+            
+            <div class="flex-1 overflow-y-auto pr-1 space-y-3 max-h-[300px]">
+                @forelse($criticalSupplies as $supply)
+                    <div class="flex items-center justify-between p-3 bg-orange-50 border border-orange-100 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center text-orange-700 text-xs font-bold">
+                                {{ substr($supply->name, 0, 2) }}
                             </div>
-                            <span class="status-badge 
-                                {{ $tool->status === 'operational' ? 'status-active' : 
-                                   ($tool->status === 'damaged' ? 'status-pending' : 'status-inactive') }}">
-                                {{ ucfirst($tool->status) }}
-                            </span>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">{{ $supply->name }}</p>
+                                <p class="text-xs text-gray-500">Mínimo: {{ $supply->min_stock }} {{ $supply->unit }}</p>
+                            </div>
                         </div>
-                    @endforeach
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-orange-600">{{ $supply->current_stock }}</p>
+                            <p class="text-[10px] text-orange-800 uppercase font-bold">Bajo</p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-6 text-gray-400">
+                        <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                        <p class="text-sm">Todo el stock en orden</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    {{-- Grid Inferior: Próximas Tareas --}}
+    <div class="grid grid-cols-1 gap-6">
+        {{-- Próximas Tareas --}}
+        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-teal-100 rounded-lg">
+                        <i data-lucide="calendar-clock" class="w-5 h-5 text-teal-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Próximas Tareas</h3>
+                        <p class="text-xs text-gray-500">Planificación inmediata</p>
+                    </div>
                 </div>
-            @else
-                <div class="empty-state text-center py-8">
-                    <i data-lucide="wrench" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
-                    <p class="text-gray-500 font-medium">No hay herramientas en uso</p>
-                    <p class="text-sm text-gray-400 mt-1">Las herramientas aparecerán aquí cuando se usen</p>
-                </div>
-            @endif
+                <a href="{{ route('foreman.tasks.index') }}" class="text-xs text-emerald-600 hover:text-emerald-700 underline">Gestionar</a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                @forelse($upcomingTasks as $task)
+                    <div class="group flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg border border-gray-100 hover:border-emerald-200 transition-all">
+                        <div class="flex items-start gap-3">
+                            <div class="mt-1">
+                                <div class="w-2 h-2 rounded-full {{ $task->priority == 'high' ? 'bg-red-500' : 'bg-emerald-500' }}"></div>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800 group-hover:text-emerald-700 transition-colors line-clamp-1">{{ $task->description }}</p>
+                                <p class="text-xs text-gray-500">
+                                    <i data-lucide="user" class="w-3 h-3 inline mr-0.5"></i> {{ $task->assignee->name ?? 'Sin asignar' }} 
+                                    <span class="mx-1">•</span> 
+                                    <i data-lucide="sprout" class="w-3 h-3 inline mr-0.5"></i> {{ $task->plot->name ?? 'Lote General' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                             <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                {{ $task->scheduled_for ? \Carbon\Carbon::parse($task->scheduled_for)->format('d/m') : 'S/F' }}
+                             </span>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-span-full text-center py-8 text-gray-400">
+                        <p class="text-sm">No hay tareas pendientes próximas</p>
+                    </div>
+                @endforelse
+            </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+{{-- ApexCharts CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+
+
+{{-- Script para ApexCharts --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var options = {
+            series: [{
+                name: 'Completadas',
+                data: @json($weeklyPerformance['completed'])
+            }, {
+                name: 'Asignadas',
+                data: @json($weeklyPerformance['assigned'])
+            }],
+            chart: {
+                type: 'bar',
+                height: 300,
+                toolbar: { show: false },
+                fontFamily: 'inherit'
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded',
+                    borderRadius: 4
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: @json($weeklyPerformance['dates']),
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                title: {
+                    text: 'Tareas'
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            colors: ['#10b981', '#cbd5e1'], // Emerald para completado, Gray para asignado
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val + " tareas"
+                    }
+                }
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'right'
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#weeklyTasksChart"), options);
+        chart.render();
+    });
+</script>
+@endpush

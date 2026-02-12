@@ -19,7 +19,7 @@ class CropController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = (string) $request->string('q');
+        $search = (string) $request->string('search');
         $status = (string) $request->string('status');
         
         $crops = Crop::query()
@@ -171,9 +171,20 @@ class CropController extends Controller
             }
             
             $photo = $request->file('photo');
-            $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->storeAs('public/photos/crops', $photoName);
-            $validated['photo'] = 'photos/crops/' . $photoName;
+            $originalName = $photo->getClientOriginalName();
+            $extension = $photo->getClientOriginalExtension();
+            $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+            $photoName = time() . '_' . $safeName . '.' . $extension;
+
+            $directory = storage_path('app/public/photos/crops');
+            if (!File::exists($directory)) {
+                File::makeDirectory($directory, 0755, true);
+            }
+
+            $path = Storage::disk('public')->putFileAs('photos/crops', $photo, $photoName);
+            if ($path) {
+                $validated['photo'] = $path;
+            }
         }
         
         \Log::info('Updating crop', [
@@ -336,7 +347,7 @@ class CropController extends Controller
 
     public function downloadPdf(Request $request)
     {
-        $search = $request->input('q', '');
+        $search = $request->input('search', '');
         $status = $request->input('status', '');
         
         $crops = Crop::query()

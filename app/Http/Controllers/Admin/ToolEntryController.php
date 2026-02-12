@@ -20,6 +20,14 @@ class ToolEntryController extends Controller
             $query->where('tool_id', $request->tool_id);
         }
 
+        // Búsqueda por nombre de herramienta
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('tool', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
         // Filtro por tipo
         if ($request->filled('type') && $request->type !== 'all') {
             $query->where('type', $request->type);
@@ -45,6 +53,7 @@ class ToolEntryController extends Controller
             'donation' => 'Donación',
             'transfer' => 'Transferencia',
             'repair' => 'Reparación',
+            'damage' => 'Daño',
         ];
 
         return view('admin.tools.entries.index', compact('entries', 'tools', 'types'));
@@ -65,6 +74,7 @@ class ToolEntryController extends Controller
             'donation' => 'Donación',
             'transfer' => 'Transferencia',
             'repair' => 'Reparación',
+            'damage' => 'Daño',
         ];
 
         return view('admin.tools.entries.create', compact('tools', 'selectedTool', 'types'));
@@ -75,7 +85,7 @@ class ToolEntryController extends Controller
         $request->validate([
             'tool_id' => 'required|exists:tools,id',
             'quantity' => 'required|integer|min:1',
-            'type' => 'required|in:purchase,donation,transfer,repair',
+            'type' => 'required|in:purchase,donation,transfer,repair,damage',
             'unit_cost' => 'nullable|numeric|min:0',
             'entry_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',
@@ -99,13 +109,13 @@ class ToolEntryController extends Controller
             ->with('status', 'Entrada de herramienta registrada correctamente');
     }
 
-    public function show(ToolEntry $entry): View
+    public function show(ToolEntry $toolEntry): View
     {
-        $entry->load(['tool', 'createdBy']);
-        return view('admin.tools.entries.show', compact('entry'));
+        $toolEntry->load(['tool', 'createdBy']);
+        return view('admin.tools.entries.show', compact('toolEntry'));
     }
 
-    public function edit(ToolEntry $entry): View
+    public function edit(ToolEntry $toolEntry): View
     {
         $tools = Tool::orderBy('name')->get();
         
@@ -114,17 +124,18 @@ class ToolEntryController extends Controller
             'donation' => 'Donación',
             'transfer' => 'Transferencia',
             'repair' => 'Reparación',
+            'damage' => 'Daño',
         ];
 
-        return view('admin.tools.entries.edit', compact('entry', 'tools', 'types'));
+        return view('admin.tools.entries.edit', compact('toolEntry', 'tools', 'types'));
     }
 
-    public function update(Request $request, ToolEntry $entry): RedirectResponse
+    public function update(Request $request, ToolEntry $toolEntry): RedirectResponse
     {
         $request->validate([
             'tool_id' => 'required|exists:tools,id',
             'quantity' => 'required|integer|min:1',
-            'type' => 'required|in:purchase,donation,transfer,repair',
+            'type' => 'required|in:purchase,donation,transfer,repair,damage',
             'unit_cost' => 'nullable|numeric|min:0',
             'entry_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',
@@ -132,16 +143,16 @@ class ToolEntryController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $entry->update($request->all());
+        $toolEntry->update($request->all());
 
         return redirect()->route('admin.tool-entries.index')
             ->with('status', 'Entrada de herramienta actualizada correctamente');
     }
 
-    public function destroy(ToolEntry $entry): RedirectResponse
+    public function destroy(ToolEntry $toolEntry): RedirectResponse
     {
-        $entryInfo = $entry->tool->name . ' (Entrada: ' . $entry->quantity . ')';
-        $entry->delete();
+        $entryInfo = $toolEntry->tool->name . ' (Entrada: ' . $toolEntry->quantity . ')';
+        $toolEntry->delete();
         return redirect()->route('admin.tool-entries.index')
             ->with('status', 'Entrada de herramienta eliminada correctamente');
     }

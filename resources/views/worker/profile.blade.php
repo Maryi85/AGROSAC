@@ -6,16 +6,6 @@
 
 @section('content')
 <div class="bg-white border rounded p-6 max-w-3xl">
-    @if (session('status'))
-        <div class="mb-4 flex items-start gap-3 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md shadow-sm">
-            <i data-lucide="check-circle" class="w-5 h-5 mt-0.5 text-emerald-600"></i>
-            <div>
-                <p class="font-medium">Datos guardados</p>
-                <p class="text-sm text-emerald-700">{{ session('status') }}</p>
-            </div>
-        </div>
-    @endif
-
     <!-- Vista de solo lectura -->
     <div id="view-mode" class="space-y-6">
         <div class="flex items-center justify-between pb-6 border-b">

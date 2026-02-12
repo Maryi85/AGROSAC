@@ -8,70 +8,24 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    <!-- Botones de acción -->
-    <div class="mb-6 flex justify-between items-center">
-        <div class="flex gap-4 flex-wrap">
-            <a href="{{ route('foreman.supply-movements.create', ['type' => 'entry']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 border border-green-200 rounded">
-                <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                <span>Entrada de Insumo</span>
-            </a>
-            <a href="{{ route('foreman.supply-movements.create', ['type' => 'exit']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded">
-                <i data-lucide="minus-circle" class="w-4 h-4"></i>
-                <span>Salida de Insumo</span>
-            </a>
-            <a href="{{ route('foreman.supply-movements.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 rounded">
-                <i data-lucide="activity" class="w-4 h-4"></i>
-                <span>Ver Movimientos</span>
-            </a>
-            <a href="{{ route('foreman.supply-consumptions.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-200 rounded">
-                <i data-lucide="bar-chart" class="w-4 h-4"></i>
-                <span>Ver Consumos</span>
-            </a>
-            <a href="{{ route('foreman.supplies.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-                <span>Nuevo Insumo</span>
-            </a>
-        </div>
-        <a href="{{ route('foreman.supplies.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
-            <i data-lucide="file-text" class="w-5 h-5"></i>
-            <span>Descargar PDF</span>
-        </a>
-    </div>
-
     <!-- Filtros de búsqueda -->
-    <form method="GET" class="mb-4 flex gap-2 items-end">
-        <div class="flex-1">
-            <label class="block text-sm mb-1 text-emerald-800">Buscar por nombre</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar insumos..." class="w-full border border-emerald-200 rounded px-3 py-2" />
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="flex items-end justify-between gap-4 mb-4">
+            <h3 class="text-lg font-semibold text-emerald-700">Buscar Insumos</h3>
+            <div class="flex gap-2">
+                <a href="{{ route('foreman.supplies.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded font-medium transition-colors">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>Descargar PDF</span>
+                </a>
+                <a href="{{ route('foreman.supplies.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded font-medium transition-colors">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    <span>Nuevo Insumo</span>
+                </a>
+            </div>
         </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Estado</label>
-            <select name="status" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los estados</option>
-                @foreach($statuses as $key => $label)
-                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
-            <i data-lucide="search" class="w-4 h-4"></i>
-            <span>Filtrar</span>
-        </button>
-    </form>
+        
+        <x-search-bar placeholder="Buscar insumos..." />
+    </div>
 
     <!-- Tabla de insumos -->
     <div class="overflow-x-auto">
@@ -642,18 +596,9 @@ function updateTableRow() {
 }
 
 function showSuccessMessage() {
-    const message = document.createElement('div');
-    message.className = 'mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded';
-    message.textContent = 'Insumo actualizado correctamente';
-    
-    const content = document.querySelector('.bg-white.border.rounded.p-4');
-    if (content) {
-        content.insertBefore(message, content.firstChild);
-        setTimeout(() => {
-            if (message.parentNode) {
-                message.parentNode.removeChild(message);
-            }
-        }, 3000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert) {
+        window.showSuccessAlert('Insumo actualizado correctamente');
     }
 }
 

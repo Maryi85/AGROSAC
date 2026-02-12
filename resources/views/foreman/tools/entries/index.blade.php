@@ -5,64 +5,23 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Entradas de Herramientas</h2>
-    <a href="{{ route('foreman.tool-entries.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
-        <i data-lucide="plus" class="w-5 h-5"></i>
-        <span>Nueva Entrada</span>
-    </a>
 </div>
 @endsection
 
 @section('content')
 <!-- Filtros -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-            <label for="tool_id" class="block text-sm font-medium text-gray-700 mb-2">Herramienta</label>
-            <select name="tool_id" id="tool_id" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <option value="all">Todas las herramientas</option>
-                @foreach($tools as $tool)
-                    <option value="{{ $tool->id }}" {{ request('tool_id') == $tool->id ? 'selected' : '' }}>
-                        {{ $tool->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-            <select name="type" id="type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <option value="all">Todos los tipos</option>
-                @foreach($types as $key => $label)
-                    <option value="{{ $key }}" {{ request('type') == $key ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label for="date_from" class="block text-sm font-medium text-gray-700 mb-2">Fecha Desde</label>
-            <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" 
-                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-
-        <div>
-            <label for="date_to" class="block text-sm font-medium text-gray-700 mb-2">Fecha Hasta</label>
-            <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" 
-                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-
-        <div class="md:col-span-4 flex justify-end gap-2">
-            <a href="{{ route('foreman.tool-entries.index') }}" 
-               class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors">
-                Limpiar
-            </a>
-            <button type="submit" 
-                    class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors">
-                Filtrar
-            </button>
-        </div>
-    </form>
+    <div class="flex items-end justify-between gap-4 mb-4">
+        <h3 class="text-lg font-semibold text-emerald-700">Filtrar Entradas</h3>
+        <a href="{{ route('foreman.tool-entries.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Nueva Entrada</span>
+        </a>
+    </div>
+    
+    <div class="mb-4">
+        <x-search-bar placeholder="Buscar por herramienta..." />
+    </div>
 </div>
 
 <!-- Tabla de entradas -->
@@ -72,12 +31,12 @@
             <thead>
                 <tr class="text-left text-emerald-800 border-b bg-gray-50">
                     <th class="py-3 px-4">Fecha</th>
+                    <th class="py-3 px-4">Foto</th>
                     <th class="py-3 px-4">Herramienta</th>
                     <th class="py-3 px-4">Tipo</th>
                     <th class="py-3 px-4">Cantidad</th>
                     <th class="py-3 px-4">Costo Unitario</th>
                     <th class="py-3 px-4">Total</th>
-                    <th class="py-3 px-4">Proveedor</th>
                     <th class="py-3 px-4">Registrado por</th>
                     <th class="py-3 px-4 text-right">Acciones</th>
                 </tr>
@@ -88,6 +47,15 @@
                     <td class="py-3 px-4">
                         <div class="font-medium text-gray-900">{{ $entry->entry_date->format('d/m/Y') }}</div>
                         <div class="text-xs text-gray-500">{{ $entry->created_at->format('H:i') }}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        @if($entry->tool->photo)
+                            <img src="{{ asset('storage/' . $entry->tool->photo) }}" alt="{{ $entry->tool->name }}" class="w-12 h-12 rounded-full object-cover border border-gray-200">
+                        @else
+                            <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                                <i data-lucide="image" class="w-5 h-5"></i>
+                            </div>
+                        @endif
                     </td>
                     <td class="py-3 px-4">
                         <div class="font-medium text-gray-900">{{ $entry->tool->name }}</div>
@@ -118,9 +86,6 @@
                                 —
                             @endif
                         </div>
-                    </td>
-                    <td class="py-3 px-4">
-                        <div class="text-sm text-gray-600">{{ $entry->supplier ?? '—' }}</div>
                     </td>
                     <td class="py-3 px-4">
                         <div class="text-sm text-gray-600">{{ $entry->createdBy->name }}</div>

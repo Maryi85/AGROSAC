@@ -8,18 +8,6 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
     <!-- Botón para agregar nuevo seguimiento -->
     <div class="mb-6 flex justify-start">
         <a href="{{ route('admin.crop-tracking.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
@@ -286,20 +274,9 @@ async function confirmDelete() {
 
 // Función para mostrar mensaje de éxito
 function showSuccessMessage(message = 'Operación realizada correctamente') {
-    const messageElement = document.createElement('div');
-    messageElement.className = 'mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded';
-    messageElement.textContent = message;
-    
-    const content = document.querySelector('.bg-white.border.rounded.p-4');
-    if (content) {
-        content.insertBefore(messageElement, content.firstChild);
-        
-        // Remover el mensaje después de 4 segundos
-        setTimeout(() => {
-            if (messageElement.parentNode) {
-                messageElement.parentNode.removeChild(messageElement);
-            }
-        }, 4000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert) {
+        window.showSuccessAlert(message);
     }
 }
 

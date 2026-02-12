@@ -41,6 +41,18 @@ class LoanController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
+        // Búsqueda general (herramienta o trabajador)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('tool', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })->orWhereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
         $loans = $query->orderBy('created_at', 'desc')->paginate(10);
 
         // Obtener herramientas disponibles para el filtro

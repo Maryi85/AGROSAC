@@ -21,13 +21,9 @@
         </a>
     </div>
 
-    <form method="GET" class="mb-4 flex gap-2">
-        <input type="text" name="q" value="{{ $search }}" placeholder="Buscar por nombre" class="border border-emerald-200 rounded px-3 py-2 w-full" />
-        <button class="px-3 py-2 border border-emerald-300 rounded text-emerald-700 hover:bg-emerald-100 inline-flex items-center gap-2">
-            <i data-lucide="search" class="w-4 h-4"></i>
-            <span>Buscar</span>
-        </button>
-    </form>
+    <div class="mb-4">
+        <x-search-bar placeholder="Buscar por nombre" />
+    </div>
 
     <div class="overflow-x-auto" x-data="plotEdit()" @close-edit.window="open=false">
         <!-- Notificación de error -->
@@ -845,14 +841,14 @@ document.addEventListener('alpine:init', () => {
                 console.log('Datos recibidos:', data);
                 
                 if (response.ok || response.status === 200) {
-                    this.successMessage = data.message || 'Lote actualizado correctamente';
-                    this.showSuccess = true;
                     this.closeModal();
                     
-                    setTimeout(() => {
-                        this.showSuccess = false;
-                    }, 3000);
+                    // Mostrar toast de éxito usando la función global
+                    if (window.showSuccessAlert) {
+                        window.showSuccessAlert(data.message || 'El lote ha sido actualizado correctamente.');
+                    }
                     
+                    // Recargar página después de un breve delay para que se vea el toast
                     setTimeout(() => {
                         window.location.reload();
                     }, 1000);

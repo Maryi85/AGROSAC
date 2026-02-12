@@ -187,8 +187,9 @@ class ToolController extends Controller
                     'id' => $tool->id,
                     'name' => $tool->name,
                     'category' => $tool->category,
-                    'total_qty' => $tool->total_qty,
                     'status' => $tool->status,
+                    'total_entries' => $tool->total_entries, // Computed accessor
+                    'available_qty' => $tool->available_qty, // Computed accessor
                     'photo' => $tool->photo ? asset('storage/' . $tool->photo) : null
                 ]
             ]);

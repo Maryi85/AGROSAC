@@ -9,73 +9,24 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    <!-- Botones de acción -->
-    <div class="mb-6 flex justify-between items-center">
-        <div class="flex gap-4 flex-wrap">
-            <a href="{{ route(route_prefix() . 'tools.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-                <span>Nueva Herramienta</span>
-            </a>
-            <a href="{{ route(route_prefix() . 'tool-entries.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="package" class="w-5 h-5"></i>
-                <span>Gestionar Entradas</span>
-            </a>
-            <a href="{{ route(route_prefix() . 'tool-damage.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                <span>Daños y Pérdidas</span>
-            </a>
-        </div>
-        <a href="{{ route(route_prefix() . 'tools.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
-            <i data-lucide="file-text" class="w-5 h-5"></i>
-            <span>Descargar PDF</span>
-        </a>
-    </div>
-
     <!-- Filtros de búsqueda -->
-    <form method="GET" class="mb-4 flex gap-2 items-end">
-        <div class="flex-1">
-            <label class="block text-sm mb-1 text-emerald-800">Buscar por nombre</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar herramientas..." class="w-full border border-emerald-200 rounded px-3 py-2" />
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="flex items-end justify-between gap-4 mb-4">
+            <h3 class="text-lg font-semibold text-emerald-700">Buscar Herramientas</h3>
+            <div class="flex gap-2">
+                <a href="{{ route(route_prefix() . 'tools.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded font-medium transition-colors">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>Descargar PDF</span>
+                </a>
+                <a href="{{ route(route_prefix() . 'tools.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded font-medium transition-colors">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    <span>Nueva Herramienta</span>
+                </a>
+            </div>
         </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Categoría</label>
-            <select name="category" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todas las categorías</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category }}" {{ request('category') === $category ? 'selected' : '' }}>
-                        {{ ucfirst(str_replace('_', ' ', $category)) }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Estado</label>
-            <select name="status" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los estados</option>
-                @foreach($statuses as $key => $label)
-                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
-            <i data-lucide="search" class="w-4 h-4"></i>
-            <span>Filtrar</span>
-        </button>
-    </form>
+        
+        <x-search-bar placeholder="Buscar herramientas..." />
+    </div>
 
     <!-- Tabla de herramientas -->
     <div class="overflow-x-auto">
@@ -98,13 +49,13 @@
                 <tr class="border-b hover:bg-gray-50" data-tool-id="{{ $tool->id }}">
                     <td class="py-3 pr-4">
                         @if(!empty($tool->photo))
-                            <img src="{{ asset('storage/' . $tool->photo) }}" alt="{{ $tool->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            <img src="{{ asset('storage/' . $tool->photo) }}" alt="{{ $tool->name }}" class="w-12 h-12 object-cover rounded-full border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-12 h-12 bg-gray-100 rounded-full border border-gray-200 flex items-center justify-center hidden">
+                                <i data-lucide="image" class="w-5 h-5 text-gray-400"></i>
                             </div>
                         @else
-                            <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                            <div class="w-12 h-12 bg-gray-100 rounded-full border border-gray-200 flex items-center justify-center">
+                                <i data-lucide="image" class="w-5 h-5 text-gray-400"></i>
                             </div>
                         @endif
                     </td>
@@ -175,19 +126,7 @@
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                             
-                            <!-- Gestionar entradas -->
-                            <a href="{{ route(route_prefix() . 'tool-entries.create', ['tool_id' => $tool->id]) }}" 
-                               class="inline-flex items-center justify-center w-8 h-8 border border-purple-200 rounded hover:bg-purple-100 text-purple-600" 
-                               title="Gestionar entradas">
-                                <i data-lucide="package" class="w-4 h-4"></i>
-                            </a>
-                            
-                            <!-- Registrar daño/pérdida -->
-                            <a href="{{ route(route_prefix() . 'tool-damage.create', ['tool_id' => $tool->id]) }}" 
-                               class="inline-flex items-center justify-center w-8 h-8 border border-orange-200 rounded hover:bg-orange-100 text-orange-600" 
-                               title="Registrar daño o pérdida">
-                                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                            </a>
+
                             
                             <!-- Editar -->
                             <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-100 text-emerald-600 edit-tool-btn" 
@@ -334,25 +273,16 @@
                 </select>
             </div>
             
-            <!-- Estado y Cantidades -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm mb-1 text-emerald-800">Estado</label>
-                    <select name="status" id="editStatus" class="w-full border border-emerald-200 rounded px-3 py-2">
-                        <option value="operational">Operacional</option>
-                        <option value="damaged">Dañado</option>
-                        <option value="lost">Perdido</option>
-                        <option value="retired">Retirado</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm mb-1 text-emerald-800">Cantidad Total</label>
-                    <input type="number" min="0" name="total_qty" id="editTotalQty" class="w-full border border-emerald-200 rounded px-3 py-2" required />
-                </div>
-                <div>
-                    <label class="block text-sm mb-1 text-emerald-800">Cantidad Disponible</label>
-                    <input type="number" min="0" name="available_qty" id="editAvailableQty" class="w-full border border-emerald-200 rounded px-3 py-2" required />
-                </div>
+            <!-- Estado -->
+            <div>
+                <label class="block text-sm mb-1 text-emerald-800">Estado</label>
+                <select name="status" id="editStatus" class="w-full border border-emerald-200 rounded px-3 py-2">
+                    <option value="operational">Operacional</option>
+                    <option value="damaged">Dañado</option>
+                    <option value="lost">Perdido</option>
+                    <option value="retired">Retirado</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Nota: Las cantidades se gestionan desde Gestionar Entradas</p>
             </div>
             
             <!-- Foto -->
@@ -397,8 +327,7 @@ function openEditModal(id, name, category, status, total_qty, available_qty, pho
     document.getElementById('editName').value = name;
     document.getElementById('editCategory').value = category;
     document.getElementById('editStatus').value = status;
-    document.getElementById('editTotalQty').value = total_qty;
-    document.getElementById('editAvailableQty').value = available_qty;
+    // Nota: total_qty y available_qty son campos computados, no se editan directamente
     
     // Manejar la foto
     const photoPreview = document.getElementById('editPhotoPreview');
@@ -562,15 +491,17 @@ async function updateTool() {
         formData.append('name', document.getElementById('editName').value);
         formData.append('category', document.getElementById('editCategory').value);
         formData.append('status', document.getElementById('editStatus').value);
-        formData.append('total_qty', document.getElementById('editTotalQty').value);
-        formData.append('available_qty', document.getElementById('editAvailableQty').value);
         
         // Agregar la foto si se seleccionó una nueva
         const photoInput = document.getElementById('editPhoto');
         if (photoInput.files.length > 0) {
+            console.log('Archivo seleccionado:', photoInput.files[0].name, 'Tamaño:', photoInput.files[0].size);
             formData.append('photo', photoInput.files[0]);
+        } else {
+            console.log('No se seleccionó ninguna foto nueva');
         }
         
+        console.log('Enviando datos al servidor...');
         const response = await fetch(`/admin/tools/${currentToolId}`, {
             method: 'POST',
             body: formData,
@@ -579,6 +510,7 @@ async function updateTool() {
                 'Accept': 'application/json'
             }
         });
+        console.log('Respuesta recibida:', response.status, response.statusText);
         
         if (response.ok) {
             const result = await response.json();
@@ -606,15 +538,28 @@ async function updateTool() {
                 }
             }
         } else {
-            const errorText = await response.text();
-            console.error('Error response:', errorText);
+            let errorMessage = 'Error al actualizar la herramienta';
+            try {
+                const errorData = await response.json();
+                console.error('Error response (JSON):', errorData);
+                errorMessage = errorData.message || errorMessage;
+                if (errorData.errors) {
+                    console.error('Validation errors:', errorData.errors);
+                    errorMessage += ': ' + Object.values(errorData.errors).flat().join(', ');
+                }
+            } catch (e) {
+                const errorText = await response.text();
+                console.error('Error response (text):', errorText);
+                errorMessage += ' (Status: ' + response.status + ')';
+            }
+            
             if (window.showErrorAlert) {
-                showErrorAlert('Error al actualizar la herramienta. Status: ' + response.status);
+                showErrorAlert(errorMessage);
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Error al actualizar la herramienta. Status: ' + response.status,
+                    text: errorMessage,
                     confirmButtonText: 'Aceptar',
                 });
             }
@@ -761,20 +706,9 @@ function updateTableRow() {
 
 // Función para mostrar mensaje de éxito
 function showSuccessMessage() {
-    const message = document.createElement('div');
-    message.className = 'mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded';
-    message.textContent = 'Herramienta actualizada correctamente';
-    
-    const content = document.querySelector('.bg-white.border.rounded.p-4');
-    if (content) {
-        content.insertBefore(message, content.firstChild);
-        
-        // Remover el mensaje después de 3 segundos
-        setTimeout(() => {
-            if (message.parentNode) {
-                message.parentNode.removeChild(message);
-            }
-        }, 3000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert) {
+        window.showSuccessAlert('Herramienta actualizada correctamente');
     }
 }
 

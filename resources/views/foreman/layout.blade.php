@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('AGROSACLOGO.png') }}">
     <title>Mayordomo | AGROSAC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -12,14 +13,18 @@
     @if (session('status'))
         <meta name="app-status" content="{{ session('status') }}">
     @endif
+    @if (session('error'))
+        <meta name="app-error" content="{{ session('error') }}">
+    @endif
 </head>
 <body class="min-h-screen bg-gray-50 text-[#1b1b18]">
     <div class="min-h-screen flex">
-        <aside class="w-64 bg-white border-r border-gray-200 p-4 flex flex-col shadow-sm">
+        <aside class="w-64 bg-white border-r border-gray-200 p-4 flex flex-col shadow-sm fixed left-0 top-0 bottom-0 overflow-y-auto">
             
-            <div class="mb-4 px-2 text-center">
-                <div class="uppercase tracking-wide text-black font-extrabold text-2xl">AGROSAC</div>
-                <div class="text-sm font-medium text-black">Mayordomo</div>
+            <div class="mb-6 px-2 text-center">
+                <div class="flex flex-col items-center gap-1">
+                    <img src="{{ asset('AGROSACLOGO.png') }}" alt="AGROSAC Logo" class="w-28 h-28 object-contain">
+                </div>
             </div>
             <nav class="space-y-1 flex-1">
                 <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('foreman.index') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-gray-300 hover:bg-gray-100 text-black' }}" href="{{ route('foreman.index') }}">
@@ -40,28 +45,76 @@
                         <span>Trabajadores</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('foreman.tools.*') || request()->routeIs('foreman.tool-entries.*') || request()->routeIs('foreman.tool-damage.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('foreman.tools.index') }}">
-                    <span class="inline-flex items-center gap-2">
-                        <i data-lucide="wrench" class="w-5 h-5 text-black"></i>
-                        <span>Inventario</span>
-                    </span>
-                </a>
+                <div x-data="{ open: {{ request()->routeIs('foreman.tools.*') || request()->routeIs('foreman.tool-entries.*') || request()->routeIs('foreman.tool-damage.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded border transition-colors {{ request()->routeIs('foreman.tools.*') || request()->routeIs('foreman.tool-entries.*') || request()->routeIs('foreman.tool-damage.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}">
+                        <span class="inline-flex items-center gap-2">
+                            <i data-lucide="wrench" class="w-5 h-5 text-black"></i>
+                            <span>Inventario</span>
+                        </span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('foreman.tools.index') || (request()->routeIs('foreman.tools.*') && !request()->routeIs('foreman.tool-entries.*') && !request()->routeIs('foreman.tool-damage.*')) ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('foreman.tools.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="list" class="w-4 h-4 text-black"></i>
+                                <span>Lista de Herramientas</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('foreman.tool-entries.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('foreman.tool-entries.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="package" class="w-4 h-4 text-black"></i>
+                                <span>Gestionar Entradas</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('foreman.tool-damage.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('foreman.tool-damage.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-black"></i>
+                                <span>Daños y Pérdidas</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
                 <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('foreman.loans.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('foreman.loans.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="arrow-left-right" class="w-5 h-5 text-black"></i>
                         <span>Préstamos</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border transition-colors {{ request()->routeIs('foreman.supplies.*') || request()->routeIs('foreman.supply-movements.*') || request()->routeIs('foreman.supply-consumptions.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}" href="{{ route('foreman.supplies.index') }}">
-                    <span class="inline-flex items-center gap-2">
-                        <i data-lucide="flask-round" class="w-5 h-5 text-black"></i>
-                        <span>Insumos</span>
-                    </span>
-                </a>
+                
+                <!-- Insumos Dropdown -->
+                <div x-data="{ open: {{ request()->routeIs('foreman.supplies.*') || request()->routeIs('foreman.supply-movements.*') || request()->routeIs('foreman.supply-consumptions.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded border transition-colors {{ request()->routeIs('foreman.supplies.*') || request()->routeIs('foreman.supply-movements.*') || request()->routeIs('foreman.supply-consumptions.*') ? 'border-emerald-400 bg-emerald-100 text-black' : 'border-transparent hover:border-emerald-400 hover:bg-emerald-200 text-black' }}">
+                        <span class="inline-flex items-center gap-2">
+                            <i data-lucide="flask-round" class="w-5 h-5 text-black"></i>
+                            <span>Insumos</span>
+                        </span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('foreman.supplies.index') || (request()->routeIs('foreman.supplies.*') && !request()->routeIs('foreman.supply-movements.*') && !request()->routeIs('foreman.supply-consumptions.*')) ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('foreman.supplies.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="list" class="w-4 h-4 text-black"></i>
+                                <span>Lista de Insumos</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('foreman.supply-movements.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('foreman.supply-movements.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="arrow-right-left" class="w-4 h-4 text-black"></i>
+                                <span>Entradas/Salidas</span>
+                            </span>
+                        </a>
+                        <a class="block px-3 py-2 rounded border text-sm transition-colors {{ request()->routeIs('foreman.supply-consumptions.*') ? 'border-emerald-400 bg-emerald-50 text-black' : 'border-transparent hover:border-emerald-300 hover:bg-emerald-100 text-black' }}" href="{{ route('foreman.supply-consumptions.index') }}">
+                            <span class="inline-flex items-center gap-2">
+                                <i data-lucide="bar-chart" class="w-4 h-4 text-black"></i>
+                                <span>Ver Consumos</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
             </nav>
         </aside>
 
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col ml-64">
             <header class="border-b border-gray-200 bg-white backdrop-blur text-black shadow-sm">
                 <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
                     <div class="flex-1">
@@ -241,16 +294,17 @@
             Toast.fire({ icon: 'error', title: error });
         }
 
-        // Función global para mostrar alertas de éxito
+        // Función global para mostrar alertas de éxito (como toast)
         window.showSuccessAlert = function(message) {
-            Swal.fire({
-                icon: 'success',
-                title: message,
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 2500,
                 timerProgressBar: true,
                 customClass: { popup: 'rounded-lg border border-emerald-200 bg-white' },
             });
+            Toast.fire({ icon: 'success', title: message });
         };
 
         // Función global para mostrar alertas de error

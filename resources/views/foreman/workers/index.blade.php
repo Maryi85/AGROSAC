@@ -6,20 +6,8 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    <!-- Botones de acción principales -->
-    <div class="mb-6 flex justify-end items-center">
+    <!-- Botón de descarga PDF -->
+    <div class="mb-6 flex justify-end">
         <a href="{{ route('foreman.workers.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
             <i data-lucide="file-text" class="w-5 h-5"></i>
             <span>Descargar PDF</span>
@@ -30,7 +18,7 @@
     <form method="GET" class="mb-4 flex gap-2 items-end">
         <div class="flex-1">
             <label class="block text-sm mb-1 text-emerald-800">Buscar por nombre o email</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar trabajadores..." class="w-full border border-emerald-200 rounded px-3 py-2" />
+            <x-search-bar placeholder="Buscar trabajadores..." :with-form="false" />
         </div>
         <div>
             <label class="block text-sm mb-1 text-emerald-800">Estado</label>
@@ -40,7 +28,7 @@
                 <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
             </select>
         </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
+        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
             <i data-lucide="search" class="w-4 h-4"></i>
             <span>Filtrar</span>
         </button>
@@ -51,8 +39,10 @@
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
+                    <th class="py-3 pr-4">Foto</th>
                     <th class="py-3 pr-4">Nombre</th>
                     <th class="py-3 pr-4">Email</th>
+                    <th class="py-3 pr-4">Teléfono</th>
                     <th class="py-3 pr-4">Estado</th>
                     <th class="py-3 pr-4">Tareas Completadas</th>
                     <th class="py-3 pr-4">Fecha de Registro</th>
@@ -63,10 +53,20 @@
                 @forelse ($workers as $worker)
                 <tr class="border-b hover:bg-gray-50" data-worker-id="{{ $worker->id }}">
                     <td class="py-3 pr-4">
+                        @if($worker->photo)
+                            <img src="{{ asset('storage/' . $worker->photo) }}" alt="Foto" class="h-10 w-10 rounded-full object-cover border border-gray-200">
+                        @else
+                            <div class="h-10 w-10 rounded-full border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-xs text-gray-400">—</div>
+                        @endif
+                    </td>
+                    <td class="py-3 pr-4">
                         <div class="font-medium text-gray-900 worker-name">{{ $worker->name }}</div>
                     </td>
                     <td class="py-3 pr-4 worker-email">
                         {{ $worker->email }}
+                    </td>
+                    <td class="py-3 pr-4">
+                        <div class="text-sm text-gray-800">{{ $worker->phone ?? '—' }}</div>
                     </td>
                     <td class="py-3 pr-4 status-badge">
                         @if($worker->email_verified_at)
@@ -560,19 +560,14 @@ function updateWorkerRow(workerId, workerData) {
 }
 
 function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${
-        type === 'success' ? 'bg-green-500 text-white' : 
-        type === 'error' ? 'bg-red-500 text-white' : 
-        'bg-blue-500 text-white'
-    }`;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert && type === 'success') {
+        window.showSuccessAlert(message);
+    } else if (window.showErrorAlert && type === 'error') {
+        window.showErrorAlert(message);
+    } else if (window.showSuccessAlert) {
+        window.showSuccessAlert(message);
+    }
 }
 
 // Cerrar modales al hacer clic fuera de ellos

@@ -15,7 +15,7 @@ class PlotController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = (string) $request->string('q');
+        $search = (string) $request->string('search');
         $plots = Plot::query()
             ->with('crops')
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
@@ -148,7 +148,7 @@ class PlotController extends Controller
 
     public function downloadPdf(Request $request)
     {
-        $search = $request->input('q', '');
+        $search = $request->input('search', '');
         $plots = Plot::query()
             ->with('crops')
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))

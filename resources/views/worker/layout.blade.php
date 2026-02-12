@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('AGROSACLOGO.png') }}">
     <title>Trabajador | AGROSAC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -18,37 +19,38 @@
 </head>
 <body class="min-h-screen bg-gray-50 text-[#1b1b18]">
     <div class="min-h-screen flex">
-        <aside class="w-64 bg-white border-r border-gray-200 p-4 flex flex-col fixed h-screen">
-            <div class="mb-6 px-2">
-                <div class="text-sm uppercase tracking-wide text-black">AGROSAC</div>
-                <div class="text-base font-semibold text-black">Trabajador</div>
+        <aside class="w-64 bg-white border-r border-gray-200 p-4 flex flex-col shadow-sm fixed left-0 top-0 bottom-0 overflow-y-auto">
+            <div class="mb-6 px-2 text-center">
+                <div class="flex flex-col items-center gap-1">
+                    <img src="{{ asset('AGROSACLOGO.png') }}" alt="AGROSAC Logo" class="w-28 h-28 object-contain">
+                </div>
             </div>
             <nav class="space-y-1 flex-1">
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.index') ? 'border-gray-300 bg-gray-100' : '' }}" href="{{ route('worker.index') }}">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.index') ? 'border-emerald-400 bg-emerald-100' : '' }}" href="{{ route('worker.index') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="layout-dashboard" class="w-5 h-5 text-black"></i>
                         <span>Dashboard</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.tasks.*') ? 'border-gray-300 bg-gray-100' : '' }}" href="{{ route('worker.tasks') }}">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.tasks.*') ? 'border-emerald-400 bg-emerald-100' : '' }}" href="{{ route('worker.tasks') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="clipboard-check" class="w-5 h-5 text-black"></i>
                         <span>Mis Tareas</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.tools.*') ? 'border-gray-300 bg-gray-100' : '' }}" href="{{ route('worker.tools') }}">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.tools.*') ? 'border-emerald-400 bg-emerald-100' : '' }}" href="{{ route('worker.tools') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="wrench" class="w-5 h-5 text-black"></i>
                         <span>Herramientas</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.profile*') ? 'border-gray-300 bg-gray-100' : '' }}" href="{{ route('worker.profile') }}">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.profile*') ? 'border-emerald-400 bg-emerald-100' : '' }}" href="{{ route('worker.profile') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="user-circle" class="w-5 h-5 text-black"></i>
                         <span>Perfil</span>
                     </span>
                 </a>
-                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.reports.*') ? 'border-gray-300 bg-gray-100' : '' }}" href="{{ route('worker.reports') }}">
+                <a class="block px-3 py-2 rounded border border-transparent hover:border-gray-300 hover:bg-gray-100 text-black {{ request()->routeIs('worker.reports.*') ? 'border-emerald-400 bg-emerald-100' : '' }}" href="{{ route('worker.reports') }}">
                     <span class="inline-flex items-center gap-2">
                         <i data-lucide="file-text" class="w-5 h-5 text-black"></i>
                         <span>Reportes</span>
@@ -241,16 +243,17 @@
             Toast.fire({ icon: 'error', title: error });
         }
 
-        // Función global para mostrar alertas de éxito
+        // Función global para mostrar alertas de éxito (como toast)
         window.showSuccessAlert = function(message) {
-            Swal.fire({
-                icon: 'success',
-                title: message,
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 2500,
                 timerProgressBar: true,
                 customClass: { popup: 'rounded-lg border border-emerald-200 bg-white' },
             });
+            Toast.fire({ icon: 'success', title: message });
         };
 
         // Función global para mostrar alertas de error

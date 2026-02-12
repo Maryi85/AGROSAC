@@ -3,30 +3,28 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Gestión de Tareas</h2>
-    <a href="{{ route('foreman.tasks.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-        <i data-lucide="plus" class="w-4 h-4"></i>
-        <span>Asignar Tarea</span>
-    </a>
 </div>
 @endsection
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
+    <!-- Botón para asignar nueva tarea -->
+    <div class="mb-6 flex justify-between items-center">
+        <a href="{{ route('foreman.tasks.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Asignar Tarea</span>
+        </a>
+        <a href="{{ route('foreman.tasks.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
+        </a>
+    </div>
 
     <!-- Filtros -->
     <form method="GET" class="mb-4 flex gap-2">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por descripción o trabajador" class="border border-emerald-200 rounded px-3 py-2 flex-1" />
+        <div class="flex-1">
+            <x-search-bar placeholder="Buscar por descripción o trabajador" :with-form="false" />
+        </div>
         <select name="status" class="border border-emerald-200 rounded px-3 py-2">
             <option value="">Todos los estados</option>
             @foreach($statuses as $status)
@@ -1023,19 +1021,14 @@ async function deleteTask(taskId) {
 }
 
 function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${
-        type === 'success' ? 'bg-green-500 text-white' : 
-        type === 'error' ? 'bg-red-500 text-white' : 
-        'bg-blue-500 text-white'
-    }`;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert && type === 'success') {
+        window.showSuccessAlert(message);
+    } else if (window.showErrorAlert && type === 'error') {
+        window.showErrorAlert(message);
+    } else if (window.showSuccessAlert) {
+        window.showSuccessAlert(message);
+    }
 }
 
 // Cerrar modales al hacer clic fuera de ellos

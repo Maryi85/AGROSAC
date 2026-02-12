@@ -6,25 +6,6 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    @if (session('temp_password'))
-        <div class="mb-4 p-3 bg-blue-100 border border-blue-300 text-blue-700 rounded">
-            <strong>Contraseña temporal generada:</strong> {{ session('temp_password') }}
-            <br><small>Comparta esta contraseña con el mayordomo de forma segura.</small>
-        </div>
-    @endif
-
     <!-- Botón para agregar nuevo mayordomo -->
     <div class="mb-6 flex justify-between items-center">
         <a href="{{ route('admin.foremen.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
@@ -41,7 +22,7 @@
     <form method="GET" class="mb-4 flex gap-2 items-end">
         <div class="flex-1">
             <label class="block text-sm mb-1 text-emerald-800">Buscar por nombre o email</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar mayordomos..." class="w-full border border-emerald-200 rounded px-3 py-2" />
+            <x-search-bar placeholder="Buscar mayordomos..." :with-form="false" />
         </div>
         <div>
             <label class="block text-sm mb-1 text-emerald-800">Estado</label>
@@ -643,29 +624,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Funciones de utilidad para mostrar mensajes
 function showSuccessMessage(message) {
-    // Crear toast de éxito
-    const toast = document.createElement('div');
-    toast.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-    toast.innerHTML = `<i data-lucide="check-circle" class="w-5 h-5 inline mr-2"></i>${message}`;
-    document.body.appendChild(toast);
-    
-    // Remover después de 3 segundos
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+    //Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert) {
+        window.showSuccessAlert(message);
+    }
 }
 
+
 function showErrorMessage(message) {
-    // Crear toast de error
-    const toast = document.createElement('div');
-    toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-    toast.innerHTML = `<i data-lucide="x-circle" class="w-5 h-5 inline mr-2"></i>${message}`;
-    document.body.appendChild(toast);
-    
-    // Remover después de 5 segundos
-    setTimeout(() => {
-        toast.remove();
-    }, 5000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showErrorAlert) {
+        window.showErrorAlert(message);
+    }
 }
 
 </script>

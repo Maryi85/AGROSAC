@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AGROSAC - Sistema de Gestión Agrícola</title>
+    <link rel="icon" href="{{ asset('AGROSACLOGO.png') }}" type="image/x-icon">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -466,11 +467,8 @@
     <nav class="navbar">
         <div class="container">
             <div class="navbar-content">
-                <a href="/" class="logo">
-                    <svg style="display: inline-block; width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                    </svg>
-                    AGROSAC
+                <a href="/" class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{{ asset('AGROSACLOGO.png') }}" alt="AGROSAC Logo" style="height: 120px; width: auto;">
                 </a>
                 <ul class="nav-links">
                     <li><a href="#features">Características</a></li>
@@ -511,7 +509,7 @@
         <div class="container">
             <div class="hero-content">
                 <h1>AGROSAC</h1>
-                <p>Software de Administración Contable Rural Organizado</p>
+                <p>Software de Administración Contable Rural</p>
                
                 <div class="cta-buttons">
                     @if (Route::has('login'))
@@ -603,16 +601,55 @@
             </div>
         </div>
     </section>
+    <!-- About Section -->
+    <section class="about" id="about" style="padding: 100px 0; background-color: #ffffff;">
+        <div class="container">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 4rem;">
+                <div style="flex: 1; min-width: 300px;">
+                    <div style="position: relative;">
+                        <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Sobre AGROSAC" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
 
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <span style="color: #4CAF50; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem; display: block; margin-bottom: 1rem;">Sobre Nosotros</span>
+                    <h2 style="font-size: 2.5rem; font-weight: 700; color: #1a202c; line-height: 1.2; margin-bottom: 1.5rem;">Transformamos la gestión agrícola tradicional</h2>
+                    <p style="color: #64748b; font-size: 1.1rem; line-height: 1.7; margin-bottom: 1.5rem;">
+                        AGROSAC nace con la misión de simplificar y potenciar la administración de fincas y negocios agrícolas. Entendemos los desafíos del campo y hemos desarrollado una solución tecnológica que se adapta a las necesidades reales de los productores.
+                    </p>
+                    <p style="color: #64748b; font-size: 1.1rem; line-height: 1.7; margin-bottom: 2rem;">
+                        Nuestro software integra contabilidad, gestión de personal, inventarios y análisis de cultivos en una sola plataforma intuitiva y accesible desde cualquier lugar.
+                    </p>
+                    
+                    <ul style="list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <li style="display: flex; align-items: center; gap: 0.75rem; color: #4a5568;">
+                            <svg width="20" height="20" fill="none" stroke="#4CAF50" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                            Gestión integral
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem; color: #4a5568;">
+                            <svg width="20" height="20" fill="none" stroke="#4CAF50" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                            Soporte continuo
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem; color: #4a5568;">
+                            <svg width="20" height="20" fill="none" stroke="#4CAF50" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                            Tecnología segura
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem; color: #4a5568;">
+                            <svg width="20" height="20" fill="none" stroke="#4CAF50" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                            Fácil de usar
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer style="background: linear-gradient(135deg, #2d5016, #4CAF50); color: white; padding: 1.5rem 0 1rem; position: relative;">
         <div class="container" style="text-align: center;">
             <div style="margin-bottom: 0.75rem;">
                 <h3 style="color: #ffffff; font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem; letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <svg style="width: 24px; height: 24px; stroke: #ffffff;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                    </svg>
+
                     AGROSAC
                 </h3>
                 <p style="color: rgba(255, 255, 255, 0.9); font-size: 0.85rem; margin: 0; font-weight: 400;">Transformando la gestión agrícola con tecnología moderna</p>
@@ -635,7 +672,7 @@
 
             <div style="border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 0.75rem;">
                 <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.75rem; margin: 0; font-weight: 400;">
-                    &copy; {{ date('Y') }} AGROSAC - Software de Administración Contable Rural Organizado. Todos los derechos reservados.
+                    &copy; {{ date('Y') }} AGROSAC - Software de Administración Contable Rural. Todos los derechos reservados.
                 </p>
             </div>
         </div>

@@ -285,7 +285,7 @@
         <div class="reset-card">
             <div class="logo-section">
                 <div class="logo">
-                    <span class="logo-text">AGROSAC</span>
+                    <img src="{{ asset('AGROSACLOGO.png') }}" alt="AGROSAC" style="height: 100px;">
                 </div>
                 <h1 class="reset-title">Recuperar Contraseña</h1>
                 <p class="reset-subtitle">Ingresa tu correo electrónico para recibir un enlace de recuperación</p>

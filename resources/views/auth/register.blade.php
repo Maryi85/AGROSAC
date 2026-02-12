@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Registro - AGROSAC</title>
+    <link rel="icon" href="{{ asset('AGROSACLOGO.png') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
     <style>
@@ -318,14 +319,60 @@
                 padding-top: 1rem;
             }
         }
+        .back-to-home {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            z-index: 10;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .back-to-home:hover {
+            background: rgba(0,0,0,0.5);
+            transform: translateX(-3px);
+        }
+
+        .back-to-home svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        @media (max-width: 480px) {
+            .back-to-home {
+                top: 10px;
+                left: 10px;
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <a href="{{ url('/') }}" class="back-to-home">
+        <svg viewBox="0 0 24 24">
+            <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Volver al Inicio
+    </a>
     <div class="register-container">
         <div class="register-card">
             <div class="logo-section">
                 <div class="logo">
-                    <span class="logo-text">AGROSAC</span>
+                    <img src="{{ asset('AGROSACLOGO.png') }}" alt="AGROSAC" style="height: 100px;">
                 </div>
                 <h1 class="register-title">Crear cuenta</h1>
                 <p class="register-subtitle">Únete a AGROSAC y gestiona tu finca de manera profesional</p>

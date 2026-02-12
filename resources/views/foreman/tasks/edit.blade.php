@@ -247,21 +247,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Función para mostrar notificaciones
+    // Función para mostrar notificaciones usando SweetAlert2
     function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-500 text-white' : 
-            type === 'error' ? 'bg-red-500 text-white' : 
-            'bg-blue-500 text-white'
-        }`;
-        notification.textContent = message;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        if (window.showSuccessAlert && type === 'success') {
+            window.showSuccessAlert(message);
+        } else if (window.showErrorAlert && type === 'error') {
+            window.showErrorAlert(message);
+        } else if (window.showSuccessAlert) {
+            window.showSuccessAlert(message);
+        }
     }
 
     // Agregar event listeners

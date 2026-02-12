@@ -11,6 +11,17 @@
     <form method="POST" action="{{ route('admin.tasks.update', $task) }}" class="space-y-6">
         @csrf
         @method('PUT')
+
+        @if ($errors->any())
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong class="font-bold">¡Ups! Algo salió mal.</strong>
+                <ul class="mt-2 list-disc list-inside text-sm">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Tipo de tarea -->
@@ -153,30 +164,57 @@
         <!-- Campos de pago dinámicos -->
         <div id="payment-fields" class="space-y-4">
             <!-- Horas -->
-            <div id="hours-field" class="hidden">
-                <label for="hours" class="block text-sm font-medium text-emerald-800 mb-2">Horas Estimadas</label>
-                <input type="number" name="hours" id="hours" value="{{ old('hours', $task->hours) }}" step="0.5" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 8.5">
-                @error('hours')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
+            <div id="hours-field" class="hidden grid grid-cols-2 gap-4">
+                <div>
+                    <label for="hours" class="block text-sm font-medium text-emerald-800 mb-2">Horas Estimadas</label>
+                    <input type="number" name="hours" id="hours" value="{{ old('hours', $task->hours) }}" step="0.5" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 8.5">
+                    @error('hours')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="price_per_hour" class="block text-sm font-medium text-emerald-800 mb-2">Precio por Hora ($)</label>
+                    <input type="number" name="price_per_hour" id="price_per_hour" value="{{ old('price_per_hour', $task->price_per_hour) }}" step="0.01" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 5000">
+                    @error('price_per_hour')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <!-- Días -->
-            <div id="days-field" class="hidden">
-                <label for="days" class="block text-sm font-medium text-emerald-800 mb-2">Días Estimados</label>
-                <input type="number" name="days" id="days" value="{{ old('days', $task->hours > 0 ? $task->hours / 8 : 1) }}" min="1" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 3">
-                @error('days')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
+            <div id="days-field" class="hidden grid grid-cols-2 gap-4">
+                <div>
+                    <label for="days" class="block text-sm font-medium text-emerald-800 mb-2">Días Estimados</label>
+                    <input type="number" name="days" id="days" value="{{ old('days', $task->hours > 0 ? $task->hours / 8 : 1) }}" min="1" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 3">
+                    @error('days')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="price_per_day" class="block text-sm font-medium text-emerald-800 mb-2">Precio por Día ($)</label>
+                    <input type="number" name="price_per_day" id="price_per_day" value="{{ old('price_per_day', $task->price_per_day) }}" step="0.01" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 40000">
+                    @error('price_per_day')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <!-- Cantidad -->
-            <div id="quantity-field" class="hidden">
-                <label for="kilos" class="block text-sm font-medium text-emerald-800 mb-2">Cantidad (kg)</label>
-                <input type="number" name="kilos" id="kilos" value="{{ old('kilos', $task->kilos) }}" step="0.1" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 50.5">
-                @error('kilos')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
+            <div id="quantity-field" class="hidden grid grid-cols-2 gap-4">
+                <div>
+                    <label for="kilos" class="block text-sm font-medium text-emerald-800 mb-2">Cantidad (kg)</label>
+                    <input type="number" name="kilos" id="kilos" value="{{ old('kilos', $task->kilos) }}" step="0.1" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 50.5">
+                    @error('kilos')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="price_per_kg" class="block text-sm font-medium text-emerald-800 mb-2">Precio por kg ($)</label>
+                    <input type="number" name="price_per_kg" id="price_per_kg" value="{{ old('price_per_kg', $task->price_per_kg) }}" step="0.01" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 500">
+                    @error('price_per_kg')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
         </div>
 
@@ -240,18 +278,25 @@ document.addEventListener('DOMContentLoaded', function() {
     function togglePaymentFields() {
         const selectedType = document.querySelector('input[name="payment_type"]:checked')?.value;
         
-        // Ocultar todos los campos
+        // Ocultar todos los div
         hoursField.classList.add('hidden');
         daysField.classList.add('hidden');
         quantityField.classList.add('hidden');
         
-        // Mostrar el campo correspondiente
+        // Deshabilitar TODOS los inputs primero para que no se envíen
+        const allInputs = document.querySelectorAll('#hours-field input, #days-field input, #quantity-field input');
+        allInputs.forEach(input => input.disabled = true);
+        
+        // Mostrar y habilitar el campo correspondiente
         if (selectedType === 'hours') {
             hoursField.classList.remove('hidden');
+            hoursField.querySelectorAll('input').forEach(input => input.disabled = false);
         } else if (selectedType === 'days') {
             daysField.classList.remove('hidden');
+            daysField.querySelectorAll('input').forEach(input => input.disabled = false);
         } else if (selectedType === 'quantity') {
             quantityField.classList.remove('hidden');
+            quantityField.querySelectorAll('input').forEach(input => input.disabled = false);
         }
     }
 
@@ -309,21 +354,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Función para mostrar notificaciones
+    // Función para mostrar notificaciones usando SweetAlert2
     function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-500 text-white' : 
-            type === 'error' ? 'bg-red-500 text-white' : 
-            'bg-blue-500 text-white'
-        }`;
-        notification.textContent = message;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        if (window.showSuccessAlert && type === 'success') {
+            window.showSuccessAlert(message);
+        } else if (window.showErrorAlert && type === 'error') {
+            window.showErrorAlert(message);
+        } else if (window.showSuccessAlert) {
+            window.showSuccessAlert(message);
+        }
     }
 
     // Agregar event listeners
@@ -336,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Actualizar trabajadores automáticamente cada 30 segundos
-    setInterval(refreshWorkers, 30000);
+    // setInterval(refreshWorkers, 30000);
 
     // Funcionalidad para cultivos
     const cropsSelect = document.getElementById('crop_id');
@@ -383,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 // Mostrar mensaje de éxito temporal
-                showNotification('Lista de cultivos actualizada correctamente', 'success');
+                // showNotification('Lista de cultivos actualizada correctamente', 'success');
             } else {
                 throw new Error('Error en la respuesta del servidor');
             }
@@ -405,10 +444,45 @@ document.addEventListener('DOMContentLoaded', function() {
     loadCrops();
 
     // Actualizar cultivos cada 30 segundos
-    setInterval(loadCrops, 30000);
+    // setInterval(loadCrops, 30000);
+
+    // Función para calcular el total del pago
+    function calculateTotal() {
+        // Obtener valores de los inputs
+        const hours = parseFloat(document.getElementById('hours')?.value || 0);
+        const pricePerHour = parseFloat(document.getElementById('price_per_hour')?.value || 0);
+        
+        const days = parseFloat(document.getElementById('days')?.value || 0);
+        const pricePerDay = parseFloat(document.getElementById('price_per_day')?.value || 0);
+        
+        const kilos = parseFloat(document.getElementById('kilos')?.value || 0);
+        const pricePerKg = parseFloat(document.getElementById('price_per_kg')?.value || 0);
+        
+        const selectedType = document.querySelector('input[name="payment_type"]:checked')?.value;
+        let total = 0;
+
+        if (selectedType === 'hours') {
+            total = hours * pricePerHour;
+        } else if (selectedType === 'days') {
+            total = days * pricePerDay;
+        } else if (selectedType === 'quantity') {
+            total = kilos * pricePerKg;
+        }
+        
+        // Actualizar visualización (si existiera un campo de total visual, pero por ahora solo aseguramos que los inputs existan)
+        // Como no agregamos un campo visual de total en el HTML, esto es principalmente para asegurar que la lógica de cálculo esté lista si se necesita
+    }
+
+    // Agregar listeners para calcular el total cuando cambien los valores
+    const inputs = ['hours', 'price_per_hour', 'days', 'price_per_day', 'kilos', 'price_per_kg'];
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', calculateTotal);
+    });
 
     // Ejecutar al cargar la página
     togglePaymentFields();
+    calculateTotal();
 });
 </script>
 @endsection

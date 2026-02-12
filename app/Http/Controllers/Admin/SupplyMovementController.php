@@ -175,7 +175,7 @@ class SupplyMovementController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.supplies.movements.index')
+            return redirect()->route('admin.supply-movements.index')
                 ->with('status', 'Movimiento de inventario actualizado exitosamente.');
 
         } catch (\Exception $e) {
@@ -199,7 +199,7 @@ class SupplyMovementController extends Controller
             $supply->updateStock();
 
             DB::commit();
-            return redirect()->route('admin.supplies.movements.index')
+            return redirect()->route('admin.supply-movements.index')
                 ->with('status', 'Movimiento de inventario eliminado exitosamente.');
 
         } catch (\Exception $e) {

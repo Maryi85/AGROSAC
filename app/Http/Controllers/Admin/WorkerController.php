@@ -240,25 +240,6 @@ class WorkerController extends Controller
             ->with('status', 'Trabajador eliminado correctamente');
     }
 
-    public function resetPassword(User $worker): RedirectResponse
-    {
-        // Verificar que sea un trabajador
-        if ($worker->role !== 'worker') {
-            abort(404);
-        }
-
-        // Generar nueva contraseña temporal
-        $tempPassword = Str::random(8);
-        
-        $worker->update([
-            'password' => Hash::make($tempPassword),
-        ]);
-
-        return redirect()->route('admin.workers.index')
-            ->with('status', "Contraseña restablecida correctamente. Nueva contraseña temporal: {$tempPassword}")
-            ->with('temp_password', $tempPassword);
-    }
-
     public function toggleStatus(User $worker): RedirectResponse
     {
         // Verificar que sea un trabajador
@@ -277,166 +258,6 @@ class WorkerController extends Controller
 
         return redirect()->route('admin.workers.index')
             ->with('status', $message);
-    }
-
-    public function tasks(User $worker, Request $request): View
-    {
-        // Verificar que sea un trabajador
-        if ($worker->role !== 'worker') {
-            abort(404);
-        }
-
-        $query = Task::where('assigned_to', $worker->id)
-            ->with(['plot', 'crop']);
-
-        // Filtros
-        if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('type') && $request->type !== 'all') {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('scheduled_for', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('scheduled_for', '<=', $request->date_to);
-        }
-
-        $tasks = $query->orderBy('scheduled_for', 'desc')->paginate(15);
-
-        return view('admin.workers.tasks', compact('worker', 'tasks'));
-    }
-
-    public function approveTask(Task $task): RedirectResponse
-    {
-        // Verificar que la tarea pertenezca a un trabajador
-        if ($task->assignee->role !== 'worker') {
-            abort(404);
-        }
-
-        if ($task->status !== 'completed') {
-            return redirect()->back()
-                ->with('error', 'Solo se pueden aprobar tareas que están en estado "completado".');
-        }
-
-        $task->update([
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-        ]);
-
-        return redirect()->back()
-            ->with('status', 'Tarea aprobada correctamente.');
-    }
-
-    public function rejectTask(Task $task): RedirectResponse
-    {
-        // Verificar que la tarea pertenezca a un trabajador
-        if ($task->assignee->role !== 'worker') {
-            abort(404);
-        }
-
-        if ($task->status !== 'completed') {
-            return redirect()->back()
-                ->with('error', 'Solo se pueden rechazar tareas que están en estado "completado".');
-        }
-
-        $task->update([
-            'status' => 'rejected',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-        ]);
-
-        return redirect()->back()
-            ->with('status', 'Tarea rechazada correctamente.');
-    }
-
-    public function dailyTasks(Request $request): View
-    {
-        $query = Task::whereHas('assignee', function ($q) {
-            $q->where('role', 'worker');
-        })
-        ->with(['assignee', 'plot', 'crop']);
-
-        // Filtros
-        if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('worker_id') && $request->worker_id !== 'all') {
-            $query->where('assigned_to', $request->worker_id);
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('scheduled_for', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('scheduled_for', '<=', $request->date_to);
-        }
-
-        // Filtrar solo tareas por horas o días
-        $query->whereIn('type', ['sowing', 'irrigation', 'fertilization', 'maintenance', 'cleaning']);
-
-        $tasks = $query->orderBy('scheduled_for', 'desc')->paginate(20);
-
-        // Obtener lista de trabajadores para el filtro
-        $workers = User::where('role', 'worker')
-            ->whereNotNull('email_verified_at')
-            ->orderBy('name')
-            ->get();
-
-        return view('admin.workers.daily-tasks', compact('tasks', 'workers'));
-    }
-
-    public function harvestTasks(Request $request): View
-    {
-        $query = Task::whereHas('assignee', function ($q) {
-            $q->where('role', 'worker');
-        })
-        ->with(['assignee', 'plot', 'crop']);
-
-        // Filtros
-        if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('worker_id') && $request->worker_id !== 'all') {
-            $query->where('assigned_to', $request->worker_id);
-        }
-
-        if ($request->filled('crop_id') && $request->crop_id !== 'all') {
-            $query->where('crop_id', $request->crop_id);
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('scheduled_for', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('scheduled_for', '<=', $request->date_to);
-        }
-
-        // Filtrar solo tareas de cosecha
-        $query->where('type', 'harvest');
-
-        $tasks = $query->orderBy('scheduled_for', 'desc')->paginate(20);
-
-        // Obtener listas para los filtros
-        $workers = User::where('role', 'worker')
-            ->whereNotNull('email_verified_at')
-            ->orderBy('name')
-            ->get();
-
-        $crops = Crop::where('status', 'active')
-            ->orderBy('name')
-            ->get();
-
-        return view('admin.workers.harvest-tasks', compact('tasks', 'workers', 'crops'));
     }
 
     private function getWorkerStats(User $worker): array
@@ -574,5 +395,186 @@ class WorkerController extends Controller
         }
 
         return view('admin.workers.report', compact('worker', 'tasks', 'totalPayment', 'totalHours', 'totalKilos', 'totalTasks', 'cropTotals'));
+    }
+
+    public function reportData(User $worker): JsonResponse
+    {
+        // Verificar que sea un trabajador
+        if ($worker->role !== 'worker') {
+            abort(404);
+        }
+
+        // Obtener todas las tareas aprobadas del trabajador con información de cultivo y precios
+        $tasks = Task::where('assigned_to', $worker->id)
+            ->whereIn('status', ['approved', 'completed'])
+            ->with(['crop', 'plot'])
+            ->orderBy('scheduled_for', 'desc')
+            ->get();
+
+        // Calcular el total_payment para cada tarea si no está guardado o es 0
+        $tasks = $tasks->map(function ($task) {
+            $calculatedPayment = 0;
+            
+            if ($task->price_per_hour && $task->hours > 0) {
+                $calculatedPayment = $task->hours * $task->price_per_hour;
+            } elseif ($task->price_per_day && $task->hours > 0) {
+                $days = $task->hours / 8;
+                $calculatedPayment = $days * $task->price_per_day;
+            } elseif ($task->price_per_kg && $task->kilos > 0) {
+                $calculatedPayment = $task->kilos * $task->price_per_kg;
+            }
+            
+            if ($task->total_payment && $task->total_payment > 0) {
+                $task->calculated_payment = $task->total_payment;
+            } else {
+                $task->calculated_payment = $calculatedPayment;
+                $task->total_payment = $calculatedPayment;
+            }
+            
+            return $task;
+        });
+
+        // Calcular totales
+        $totalPayment = $tasks->sum(function ($task) {
+            return $task->calculated_payment ?? ($task->total_payment ?? 0);
+        });
+        $totalHours = $tasks->sum(function ($task) {
+            return $task->hours ?? 0;
+        });
+        $totalKilos = $tasks->sum(function ($task) {
+            return $task->kilos ?? 0;
+        });
+        $totalTasks = $tasks->count();
+
+        // Agrupar por cultivo
+        $tasksByCrop = $tasks->groupBy('crop_id');
+        $cropTotals = [];
+        foreach ($tasksByCrop as $cropId => $cropTasks) {
+            $crop = $cropTasks->first()->crop;
+            $cropPayment = $cropTasks->sum(function ($task) {
+                return $task->calculated_payment ?? ($task->total_payment ?? 0);
+            });
+            $cropHours = $cropTasks->sum(function ($task) {
+                return $task->hours ?? 0;
+            });
+            $cropKilos = $cropTasks->sum(function ($task) {
+                return $task->kilos ?? 0;
+            });
+            $cropTotals[] = [
+                'crop' => $crop ? $crop->name : 'Sin cultivo',
+                'tasks_count' => $cropTasks->count(),
+                'total_payment' => $cropPayment,
+                'total_hours' => $cropHours,
+                'total_kilos' => $cropKilos,
+            ];
+        }
+
+        return response()->json([
+            'worker' => [
+                'name' => $worker->name,
+                'email' => $worker->email,
+                'status' => $worker->email_verified_at ? 'Activo' : 'Inactivo',
+                'registered' => $worker->created_at->format('d/m/Y H:i'),
+            ],
+            'totals' => [
+                'tasks' => $totalTasks,
+                'hours' => $totalHours,
+                'kilos' => $totalKilos,
+                'payment' => $totalPayment,
+            ],
+            'cropTotals' => $cropTotals,
+            'tasks' => $tasks->map(function ($task) {
+                return [
+                    'date' => $task->scheduled_for->format('d/m/Y'),
+                    'type' => ucfirst(str_replace('_', ' ', $task->type)),
+                    'description' => $task->description ?: 'Sin descripción',
+                    'crop' => $task->crop ? $task->crop->name : 'Sin cultivo',
+                    'plot' => $task->plot ? $task->plot->name : 'Sin lote',
+                    'hours' => $task->hours ?? 0,
+                    'kilos' => $task->kilos ?? 0,
+                    'price_per_hour' => $task->price_per_hour,
+                    'price_per_day' => $task->price_per_day,
+                    'price_per_kg' => $task->price_per_kg,
+                    'total' => $task->calculated_payment ?? $task->total_payment ?? 0,
+                ];
+            }),
+        ]);
+    }
+
+    public function reportPdf(User $worker)
+    {
+        // Verificar que sea un trabajador
+        if ($worker->role !== 'worker') {
+            abort(404);
+        }
+
+        // Obtener todas las tareas aprobadas del trabajador
+        $tasks = Task::where('assigned_to', $worker->id)
+            ->whereIn('status', ['approved', 'completed'])
+            ->with(['crop', 'plot'])
+            ->orderBy('scheduled_for', 'desc')
+            ->get();
+
+        // Calcular el total_payment para cada tarea
+        $tasks = $tasks->map(function ($task) {
+            $calculatedPayment = 0;
+            
+            if ($task->price_per_hour && $task->hours > 0) {
+                $calculatedPayment = $task->hours * $task->price_per_hour;
+            } elseif ($task->price_per_day && $task->hours > 0) {
+                $days = $task->hours / 8;
+                $calculatedPayment = $days * $task->price_per_day;
+            } elseif ($task->price_per_kg && $task->kilos > 0) {
+                $calculatedPayment = $task->kilos * $task->price_per_kg;
+            }
+            
+            if ($task->total_payment && $task->total_payment > 0) {
+                $task->calculated_payment = $task->total_payment;
+            } else {
+                $task->calculated_payment = $calculatedPayment;
+                $task->total_payment = $calculatedPayment;
+            }
+            
+            return $task;
+        });
+
+        // Calcular totales
+        $totalPayment = $tasks->sum(function ($task) {
+            return $task->calculated_payment ?? ($task->total_payment ?? 0);
+        });
+        $totalHours = $tasks->sum(function ($task) {
+            return $task->hours ?? 0;
+        });
+        $totalKilos = $tasks->sum(function ($task) {
+            return $task->kilos ?? 0;
+        });
+        $totalTasks = $tasks->count();
+
+        // Agrupar por cultivo
+        $tasksByCrop = $tasks->groupBy('crop_id');
+        $cropTotals = [];
+        foreach ($tasksByCrop as $cropId => $cropTasks) {
+            $crop = $cropTasks->first()->crop;
+            $cropPayment = $cropTasks->sum(function ($task) {
+                return $task->calculated_payment ?? ($task->total_payment ?? 0);
+            });
+            $cropHours = $cropTasks->sum(function ($task) {
+                return $task->hours ?? 0;
+            });
+            $cropKilos = $cropTasks->sum(function ($task) {
+                return $task->kilos ?? 0;
+            });
+            $cropTotals[$cropId] = [
+                'crop' => $crop ? $crop->name : 'Sin cultivo',
+                'tasks_count' => $cropTasks->count(),
+                'total_payment' => $cropPayment,
+                'total_hours' => $cropHours,
+                'total_kilos' => $cropKilos,
+            ];
+        }
+
+        // Generar PDF
+        $pdf = Pdf::loadView('admin.workers.report-pdf', compact('worker', 'tasks', 'totalPayment', 'totalHours', 'totalKilos', 'totalTasks', 'cropTotals'));
+        return $pdf->download('reporte-trabajador-' . $worker->name . '-' . now()->format('Y-m-d') . '.pdf');
     }
 }

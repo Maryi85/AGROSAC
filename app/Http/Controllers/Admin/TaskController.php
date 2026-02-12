@@ -51,8 +51,18 @@ class TaskController extends Controller
             ->get();
         $plots = Plot::where('status', 'active')->orderBy('name')->get();
         $crops = Crop::orderBy('name')->get();
+        $taskTypes = [
+            'daily' => 'Diaria',
+            'harvest' => 'Cosecha',
+            'maintenance' => 'Mantenimiento',
+            'planting' => 'Siembra',
+            'irrigation' => 'Riego',
+            'fertilization' => 'Fertilización'
+        ];
         
-        return view('admin.tasks.create', compact('workers', 'plots', 'crops'));
+        $supplies = \App\Models\Supply::where('status', 'active')->orderBy('name')->get();
+
+        return view('admin.tasks.create', compact('workers', 'plots', 'crops', 'taskTypes', 'supplies'));
     }
 
     public function store(StoreTaskRequest $request): RedirectResponse
@@ -104,12 +114,23 @@ class TaskController extends Controller
             ->get();
         $plots = Plot::where('status', 'active')->orderBy('name')->get();
         $crops = Crop::orderBy('name')->get();
+        $taskTypes = [
+            'daily' => 'Diaria',
+            'harvest' => 'Cosecha',
+            'maintenance' => 'Mantenimiento',
+            'planting' => 'Siembra',
+            'irrigation' => 'Riego',
+            'fertilization' => 'Fertilización'
+        ];
         
-        return view('admin.tasks.edit', compact('task', 'workers', 'plots', 'crops'));
+        $supplies = \App\Models\Supply::where('status', 'active')->orderBy('name')->get();
+
+        return view('admin.tasks.edit', compact('task', 'workers', 'plots', 'crops', 'taskTypes', 'supplies'));
     }
 
     public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
     {
+        \Illuminate\Support\Facades\Log::info('Task update request:', $request->all());
         $data = $request->validated();
         
         // Determinar el tipo de pago y asignar valores correspondientes

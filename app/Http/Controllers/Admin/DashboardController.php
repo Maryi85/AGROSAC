@@ -77,6 +77,32 @@ class DashboardController extends Controller
         // Configuración de la finca para el mapa
         $farmSettings = FarmSetting::getFarmSettings();
 
+        // Balance financiero del mes actual
+        $currentMonthIncome = LedgerEntry::where('type', 'income')
+            ->whereYear('occurred_at', now()->year)
+            ->whereMonth('occurred_at', now()->month)
+            ->sum('amount');
+        
+        $currentMonthExpenses = LedgerEntry::where('type', 'expense')
+            ->whereYear('occurred_at', now()->year)
+            ->whereMonth('occurred_at', now()->month)
+            ->sum('amount');
+        
+        $currentMonthBalance = $currentMonthIncome - $currentMonthExpenses;
+
+        // Insumos con stock bajo
+        $lowStockSupplies = Supply::where('status', 'active')
+            ->whereRaw('current_stock <= min_stock')
+            ->orderBy('current_stock', 'asc')
+            ->limit(5)
+            ->get();
+
+        // Cultivos activos con información de plot
+        $activeCropsWithPlot = Crop::with('plot')
+            ->where('status', 'active')
+            ->limit(6)
+            ->get();
+
         return view('admin.index', compact(
             'totalUsers',
             'activeUsers',
@@ -96,7 +122,12 @@ class DashboardController extends Controller
             'cropsByStatus',
             'recentTasks',
             'recentLedgerEntries',
-            'farmSettings'
+            'farmSettings',
+            'currentMonthIncome',
+            'currentMonthExpenses',
+            'currentMonthBalance',
+            'lowStockSupplies',
+            'activeCropsWithPlot'
         ));
     }
 }

@@ -1,22 +1,11 @@
 @extends('foreman.layout')
 
 @section('header')
-<div class="flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-emerald-700">Gestión de Préstamos</h2>
-    <a href="{{ route('foreman.loans.create') }}" class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded">
-        <i data-lucide="plus" class="w-4 h-4"></i>
-        <span>Prestar Herramienta</span>
-    </a>
-</div>
+<h2 class="text-lg font-semibold text-emerald-700">Gestión de Préstamos</h2>
 @endsection
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    @if (session('status'))
-        <div class="mb-4 p-3 bg-emerald-100 border border-emerald-300 text-emerald-700 rounded">
-            {{ session('status') }}
-        </div>
-    @endif
 
     @if (session('error'))
         <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
@@ -24,46 +13,18 @@
         </div>
     @endif
 
+    <!-- Botón de descarga PDF -->
+    <div class="mb-4 flex justify-end">
+        <a href="{{ route('foreman.loans.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
+        </a>
+    </div>
+
     <!-- Filtros de búsqueda -->
-    <form method="GET" class="mb-4 flex gap-2 items-end">
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Estado</label>
-            <select name="status" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los estados</option>
-                @foreach($statuses as $key => $label)
-                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Herramienta</label>
-            <select name="tool_id" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todas las herramientas</option>
-                @foreach($tools as $tool)
-                    <option value="{{ $tool->id }}" {{ request('tool_id') == $tool->id ? 'selected' : '' }}>
-                        {{ $tool->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm mb-1 text-emerald-800">Trabajador</label>
-            <select name="user_id" class="border border-emerald-200 rounded px-3 py-2">
-                <option value="all">Todos los trabajadores</option>
-                @foreach($workers as $worker)
-                    <option value="{{ $worker->id }}" {{ request('user_id') == $worker->id ? 'selected' : '' }}>
-                        {{ $worker->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
-            <i data-lucide="search" class="w-4 h-4"></i>
-            <span>Filtrar</span>
-        </button>
-    </form>
+    <div class="mb-4">
+        <x-search-bar placeholder="Buscar por herramienta o trabajador..." />
+    </div>
 
     <!-- Tabla de préstamos -->
     <div class="overflow-x-auto">
@@ -73,6 +34,7 @@
                     <th class="py-3 pr-4">Herramienta</th>
                     <th class="py-3 pr-4">Trabajador</th>
                     <th class="py-3 pr-4">Cantidad</th>
+                    <th class="py-3 pr-4">Fecha Solicitud</th>
                     <th class="py-3 pr-4">Fecha Préstamo</th>
                     <th class="py-3 pr-4">Fecha Devolución</th>
                     <th class="py-3 pr-4">Estado</th>
@@ -94,7 +56,14 @@
                         <div class="text-sm text-gray-900 font-medium">{{ $loan->quantity }}</div>
                     </td>
                     <td class="py-3 pr-4">
-                        <div class="text-sm text-gray-900">{{ $loan->out_at->format('d/m/Y H:i') }}</div>
+                        <div class="text-sm text-gray-900">{{ $loan->created_at->format('d/m/Y H:i') }}</div>
+                    </td>
+                    <td class="py-3 pr-4">
+                        @if($loan->out_at)
+                            <div class="text-sm text-gray-900">{{ $loan->out_at->format('d/m/Y H:i') }}</div>
+                        @else
+                            <div class="text-sm text-gray-500">—</div>
+                        @endif
                     </td>
                     <td class="py-3 pr-4">
                         @if($loan->due_at)
@@ -526,19 +495,14 @@ async function deleteLoan(loanId) {
 }
 
 function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${
-        type === 'success' ? 'bg-green-500 text-white' : 
-        type === 'error' ? 'bg-red-500 text-white' : 
-        'bg-blue-500 text-white'
-    }`;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert && type === 'success') {
+        window.showSuccessAlert(message);
+    } else if (window.showErrorAlert && type === 'error') {
+        window.showErrorAlert(message);
+    } else if (window.showSuccessAlert) {
+        window.showSuccessAlert(message);
+    }
 }
 
     // Cerrar modal al hacer clic fuera de él

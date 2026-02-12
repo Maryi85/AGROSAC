@@ -23,6 +23,7 @@ class Task extends Model
         'total_payment',
         'approved_by',
         'approved_at',
+        'supplies_data',
     ];
 
     protected $casts = [
@@ -33,7 +34,15 @@ class Task extends Model
         'price_per_hour' => 'decimal:2',
         'price_per_day' => 'decimal:2',
         'price_per_kg' => 'decimal:2',
+        'price_per_kg' => 'decimal:2',
         'total_payment' => 'decimal:2',
+        'supplies_data' => 'array',
+    ];
+
+    protected $attributes = [
+        'hours' => 0,
+        'kilos' => 0,
+        'total_payment' => 0,
     ];
 
     public function plot(): BelongsTo

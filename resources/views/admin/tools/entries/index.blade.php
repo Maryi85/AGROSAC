@@ -8,64 +8,23 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h2 class="text-lg font-semibold text-emerald-700">Entradas de Herramientas</h2>
-    <a href="{{ route(route_prefix() . 'tool-entries.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
-        <i data-lucide="plus" class="w-5 h-5"></i>
-        <span>Nueva Entrada</span>
-    </a>
 </div>
 @endsection
 
 @section('content')
 <!-- Filtros -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-            <label for="tool_id" class="block text-sm font-medium text-gray-700 mb-2">Herramienta</label>
-            <select name="tool_id" id="tool_id" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <option value="all">Todas las herramientas</option>
-                @foreach($tools as $tool)
-                    <option value="{{ $tool->id }}" {{ request('tool_id') == $tool->id ? 'selected' : '' }}>
-                        {{ $tool->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-            <select name="type" id="type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <option value="all">Todos los tipos</option>
-                @foreach($types as $key => $label)
-                    <option value="{{ $key }}" {{ request('type') == $key ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label for="date_from" class="block text-sm font-medium text-gray-700 mb-2">Fecha Desde</label>
-            <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" 
-                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-
-        <div>
-            <label for="date_to" class="block text-sm font-medium text-gray-700 mb-2">Fecha Hasta</label>
-            <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" 
-                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-
-        <div class="md:col-span-4 flex justify-end gap-2">
-            <a href="{{ route(route_prefix() . 'tool-entries.index') }}" 
-               class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors">
-                Limpiar
-            </a>
-            <button type="submit" 
-                    class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors">
-                Filtrar
-            </button>
-        </div>
-    </form>
+    <div class="flex items-end justify-between gap-4 mb-4">
+        <h3 class="text-lg font-semibold text-emerald-700">Filtrar Entradas</h3>
+        <a href="{{ route(route_prefix() . 'tool-entries.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Nueva Entrada</span>
+        </a>
+    </div>
+    
+    <div class="mb-4">
+        <x-search-bar placeholder="Buscar por herramienta..." />
+    </div>
 </div>
 
 <!-- Tabla de entradas -->
@@ -75,12 +34,13 @@
             <thead>
                 <tr class="text-left text-emerald-800 border-b bg-gray-50">
                     <th class="py-3 px-4">Fecha</th>
+                    <th class="py-3 px-4">Foto</th>
                     <th class="py-3 px-4">Herramienta</th>
                     <th class="py-3 px-4">Tipo</th>
                     <th class="py-3 px-4">Cantidad</th>
                     <th class="py-3 px-4">Costo Unitario</th>
                     <th class="py-3 px-4">Total</th>
-                    <th class="py-3 px-4">Proveedor</th>
+
                     <th class="py-3 px-4">Registrado por</th>
                     <th class="py-3 px-4 text-right">Acciones</th>
                 </tr>
@@ -91,6 +51,15 @@
                     <td class="py-3 px-4">
                         <div class="font-medium text-gray-900">{{ $entry->entry_date->format('d/m/Y') }}</div>
                         <div class="text-xs text-gray-500">{{ $entry->created_at->format('H:i') }}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        @if($entry->tool->photo)
+                            <img src="{{ asset('storage/' . $entry->tool->photo) }}" alt="{{ $entry->tool->name }}" class="w-12 h-12 rounded-full object-cover border border-gray-200">
+                        @else
+                            <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                                <i data-lucide="image" class="w-5 h-5"></i>
+                            </div>
+                        @endif
                     </td>
                     <td class="py-3 px-4">
                         <div class="font-medium text-gray-900">{{ $entry->tool->name }}</div>
@@ -122,31 +91,29 @@
                             @endif
                         </div>
                     </td>
-                    <td class="py-3 px-4">
-                        <div class="text-sm text-gray-600">{{ $entry->supplier ?? '—' }}</div>
-                    </td>
+
                     <td class="py-3 px-4">
                         <div class="text-sm text-gray-600">{{ $entry->createdBy->name }}</div>
                     </td>
                     <td class="py-3 px-4 text-right">
                         <div class="flex items-center gap-1 justify-end">
-                            <!-- Ver detalles -->
-                            <a href="{{ route(route_prefix() . 'tool-entries.show', $entry) }}" 
-                               class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600" 
-                               title="Ver detalles">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                            </a>
-                            
                             <!-- Editar -->
-                            <a href="{{ route(route_prefix() . 'tool-entries.edit', $entry) }}" 
-                               class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-600" 
-                               title="Editar">
+                            <button type="button"
+                                class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-600 edit-entry-btn" 
+                                data-entry-id="{{ $entry->id }}"
+                                data-entry-tool-id="{{ $entry->tool_id }}"
+                                data-entry-quantity="{{ $entry->quantity }}"
+                                data-entry-type="{{ $entry->type }}"
+                                data-entry-date="{{ $entry->entry_date->format('Y-m-d') }}"
+                                data-entry-unit-cost="{{ $entry->unit_cost ?? '' }}"
+                                data-entry-notes="{{ $entry->notes ?? '' }}"
+                                title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
-                            </a>
+                            </button>
                             
                             <!-- Eliminar -->
                             <form method="POST" action="{{ route(route_prefix() . 'tool-entries.destroy', $entry) }}" class="inline" 
-                                  onsubmit="return confirm('¿Eliminar esta entrada? Esta acción no se puede deshacer.')">
+                                  data-confirm="true" data-message="¿Eliminar esta entrada? Esta acción no se puede deshacer.">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" 
@@ -174,4 +141,160 @@
     </div>
     @endif
 </div>
+
+<!-- Modal de edición -->
+<div id="editEntryModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto" style="display: none;">
+    <div class="bg-white border rounded-lg p-6 w-full max-w-2xl mx-4 my-8">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-emerald-700">Editar Entrada de Herramienta</h3>
+            <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <form id="editEntryForm" method="POST">
+            @csrf
+            @method('PUT')
+            <input type="hidden" id="editEntryId" name="entry_id">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Herramienta -->
+                <div class="md:col-span-2">
+                    <label for="editToolId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Herramienta <span class="text-red-500">*</span>
+                    </label>
+                    <select name="tool_id" id="editToolId" required 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="">Seleccionar herramienta</option>
+                        @foreach($tools as $tool)
+                            <option value="{{ $tool->id }}">{{ $tool->name }} - {{ $tool->category }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Cantidad -->
+                <div>
+                    <label for="editQuantity" class="block text-sm font-medium text-gray-700 mb-2">
+                        Cantidad <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="quantity" id="editQuantity" min="1" required 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <!-- Tipo de entrada -->
+                <div>
+                    <label for="editType" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Entrada <span class="text-red-500">*</span>
+                    </label>
+                    <select name="type" id="editType" required 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="">Seleccionar tipo</option>
+                        @foreach($types as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Fecha de entrada -->
+                <div>
+                    <label for="editEntryDate" class="block text-sm font-medium text-gray-700 mb-2">
+                        Fecha de Entrada <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="entry_date" id="editEntryDate" required 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <!-- Costo unitario -->
+                <div>
+                    <label for="editUnitCost" class="block text-sm font-medium text-gray-700 mb-2">
+                        Costo Unitario
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-gray-500">$</span>
+                        <input type="number" name="unit_cost" id="editUnitCost" step="0.01" min="0" 
+                               class="w-full border border-gray-300 rounded-md pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                <div class="md:col-span-2">
+                    <label for="editNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                        Notas Adicionales
+                    </label>
+                    <textarea name="notes" id="editNotes" rows="3" maxlength="1000"
+                              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                              placeholder="Información adicional sobre la entrada..."></textarea>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex items-center gap-2 justify-end pt-4 border-t">
+                <button type="button" onclick="closeEditModal()" 
+                        class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors">
+                    <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
+                    Actualizar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Abrir modal de edición
+    document.addEventListener('DOMContentLoaded', function() {
+        const editButtons = document.querySelectorAll('.edit-entry-btn');
+        const form = document.getElementById('editEntryForm');
+        
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const entryId = this.dataset.entryId;
+                const toolId = this.dataset.entryToolId;
+                const quantity = this.dataset.entryQuantity;
+                const type = this.dataset.entryType;
+                const date = this.dataset.entryDate;
+                const unitCost = this.dataset.entryUnitCost;
+                const notes = this.dataset.entryNotes;
+                
+                // Configurar action del formulario
+                const routePrefix = '{{ route_prefix() === 'foreman.' ? 'foreman' : 'admin' }}';
+                form.action = `/${routePrefix}/tool-entries/${entryId}`;
+
+                // Llenar el formulario
+                document.getElementById('editEntryId').value = entryId;
+                document.getElementById('editToolId').value = toolId;
+                document.getElementById('editQuantity').value = quantity;
+                document.getElementById('editType').value = type;
+                document.getElementById('editEntryDate').value = date;
+                document.getElementById('editUnitCost').value = unitCost;
+                document.getElementById('editNotes').value = notes;
+                
+                // Mostrar el modal
+                document.getElementById('editEntryModal').style.display = 'flex';
+                
+                // Re-inicializar los iconos de lucide
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            });
+        });
+    });
+
+// Cerrar modal de edición
+function closeEditModal() {
+    document.getElementById('editEntryModal').style.display = 'none';
+}
+
+// Cerrar modal al hacer clic fuera
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('editEntryModal');
+    if (e.target === modal) {
+        closeEditModal();
+    }
+});
+</script>
 @endsection

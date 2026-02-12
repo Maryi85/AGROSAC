@@ -37,6 +37,12 @@ class ToolDamageController extends Controller
             $query->where('id', $request->tool_id);
         }
 
+        // Búsqueda por nombre de herramienta
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%");
+        }
+
         $tools = $query->orderBy('name')->paginate(20);
 
         // Obtener herramientas para el filtro
