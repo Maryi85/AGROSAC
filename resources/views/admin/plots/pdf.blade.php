@@ -4,129 +4,199 @@
     <meta charset="utf-8">
     <title>Reporte de Lotes - AGROSAC</title>
     <style>
+        @page {
+            margin: 10mm 15mm;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
             color: #333;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #10b981;
-            padding-bottom: 15px;
-        }
-        .header h1 {
-            margin: 0;
-            color: #10b981;
-            font-size: 24px;
-        }
-        .header p {
-            margin: 5px 0;
-            color: #666;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table th {
-            background: #10b981;
-            color: white;
-            padding: 10px;
-            text-align: left;
-            font-size: 10px;
-        }
-        table td {
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-            font-size: 10px;
-            vertical-align: top;
-        }
-        .crop-info {
-            margin-bottom: 3px;
             line-height: 1.4;
         }
-        .crop-name {
+
+        /* --- Colors --- */
+        /* Corporate Green: #10b981 */
+        
+        /* --- Utilities --- */
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
+
+        /* --- Header --- */
+        .header {
+            width: 100%;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #10b981;
+        }
+        .header-table { width: 100%; }
+        .header-logo { width: 60px; height: auto; }
+        .header-title { 
+            font-size: 18pt; 
+            font-weight: bold; 
+            color: #10b981; 
+            margin: 0;
+        }
+        .header-subtitle { 
+            font-size: 10pt; 
+            color: #666; 
+            margin-top: 5px;
+        }
+
+        /* --- Data Table --- */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+            margin-bottom: 20px;
+        }
+        .data-table th {
+            background-color: #10b981;
+            color: #fff;
+            padding: 10px;
+            text-align: left;
             font-weight: bold;
-            color: #166534;
+            text-transform: uppercase;
+            font-size: 8pt;
         }
-        .crop-variety {
-            color: #666;
-            font-size: 9px;
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+            vertical-align: top;
         }
-        table tr:nth-child(even) {
-            background: #f9fafb;
-        }
+        .data-table tr:nth-child(even) { background-color: #f9fafb; }
+        
+        /* --- Badges --- */
         .badge {
-            padding: 4px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: 8pt;
             font-weight: bold;
+            display: inline-block;
         }
-        .badge-success {
-            background: #dcfce7;
-            color: #166534;
+        .badge-active { background: #dcfce7; color: #166534; }
+        .badge-inactive { background: #fef2f2; color: #991b1b; }
+        
+        /* --- Crops List --- */
+        .crop-item {
+            margin-bottom: 4px;
+            font-size: 9pt;
         }
-        .badge-danger {
-            background: #fef2f2;
-            color: #991b1b;
-        }
+        .crop-name { font-weight: bold; color: #166534; }
+        .crop-variety { color: #666; font-size: 8pt; font-style: italic; }
+
+        /* --- Footer --- */
         .footer {
-            margin-top: 40px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
             text-align: center;
-            font-size: 10px;
-            color: #666;
+            font-size: 8pt;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 10px;
         }
+
+        /* --- Summary Section --- */
+        .summary-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 50%;
+        }
+        .summary-title {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+        .summary-row {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .summary-label { color: #6b7280; }
+        .summary-value { font-weight: bold; color: #111; float: right; }
     </style>
 </head>
 <body>
+
+    <!-- Header -->
     <div class="header">
-        <h1>AGROSAC</h1>
-        <p>Reporte de Lotes</p>
-        <p>Generado el: {{ now()->format('d/m/Y H:i:s') }}</p>
+        <table class="header-table">
+            <tr>
+                <td style="width: 60px; vertical-align: middle;">
+                    <img src="{{ public_path('AGROSACLOGO.png') }}" class="header-logo" alt="Logo">
+                </td>
+                <td style="vertical-align: middle; padding-left: 15px;">
+                    <h1 class="header-title">AGROSAC</h1>
+                    <div class="header-subtitle">Sistema de Gestión Agrícola</div>
+                </td>
+                <td style="text-align: right; vertical-align: middle;">
+                    <div style="font-size: 14pt; font-weight: bold; color: #333;">REPORTE DE LOTES</div>
+                    <div style="font-size: 9pt; color: #666;">Generado: {{ now()->format('d/m/Y H:i') }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <table>
+    <!-- Summary -->
+    <table style="width: 100%; margin-bottom: 20px;">
+        <tr>
+            <td style="vertical-align: top; width: 60%;">
+            </td>
+            <td style="vertical-align: top; width: 40%;">
+                <div class="summary-box" style="width: 100%;">
+                    <div class="summary-title">Resumen</div>
+                    <div class="summary-row">
+                        <span class="summary-label">Total Lotes:</span>
+                        <span class="summary-value">{{ $plots->count() }}</span>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Data Table -->
+    <table class="data-table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Ubicación</th>
-                <th>Área (hectáreas)</th>
-                <th>Cultivos</th>
-                <th>Estado</th>
+                <th style="width: 5%;">ID</th>
+                <th style="width: 20%;">Nombre</th>
+                <th style="width: 25%;">Ubicación</th>
+                <th style="width: 15%; text-align: right;">Área (Ha)</th>
+                <th style="width: 25%;">Cultivos</th>
+                <th style="width: 10%; text-align: center;">Estado</th>
             </tr>
         </thead>
         <tbody>
             @forelse($plots as $plot)
                 <tr>
                     <td>{{ $plot->id }}</td>
-                    <td>{{ $plot->name }}</td>
+                    <td class="font-bold">{{ $plot->name }}</td>
                     <td>{{ $plot->location ?? 'N/A' }}</td>
-                    <td>{{ number_format($plot->area ?? 0, 2) }}</td>
+                    <td class="text-right">{{ number_format($plot->area ?? 0, 0) }}</td>
                     <td>
                         @if($plot->crops && $plot->crops->count() > 0)
                             @foreach($plot->crops as $crop)
-                                <div style="margin-bottom: 4px;">
-                                    <strong>{{ $crop->name }}</strong>
+                                <div class="crop-item">
+                                    <span class="crop-name">{{ $crop->name }}</span>
                                     @if($crop->variety)
-                                        <span style="color: #666; font-size: 10px;">({{ $crop->variety }})</span>
-                                    @endif
-                                    @if($crop->status === 'active')
-                                        <span class="badge badge-success" style="margin-left: 5px;">Activo</span>
-                                    @else
-                                        <span class="badge badge-danger" style="margin-left: 5px;">Inactivo</span>
+                                        <span class="crop-variety">({{ $crop->variety }})</span>
                                     @endif
                                 </div>
                             @endforeach
                         @else
-                            <span style="color: #999;">Sin cultivo</span>
+                            <span style="color: #999; font-style: italic;">Sin cultivos</span>
                         @endif
                     </td>
-                    <td>
-                        <span class="badge {{ $plot->status === 'active' ? 'badge-success' : 'badge-danger' }}">
+                    <td class="text-center">
+                        <span class="badge {{ $plot->status === 'active' ? 'badge-active' : 'badge-inactive' }}">
                             {{ $plot->status === 'active' ? 'Activo' : 'Inactivo' }}
                         </span>
                     </td>
@@ -139,9 +209,12 @@
         </tbody>
     </table>
 
+    <!-- Footer -->
     <div class="footer">
-        <p>Total de lotes: {{ $plots->count() }}</p>
-        <p>AGROSAC - Sistema de Gestión Agrícola</p>
+        AGROSAC - Sistema de Gestión Agrícola &copy; {{ date('Y') }}
+        <br>
+        Este documento es un reporte generado automáticamente.
     </div>
+
 </body>
 </html>

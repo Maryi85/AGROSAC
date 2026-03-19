@@ -65,19 +65,12 @@ class PlotController extends Controller
         return redirect()->route('admin.plots.index')->with('status', 'Lote creado correctamente');
     }
 
-    public function edit(Plot $plot): View
+    public function edit(Plot $plot): RedirectResponse
     {
-        $farmSettings = \App\Models\FarmSetting::getFarmSettings();
-        // Obtener todos los lotes existentes con sus boundaries para mostrarlos en el mapa (excluyendo el que se está editando)
-        $existingPlots = Plot::whereNotNull('boundary')
-            ->where('status', 'active')
-            ->where('id', '!=', $plot->id)
-            ->select('id', 'name', 'boundary', 'latitude', 'longitude')
-            ->get()
-            ->toArray(); // Convertir Collection a array para evitar problemas con @json()
-        
-        return view('admin.plots.edit', compact('plot', 'farmSettings', 'existingPlots'));
+        // La edición se realiza mediante el modal en el listado de lotes
+        return redirect()->route('admin.plots.index');
     }
+
 
     public function update(UpdatePlotRequest $request, Plot $plot): RedirectResponse|\Illuminate\Http\JsonResponse
     {

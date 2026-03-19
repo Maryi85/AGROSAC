@@ -5,279 +5,175 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar Contraseña - AGROSAC</title>
     <style>
-        * {
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
             color: #333333;
-            background-color: #f5f5f5;
         }
-        
-        .email-container {
+        .email-wrapper {
+            width: 100%;
+            background-color: #f4f7f6;
+            padding: 40px 0;
+        }
+        .email-content {
             max-width: 600px;
-            margin: 40px auto;
+            margin: 0 auto;
             background-color: #ffffff;
             border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-        
-        .header {
-            background-color: #4CAF50;
-            padding: 25px 30px;
-            text-align: center;
-        }
-        
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-        }
-        
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background-color: rgba(255, 255, 255, 0.25);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            flex-shrink: 0;
-        }
-        
-        .logo-icon span {
-            font-size: 24px;
-        }
-        
-        .header h1 {
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0;
-            letter-spacing: 0.5px;
-        }
-        
-        .content {
-            padding: 50px 40px;
-        }
-        
-        .greeting {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 20px;
-        }
-        
-        .message {
-            color: #555555;
-            font-size: 16px;
-            line-height: 1.7;
-            margin-bottom: 30px;
-        }
-        
-        .role-info {
-            text-align: center;
-            margin: 30px 0;
-        }
-        
-        .role-badge {
-            display: inline-block;
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .button-wrapper {
-            text-align: center;
-            margin: 40px 0;
-        }
-        
-        .reset-button {
-            display: inline-block;
-            background-color: #4CAF50;
-            color: #ffffff !important;
-            text-decoration: none;
-            padding: 18px 50px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            transition: background-color 0.3s ease;
-        }
-        
-        .reset-button:hover {
-            background-color: #45a049;
-        }
-        
-        .info-section {
-            margin-top: 40px;
-            padding-top: 30px;
-            border-top: 1px solid #e0e0e0;
-        }
-        
-        .info-item {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            border-left: 4px solid #4CAF50;
-        }
-        
-        .info-item p {
-            color: #555555;
-            font-size: 14px;
-            line-height: 1.6;
-            margin: 0;
-        }
-        
-        .info-item strong {
-            color: #333333;
-        }
-        
-        .link-box {
-            background-color: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 15px;
-            margin-top: 15px;
-            word-break: break-all;
-        }
-        
-        .link-box a {
-            color: #4CAF50;
-            text-decoration: none;
-            font-size: 13px;
-            word-break: break-all;
-        }
-        
-        .footer {
-            background-color: #2c3e50;
+        .email-header {
+            background-color: #ffffff;
             padding: 30px;
             text-align: center;
+            border-bottom: 3px solid #10b981; /* Emerald 500 */
         }
-        
-        .footer-brand {
-            color: #68d391;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 15px;
+        .logo-img {
+            max-width: 180px;
+            height: auto;
         }
-        
-        .footer-text {
-            color: #a0aec0;
+        .email-body {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 22px;
+            font-weight: 600;
+            color: #065f46; /* Emerald 800 */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .message-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #4b5563; /* Gray 600 */
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .role-badge {
+            display: inline-block;
+            background-color: #ecfdf5; /* Emerald 50 */
+            color: #059669; /* Emerald 600 */
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 14px;
-            line-height: 1.8;
-            margin-bottom: 10px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            border: 1px solid #d1fae5;
         }
-        
-        .footer-copyright {
-            color: #718096;
+        .action-button {
+            display: block;
+            width: 220px;
+            margin: 0 auto;
+            background-color: #10b981; /* Emerald 500 */
+            color: #ffffff;
+            text-align: center;
+            padding: 14px 0;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .action-button:hover {
+            background-color: #059669; /* Emerald 600 */
+        }
+        .info-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6; /* Blue 500 */
+            padding: 15px;
+            border-radius: 4px;
+            margin: 30px 0;
+            font-size: 14px;
+            color: #1e293b;
+        }
+        .warning-box {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #92400e;
+        }
+        .link-container {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            word-break: break-all;
             font-size: 12px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #10b981;
         }
-        
-        @media only screen and (max-width: 600px) {
-            .email-container {
-                margin: 20px auto;
-                border-radius: 0;
-            }
-            
-            .header {
-                padding: 20px 20px;
-            }
-            
-            .header-content {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .header h1 {
-                font-size: 22px;
-            }
-            
-            .content {
-                padding: 40px 25px;
-            }
-            
-            .reset-button {
-                padding: 16px 40px;
-                font-size: 15px;
-            }
-            
-            .header h1 {
-                font-size: 28px;
-            }
+        .link-container a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        .help-text {
+            font-size: 14px;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+        .email-footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+            border-top: 1px solid #f3f4f6;
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-content">
-                <div class="logo-icon">
-                    <span>🌱</span>
-                </div>
-                <h1>AGROSAC</h1>
-            </div>
-        </div>
-        
-        <!-- Content -->
-        <div class="content">
-            <div class="greeting">
-                ¡Hola{{ $notifiable->name ? ', ' . $notifiable->name : '' }}!
+    <div class="email-wrapper">
+        <div class="email-content">
+            <div class="email-header">
+                {{-- Logo del software --}}
+                <img src="{{ $message->embed(public_path('AGROSACLOGO.png')) }}" alt="AGROSAC" class="logo-img">
             </div>
             
-            <div class="message">
-                <p>Has recibido este correo porque solicitaste recuperar tu contraseña en AGROSAC.</p>
-            </div>
-            
-            <div class="role-info">
-                <span class="role-badge">Rol: {{ ucfirst($notifiable->role ?? 'usuario') }}</span>
-            </div>
-            
-            <div class="button-wrapper">
-                <a href="{{ $url }}" class="reset-button">Recuperar Contraseña</a>
-            </div>
-            
-            <div class="info-section">
-                <div class="info-item">
-                    <p><strong>⏰ Este enlace expirará en 60 minutos</strong> por seguridad.</p>
-                </div>
+            <div class="email-body">
+                <h1 class="greeting">¡Hola{{ $notifiable->name ? ', ' . $notifiable->name : '' }}!</h1>
                 
-                <div class="info-item">
-                    <p><strong>Si no puedes hacer clic en el botón</strong>, copia y pega este enlace en tu navegador:</p>
-                    <div class="link-box">
+                <p class="message-text">
+                    Has recibido este correo porque solicitaste recuperar tu contraseña en <strong>AGROSAC</strong>.
+                </p>
+
+                @if(isset($notifiable->role))
+                <div style="text-align: center;">
+                    <span class="role-badge">Rol: {{ ucfirst($notifiable->role) }}</span>
+                </div>
+                @endif
+                
+                <a href="{{ $url }}" class="action-button">Recuperar Contraseña</a>
+
+                <div class="separator" style="margin: 30px 0; border-top: 1px solid #e5e7eb;"></div>
+
+                <div class="info-box">
+                    <strong>⏰ Este enlace expirará en 60 minutos</strong> por seguridad.
+                </div>
+
+                <div class="warning-box" style="background-color: #f8fafc; border-left: 4px solid #10b981; color: #334155;">
+                    <p style="margin: 0 0 10px 0;"><strong>Si no puedes hacer clic en el botón</strong>, copia y pega este enlace en tu navegador:</p>
+                    <div class="link-container">
                         <a href="{{ $url }}">{{ $url }}</a>
                     </div>
                 </div>
-                
-                <div class="info-item">
-                    <p><strong>Si no solicitaste este cambio</strong>, puedes ignorar este correo de forma segura. Tu cuenta permanecerá sin cambios.</p>
+
+                <div class="warning-box" style="margin-top: 20px;">
+                    <strong>Si no solicitaste este cambio</strong>, puedes ignorar este correo de forma segura. Tu cuenta permanecerá sin cambios.
                 </div>
             </div>
-        </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-brand">AGROSAC</div>
-            <div class="footer-text">
-                Software de Administración Contable Rural Organizado
-            </div>
-            <div class="footer-copyright">
-                &copy; {{ date('Y') }} AGROSAC. Todos los derechos reservados.
+
+            <div class="email-footer">
+                <p>&copy; {{ date('Y') }} AGROSAC. Todos los derechos reservados.</p>
+                <p>Software de Administración Contable Rural Organizado</p>
             </div>
         </div>
     </div>

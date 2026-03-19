@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <form method="POST" action="{{ route('admin.foremen.store') }}">
+    <form method="POST" action="{{ route('admin.foremen.store') }}" enctype="multipart/form-data">
         @csrf
         
         <div class="space-y-6">
@@ -33,6 +33,28 @@
                                class="w-full border border-emerald-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('email') border-red-500 @enderror" 
                                placeholder="correo@ejemplo.com" required>
                         @error('email')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <!-- Teléfono -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               class="w-full border border-emerald-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('phone') border-red-500 @enderror" 
+                               placeholder="Ej: 3000000000">
+                        @error('phone')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Foto -->
+                    <div>
+                        <label for="photo" class="block text-sm font-medium text-gray-700 mb-1">Foto (opcional)</label>
+                        <input type="file" id="photo" name="photo" accept="image/*"
+                               class="w-full text-sm @error('photo') border-red-500 @enderror">
+                        @error('photo')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -71,16 +93,16 @@
             </div>
         </div>
         
-        <!-- Botones de acción -->
-        <div class="mt-6 flex justify-end gap-3">
+        {{-- Responsive: columna invertida en móvil (submit arriba), fila en sm+ --}}
+        <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
             <a href="{{ route('admin.foremen.index') }}" 
-               class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 inline-flex items-center gap-2">
+               class="w-full sm:w-auto px-4 py-2.5 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 inline-flex items-center justify-center gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 <span>Cancelar</span>
             </a>
             
             <button type="submit" 
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+                    class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center justify-center gap-2">
                 <i data-lucide="user-plus" class="w-4 h-4"></i>
                 <span>Crear Mayordomo</span>
             </button>

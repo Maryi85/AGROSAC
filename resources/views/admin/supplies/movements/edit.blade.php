@@ -41,7 +41,7 @@
                     <option value="">Seleccionar insumo</option>
                     @foreach($supplies as $supply)
                         <option value="{{ $supply->id }}" 
-                                data-unit-cost="{{ $supply->unit_cost }}"
+                                data-unit-cost="{{ (int)$supply->unit_cost }}"
                                 {{ old('supply_id', $supplyMovement->supply_id) == $supply->id ? 'selected' : '' }}>
                             {{ $supply->name }} - Stock: {{ rtrim(rtrim(number_format($supply->current_stock, 2, '.', ','), '0'), '.') }} {{ $supply->unit }}
                         </option>
@@ -86,7 +86,7 @@
                 <input type="number" 
                        id="quantity" 
                        name="quantity" 
-                       value="{{ old('quantity', $supplyMovement->quantity) }}"
+                       value="{{ old('quantity', (float)$supplyMovement->quantity) }}"
                        step="0.001"
                        min="0.001"
                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -105,7 +105,7 @@
                        id="unit_cost" 
                        name="unit_cost" 
                        value="{{ old('unit_cost', $supplyMovement->unit_cost) }}"
-                       step="0.01"
+                       step="1"
                        min="0"
                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                        placeholder="0.00"
@@ -142,7 +142,7 @@
         <div class="bg-gray-50 rounded-lg p-4">
             <div class="flex items-center justify-between">
                 <span class="text-lg font-medium text-gray-900">Costo Total:</span>
-                <span id="total-cost" class="text-2xl font-bold text-emerald-600">${{ number_format($supplyMovement->total_cost, 2) }}</span>
+                <span id="total-cost" class="text-2xl font-bold text-emerald-600">${{ number_format($supplyMovement->total_cost, 0) }}</span>
             </div>
         </div>
 
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const quantity = parseFloat(quantityInput.value) || 0;
         const unitCost = parseFloat(unitCostInput.value) || 0;
         const totalCost = quantity * unitCost;
-        totalCostElement.textContent = '$' + totalCost.toFixed(2);
+        totalCostElement.textContent = '$' + totalCost.toFixed(0);
     }
 
     // Calcular costo total cuando cambien los valores
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Si es una salida y hay un precio registrado, auto-completar el precio
             if (typeSelect.value === 'exit' && unitCost && unitCost !== '0' && unitCost !== '') {
-                unitCostInput.value = parseFloat(unitCost).toFixed(2);
+                unitCostInput.value = parseFloat(unitCost).toFixed(0);
                 calculateTotalCost();
             }
         }
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const requestedQuantity = parseFloat(quantityInput.value) || 0;
                     
                     // Agregar la cantidad original del movimiento si estamos editando una salida
-                    const originalQuantity = {{ $supplyMovement->type === 'exit' ? $supplyMovement->quantity : 0 }};
+                    const originalQuantity = {{ $supplyMovement->type === 'exit' ? (float)$supplyMovement->quantity : 0 }};
                     const adjustedStock = availableStock + originalQuantity;
                     
                     if (requestedQuantity > adjustedStock) {

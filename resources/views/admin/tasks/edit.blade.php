@@ -107,7 +107,7 @@
                     <select name="crop_id" id="crop_id" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                         <option value="">Seleccionar cultivo</option>
                         @foreach($crops as $crop)
-                            <option value="{{ $crop->id }}" {{ old('crop_id', $task->crop_id) == $crop->id ? 'selected' : '' }}>
+                            <option value="{{ $crop->id }}" data-plot-id="{{ $crop->plot_id }}" {{ old('crop_id', $task->crop_id) == $crop->id ? 'selected' : '' }}>
                                 {{ $crop->name }}
                             </option>
                         @endforeach
@@ -167,14 +167,14 @@
             <div id="hours-field" class="hidden grid grid-cols-2 gap-4">
                 <div>
                     <label for="hours" class="block text-sm font-medium text-emerald-800 mb-2">Horas Estimadas</label>
-                    <input type="number" name="hours" id="hours" value="{{ old('hours', $task->hours) }}" step="0.5" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 8.5">
+                    <input type="number" name="hours" id="hours" value="{{ old('hours', $task->hours) }}" step="1" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 8.5">
                     @error('hours')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
                 <div>
                     <label for="price_per_hour" class="block text-sm font-medium text-emerald-800 mb-2">Precio por Hora ($)</label>
-                    <input type="number" name="price_per_hour" id="price_per_hour" value="{{ old('price_per_hour', $task->price_per_hour) }}" step="0.01" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 5000">
+                    <input type="number" name="price_per_hour" id="price_per_hour" value="{{ old('price_per_hour', (int)$task->price_per_hour) }}" step="1" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 5000">
                     @error('price_per_hour')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -192,7 +192,7 @@
                 </div>
                 <div>
                     <label for="price_per_day" class="block text-sm font-medium text-emerald-800 mb-2">Precio por Día ($)</label>
-                    <input type="number" name="price_per_day" id="price_per_day" value="{{ old('price_per_day', $task->price_per_day) }}" step="0.01" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 40000">
+                    <input type="number" name="price_per_day" id="price_per_day" value="{{ old('price_per_day', (int)$task->price_per_day) }}" step="1" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 40000">
                     @error('price_per_day')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -210,7 +210,7 @@
                 </div>
                 <div>
                     <label for="price_per_kg" class="block text-sm font-medium text-emerald-800 mb-2">Precio por kg ($)</label>
-                    <input type="number" name="price_per_kg" id="price_per_kg" value="{{ old('price_per_kg', $task->price_per_kg) }}" step="0.01" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 500">
+                    <input type="number" name="price_per_kg" id="price_per_kg" value="{{ old('price_per_kg', (int)$task->price_per_kg) }}" step="1" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 500">
                     @error('price_per_kg')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -251,6 +251,67 @@
             </div>
         </div>
 
+        <!-- Insumos Requeridos -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" x-data="suppliesRepeater()">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-md font-medium text-emerald-800 flex items-center gap-2">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    Insumos Requeridos
+                </h3>
+                <button type="button" @click="addSupply()" class="text-sm text-emerald-600 hover:text-emerald-800 flex items-center gap-1">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    Agregar Insumo
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <template x-for="(row, index) in rows" :key="row.id">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-white p-3 rounded shadow-sm">
+
+                        <!-- Selección de Insumo -->
+                        <div class="md:col-span-7">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Insumo</label>
+                            <select :name="`supplies_data[${index}][supply_id]`" x-model="row.supply_id" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                                <option value="">Seleccionar...</option>
+                                @foreach($supplies as $supply)
+                                    <option value="{{ $supply->id }}" data-unit="{{ $supply->unit }}">
+                                        {{ $supply->name }} (Min: {{ $supply->min_stock }} {{ $supply->unit }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="md:col-span-4">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
+                            <div class="relative">
+                                <input type="number" :name="`supplies_data[${index}][quantity]`" x-model="row.quantity" step="1" min="0" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                                <span class="absolute right-8 top-1.5 text-xs text-gray-500" x-text="getUnit(row.supply_id)"></span>
+                            </div>
+                        </div>
+
+                        <!-- Botón Eliminar -->
+                        <div class="md:col-span-1 text-right pb-1">
+                            <button type="button" @click="removeSupply(row.id)" class="text-red-500 hover:text-red-700 p-1" title="Quitar insumo">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <div x-show="rows.length === 0" class="text-center py-4 text-gray-500 text-sm italic">
+                    No hay insumos asignados a esta tarea.
+                </div>
+            </div>
+
+            @if($errors->has('supplies_data'))
+                <div class="mt-2 text-red-600 text-sm">{{ $errors->first('supplies_data') }}</div>
+            @endif
+        </div>
+
+
+
+
         <!-- Botones -->
         <div class="flex items-center gap-4 pt-4">
             <button type="submit" class="px-6 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors">
@@ -264,6 +325,7 @@
         </div>
     </form>
 </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -379,6 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Funcionalidad para cultivos
     const cropsSelect = document.getElementById('crop_id');
+    const plotSelect = document.getElementById('plot_id');
     const refreshCropsBtn = document.getElementById('refreshCropsBtn');
     const cropsLoading = document.getElementById('crops-loading');
 
@@ -418,6 +481,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         option.selected = true;
                     }
                     
+                    if (crop.plot_id) {
+                        option.setAttribute('data-plot-id', crop.plot_id);
+                    }
+                    
                     cropsSelect.appendChild(option);
                 });
                 
@@ -442,6 +509,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cargar cultivos al cargar la página
     loadCrops();
+
+    if (cropsSelect && plotSelect) {
+        cropsSelect.addEventListener('change', function() {
+            const selectedCrop = this.options[this.selectedIndex];
+            const plotId = selectedCrop.getAttribute('data-plot-id');
+            if (plotId) plotSelect.value = plotId;
+        });
+
+        plotSelect.addEventListener('change', function() {
+            const selectedPlotId = this.value;
+            if (!selectedPlotId) return;
+
+            const cropsForPlot = Array.from(cropsSelect.options).filter(opt => opt.getAttribute('data-plot-id') === selectedPlotId);
+            
+            if (cropsForPlot.length === 1) {
+                cropsSelect.value = cropsForPlot[0].value;
+            } else if (cropsForPlot.length > 1) {
+                const currentCropPlotId = cropsSelect.options[cropsSelect.selectedIndex]?.getAttribute('data-plot-id');
+                if (currentCropPlotId !== selectedPlotId) {
+                    cropsSelect.value = '';
+                }
+            }
+        });
+    }
 
     // Actualizar cultivos cada 30 segundos
     // setInterval(loadCrops, 30000);
@@ -485,4 +576,47 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateTotal();
 });
 </script>
+
+@push('scripts')
+<script>
+function suppliesRepeater() {
+    return {
+        rows: [],
+        init() {
+            const oldSuppliesObj = @json(old('supplies_data', []));
+            const oldSupplies = Array.isArray(oldSuppliesObj) ? oldSuppliesObj : Object.values(oldSuppliesObj);
+            
+            const taskSuppliesObj = @json($task->supplies_data ?? []);
+            const taskSupplies = Array.isArray(taskSuppliesObj) ? taskSuppliesObj : Object.values(taskSuppliesObj);
+            
+            const hasOldData = "{{ old('type') }}" !== "";
+            const source = hasOldData ? oldSupplies : taskSupplies;
+            
+            if (source.length > 0) {
+                this.rows = source.map(item => ({
+                    id: Date.now() + Math.random(),
+                    supply_id: item.supply_id,
+                    quantity: item.quantity
+                }));
+            }
+        },
+        addSupply() {
+            this.rows.push({ id: Date.now(), supply_id: '', quantity: '' });
+        },
+        removeSupply(id) {
+            this.rows = this.rows.filter(r => r.id !== id);
+        },
+        getUnit(supplyId) {
+            if (!supplyId) return '';
+            const supply = window.editSuppliesMap[supplyId];
+            return supply ? supply.unit : '';
+        }
+    };
+}
+window.editSuppliesMap = {};
+@foreach($supplies as $supply)
+    window.editSuppliesMap[{{ $supply->id }}] = { unit: '{{ $supply->unit }}', name: '{{ addslashes($supply->name) }}' };
+@endforeach
+</script>
+@endpush
 @endsection

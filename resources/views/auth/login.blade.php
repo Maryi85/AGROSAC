@@ -13,22 +13,24 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 100svh;
             position: relative;
-            overflow: hidden;
-            padding: 20px;
+            overflow-x: hidden;
             background: #1a1a1a;
         }
-        
+
         body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -41,10 +43,10 @@
             transform: scale(1.1);
             z-index: 0;
         }
-        
+
         body::after {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -52,14 +54,23 @@
             background: rgba(0, 0, 0, 0.4);
             z-index: 1;
         }
-        
-        .login-container {
+
+        .page-wrapper {
             position: relative;
             z-index: 2;
+            min-height: 100vh;
+            min-height: 100svh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 16px 16px;
+            padding-top: max(60px, calc(40px + env(safe-area-inset-top)));
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+        }
+
+        .login-container {
             width: 100%;
             max-width: 420px;
-            margin: 0 auto;
-            padding: 0 20px;
         }
         
         .login-card {
@@ -67,7 +78,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 24px;
-            padding: 3rem 2.5rem;
+            padding: 2.5rem 2rem;
             box-shadow: 
                 0 25px 50px rgba(0, 0, 0, 0.5),
                 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
@@ -291,20 +302,48 @@
         
         @media (max-width: 480px) {
             .login-card {
-                padding: 2.5rem 2rem;
-                border-radius: 24px;
+                padding: 2rem 1.5rem;
+                border-radius: 20px;
             }
             
             .login-title {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
+            }
+
+            .login-subtitle {
+                font-size: 0.82rem;
             }
             
             .logo-text {
-                font-size: 2rem;
+                font-size: 1.75rem;
+            }
+
+            .logo img {
+                height: 85px !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .login-card {
+                padding: 1.75rem 1.25rem;
+                border-radius: 16px;
+            }
+
+            .login-title {
+                font-size: 1.25rem;
+            }
+
+            .logo img {
+                height: 70px !important;
+            }
+
+            .form-input {
+                font-size: 0.9rem;
+                padding: 0.75rem 0.875rem;
             }
         }
         .back-to-home {
-            position: absolute;
+            position: fixed;
             top: 20px;
             left: 20px;
             color: white;
@@ -337,10 +376,16 @@
 
         @media (max-width: 480px) {
             .back-to-home {
-                top: 10px;
-                left: 10px;
-                padding: 8px 15px;
-                font-size: 0.8rem;
+                top: 8px;
+                left: 8px;
+                padding: 7px 12px;
+                font-size: 0.78rem;
+                gap: 5px;
+            }
+
+            .back-to-home svg {
+                width: 15px;
+                height: 15px;
             }
         }
     </style>
@@ -352,7 +397,8 @@
         </svg>
         Volver al Inicio
     </a>
-    <div class="login-container">
+    <div class="page-wrapper">
+        <div class="login-container">
         <div class="login-card">
             <div class="logo-section">
                 <div class="logo">
@@ -399,7 +445,7 @@
                 </div>
                 
                 <button type="submit" class="login-button">
-                    Entrar
+                    Iniciar sesión
                 </button>
         </form>
             
@@ -407,7 +453,8 @@
                 <p class="register-text">¿No tienes cuenta? <a href="{{ route('register') }}">Regístrate</a></p>
             </div>
             </div>
-    </div>
+        </div>{{-- login-container --}}
+    </div>{{-- page-wrapper --}}
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {

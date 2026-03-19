@@ -123,7 +123,7 @@
             font-size: 9pt;
         }
         .data-table th {
-            background-color: #064e3b; /* Dark green */
+            background-color: #10b981; /* Standardized Green */
             color: #fff;
             padding: 10px;
             text-align: left;
@@ -224,7 +224,7 @@
             <!-- Horas -->
             <td class="kpi-card bg-orange-light">
                 <div class="kpi-label text-orange">Total Horas</div>
-                <div class="kpi-value text-orange">{{ number_format($totalHours ?? 0, 2) }}</div>
+                <div class="kpi-value text-orange">{{ number_format($totalHours ?? 0, 0) }}</div>
             </td>
             <!-- Kilos -->
             <td class="kpi-card bg-purple-light">
@@ -234,7 +234,7 @@
             <!-- Total -->
             <td class="kpi-card bg-green-light" style="border: 1px solid #10b981;">
                 <div class="kpi-label text-green">Total Acumulado</div>
-                <div class="kpi-value text-green">${{ number_format($totalPayment ?? 0, 2) }}</div>
+                <div class="kpi-value text-green">${{ number_format($totalPayment ?? 0, 0) }}</div>
             </td>
         </tr>
     </table>
@@ -258,9 +258,9 @@
                 <tr>
                     <td style="font-weight: bold;">{{ $cropTotal['crop'] }}</td>
                     <td class="text-right">{{ $cropTotal['tasks_count'] }}</td>
-                    <td class="text-right">{{ number_format($cropTotal['total_hours'], 2) }}</td>
+                    <td class="text-right">{{ number_format($cropTotal['total_hours'], 0) }}</td>
                     <td class="text-right">{{ number_format($cropTotal['total_kilos'], 3) }}</td>
-                    <td class="text-right font-bold text-green">${{ number_format($cropTotal['total_payment'] ?? 0, 2) }}</td>
+                    <td class="text-right font-bold text-green">${{ number_format($cropTotal['total_payment'] ?? 0, 0) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -300,7 +300,7 @@
                     </td>
                     <td class="text-right">
                         @if($task->hours > 0)
-                            <div>{{ number_format($task->hours, 2) }} h</div>
+                            <div>{{ number_format($task->hours, 0) }} h</div>
                         @endif
                         @if($task->kilos > 0)
                             <div>{{ number_format($task->kilos, 3) }} kg</div>
@@ -310,18 +310,18 @@
                         @endif
                     </td>
                     <td class="text-right" style="font-size: 8pt;">
-                        @if($task->price_per_hour)
-                            ${{ number_format($task->price_per_hour, 2) }}/h
-                        @elseif($task->price_per_day)
-                            ${{ number_format($task->price_per_day, 2) }}/d
-                        @elseif($task->price_per_kg)
-                            ${{ number_format($task->price_per_kg, 2) }}/kg
+                        @if((int)$task->price_per_hour)
+                            ${{ number_format((int)$task->price_per_hour, 0) }}/h
+                        @elseif((int)$task->price_per_day)
+                            ${{ number_format((int)$task->price_per_day, 0) }}/d
+                        @elseif((int)$task->price_per_kg)
+                            ${{ number_format((int)$task->price_per_kg, 0) }}/kg
                         @else
                             -
                         @endif
                     </td>
                     <td class="text-right font-bold text-green">
-                        ${{ number_format($task->calculated_payment ?? $task->total_payment ?? 0, 2) }}
+                        ${{ number_format($task->calculated_payment ?? $task->total_payment ?? 0, 0) }}
                     </td>
                 </tr>
                 @endforeach
@@ -332,7 +332,7 @@
         <div style="margin-top: 15px; text-align: right;">
             <div style="display: inline-block; background-color: #ecfdf5; padding: 10px 20px; border-radius: 6px; border: 1px solid #10b981;">
                 <span style="font-size: 10pt; font-weight: bold; color: #065f46; margin-right: 15px;">TOTAL ACUMULADO:</span>
-                <span style="font-size: 14pt; font-weight: bold; color: #059669;">${{ number_format($totalPayment ?? 0, 2) }}</span>
+                <span style="font-size: 14pt; font-weight: bold; color: #059669;">${{ number_format($totalPayment ?? 0, 0) }}</span>
             </div>
         </div>
     </div>

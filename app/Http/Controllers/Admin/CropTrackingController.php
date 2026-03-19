@@ -134,7 +134,7 @@ class CropTrackingController extends Controller
                 $consumption->supply->name ?? 'N/A',
                 $consumption->qty,
                 $consumption->supply->unit ?? '',
-                number_format($consumption->total_cost, 2),
+                number_format($consumption->total_cost, 0),
                 $consumption->used_at ? $consumption->used_at->format('d/m/Y') : 'N/A'
             );
         }
@@ -199,7 +199,7 @@ class CropTrackingController extends Controller
                     $consumption->supply->name ?? 'N/A',
                     $consumption->qty,
                     $consumption->supply->unit ?? '',
-                    number_format($consumption->total_cost, 2),
+                    number_format($consumption->total_cost, 0),
                     $consumption->used_at ? $consumption->used_at->format('d/m/Y') : 'N/A'
                 );
             }

@@ -66,7 +66,7 @@
         
             <div>
                 <label class="block text-sm mb-1 text-emerald-800">Área (ha) <span class="text-red-500">*</span></label>
-                <input type="number" step="0.01" min="1" name="area" value="{{ old('area') }}" class="w-full border border-emerald-200 rounded px-3 py-2" required />
+                <input type="number" step="1" min="1" name="area" value="{{ old('area') }}" class="w-full border border-emerald-200 rounded px-3 py-2" required />
                 @error('area')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
         </div>
         <div>
@@ -144,7 +144,7 @@
         let geocoder;
         let draw;
 
-        // Coordenadas por defecto (centro de Lima, Perú)
+        // Coordenadas por defecto 
         const defaultLocation = [-77.0428, -12.0464];
         
         // Si hay valores antiguos, usarlos
@@ -378,8 +378,25 @@
                                     'line-dasharray': [4, 2]
                                 }
                             });
-                            
-                            console.log('Lotes existentes agregados correctamente');
+
+                            // Agregar capa de etiquetas con el nombre de cada lote
+                            plotMap.addLayer({
+                                'id': 'existing-plots-labels',
+                                'type': 'symbol',
+                                'source': 'existing-plots',
+                                'layout': {
+                                    'text-field': ['get', 'name'],
+                                    'text-size': 13,
+                                    'text-anchor': 'center',
+                                    'text-allow-overlap': true,
+                                    'text-ignore-placement': true
+                                },
+                                'paint': {
+                                    'text-color': '#7f1d1d',
+                                    'text-halo-color': 'rgba(255, 255, 255, 0.85)',
+                                    'text-halo-width': 2
+                                }
+                            });
                             
                             // Agregar marcadores para los lotes existentes si tienen coordenadas
                             existingPlots.forEach((plot) => {
@@ -623,7 +640,7 @@
                     // Actualizar el campo de área del formulario si existe
                     const areaInput = document.querySelector('input[name="area"]');
                     if (areaInput) {
-                        areaInput.value = areaHa.toFixed(2);
+                        areaInput.value = areaHa.toFixed(0);
                     }
                 } else {
                     const boundaryInput = document.getElementById('boundary');

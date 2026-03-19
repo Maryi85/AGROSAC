@@ -6,44 +6,40 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <!-- Botones de acción principales -->
-    <div class="mb-6 flex justify-between items-center">
-        <div class="flex gap-4">
-            <a href="{{ route('admin.workers.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-                <span>Nuevo Trabajador</span>
-            </a>
-        </div>
-        <div class="flex gap-2">
-            <a href="{{ route('admin.workers.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="file-text" class="w-5 h-5"></i>
-                <span>Descargar PDF</span>
-            </a>
-        </div>
+    {{-- Responsive: wrap buttons on mobile --}}
+    <div class="mb-6 flex flex-wrap gap-2 justify-between items-center">
+        <a href="{{ route('admin.workers.create') }}" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Nuevo Trabajador</span>
+        </a>
+        <a href="{{ route('admin.workers.pdf', request()->query()) }}" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span>Descargar PDF</span>
+        </a>
     </div>
 
-    <!-- Filtros de búsqueda -->
-    <form method="GET" class="mb-4 flex gap-2 items-end">
+    {{-- Responsive: stack on mobile, row on sm+ --}}
+    <form method="GET" class="mb-4 flex flex-col sm:flex-row gap-2 sm:items-end">
         <div class="flex-1">
             <label class="block text-sm mb-1 text-emerald-800">Buscar por nombre o email</label>
             <x-search-bar placeholder="Buscar trabajadores..." :with-form="false" />
         </div>
         <div>
             <label class="block text-sm mb-1 text-emerald-800">Estado</label>
-            <select name="status" class="border border-emerald-200 rounded px-3 py-2">
+            <select name="status" class="w-full sm:w-auto border border-emerald-200 rounded px-3 py-2">
                 <option value="all">Todos los estados</option>
                 <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Activos</option>
                 <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivos</option>
             </select>
         </div>
-        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+        <button type="submit" class="w-full sm:w-auto px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center justify-center gap-2">
             <i data-lucide="search" class="w-4 h-4"></i>
             <span>Filtrar</span>
         </button>
     </form>
 
-    <!-- Tabla de trabajadores -->
-    <div class="overflow-x-auto">
+    {{-- Tabla Desktop --}}
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
@@ -62,7 +58,7 @@
                 <tr class="border-b hover:bg-gray-50" data-worker-id="{{ $worker->id }}">
                     <td class="py-3 pr-4">
                         @if($worker->photo)
-                            <img src="{{ asset('storage/' . $worker->photo) }}" alt="Foto" class="h-10 w-10 rounded-full object-cover border border-gray-200">
+                            <img src="{{ storage_asset($worker->photo) }}" alt="Foto" class="h-10 w-10 rounded-full object-cover border border-gray-200">
                         @else
                             <div class="h-10 w-10 rounded-full border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-xs text-gray-400">—</div>
                         @endif
@@ -98,7 +94,6 @@
                     </td>
                     <td class="py-3 pr-4 text-right">
                         <div class="flex items-center gap-1 justify-end">
-                            <!-- Ver detalles -->
                             <button class="view-worker-btn inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600" 
                                title="Ver detalles"
                                data-worker-id="{{ $worker->id }}"
@@ -107,60 +102,115 @@
                                data-worker-phone="{{ $worker->phone ?? '—' }}"
                                data-worker-status="{{ $worker->email_verified_at ? 'Activo' : 'Inactivo' }}"
                                data-worker-registered="{{ $worker->created_at->format('d/m/Y H:i') }}"
-                               data-worker-photo="{{ $worker->photo ? asset('storage/' . $worker->photo) : '' }}">
+                               data-worker-photo="{{ $worker->photo ? storage_asset($worker->photo) : '' }}">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
-                            
-                            <!-- Generar Reporte -->
                             <button class="report-worker-btn inline-flex items-center justify-center w-9 h-9 border-2 border-green-500 rounded-lg hover:bg-green-100 text-green-700 bg-green-50 shadow-sm" 
                                title="Generar Reporte"
                                data-worker-id="{{ $worker->id }}"
                                data-worker-name="{{ $worker->name }}">
                                 <i data-lucide="file-text" class="w-5 h-5"></i>
                             </button>
-                            
-                            <!-- Editar -->
                             <button class="edit-worker-btn inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-600" 
                                     title="Editar"
                                     data-worker-id="{{ $worker->id }}"
                                     data-worker-name="{{ $worker->name }}"
                                     data-worker-email="{{ $worker->email }}"
+                                    data-worker-phone="{{ $worker->phone }}"
                                     data-worker-status="{{ $worker->email_verified_at ? 'active' : 'inactive' }}">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
-                            
-                            <!-- Eliminar -->
-                            @if($worker->email_verified_at)
-                                <button disabled class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded bg-gray-100 text-gray-400 cursor-not-allowed opacity-60" title="No se puede eliminar un trabajador activo. Debe desactivarlo primero.">
-                                    <i data-lucide="trash" class="w-4 h-4"></i>
-                                </button>
-                            @else
-                                <form method="POST" action="{{ route('admin.workers.destroy', $worker) }}" class="inline" data-confirm="true" data-message="¿Eliminar este trabajador? Esta acción no se puede deshacer.">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
-                                        <i data-lucide="trash" class="w-4 h-4"></i>
-                                    </button>
-                                </form>
-                            @endif
+                            <div class="delete-action-container">
+                                @if($worker->email_verified_at)
+                                    <button disabled class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded bg-gray-100 text-gray-400 cursor-not-allowed opacity-60" title="No se puede eliminar un trabajador activo."><i data-lucide="trash" class="w-4 h-4"></i></button>
+                                @else
+                                    <form method="POST" action="{{ route('admin.workers.destroy', $worker) }}" class="inline" data-confirm="true" data-message="¿Eliminar este trabajador?">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="py-6 text-center text-emerald-800/70">No hay trabajadores registrados</td>
+                    <td colspan="8" class="py-6 text-center text-emerald-800/70">No hay trabajadores registrados</td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
+    {{-- Mobile Cards --}}
+    <div class="md:hidden space-y-3">
+        @forelse ($workers as $worker)
+        <div class="bg-white border rounded-lg p-4 shadow-sm" data-worker-id="{{ $worker->id }}">
+            <div class="flex items-center gap-3 mb-3">
+                @if($worker->photo)
+                    <img src="{{ storage_asset($worker->photo) }}" alt="Foto" class="h-12 w-12 rounded-full object-cover border border-gray-200 flex-shrink-0">
+                @else
+                    <div class="h-12 w-12 rounded-full border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 flex-shrink-0"><i data-lucide="user" class="w-6 h-6"></i></div>
+                @endif
+                <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-gray-900 worker-name truncate">{{ $worker->name }}</div>
+                    <div class="text-sm text-gray-500 worker-email truncate">{{ $worker->email }}</div>
+                </div>
+                <span class="status-badge flex-shrink-0 px-2 py-1 text-xs rounded {{ $worker->email_verified_at ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
+                    {{ $worker->email_verified_at ? 'Activo' : 'Inactivo' }}
+                </span>
+            </div>
+            <div class="text-sm text-gray-600 mb-3 space-y-1">
+                @if($worker->phone)
+                <div class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4 text-emerald-500"></i><span>{{ $worker->phone }}</span></div>
+                @endif
+                <div class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-emerald-500"></i><span>{{ $worker->created_at->format('d/m/Y') }}</span></div>
+            </div>
+            <div class="grid grid-cols-4 border-t border-gray-100 pt-3 gap-2">
+                <button class="view-worker-btn flex items-center justify-center gap-1 py-2 text-blue-600 bg-blue-50 rounded-lg text-sm"
+                    data-worker-id="{{ $worker->id }}" data-worker-name="{{ $worker->name }}" data-worker-email="{{ $worker->email }}"
+                    data-worker-phone="{{ $worker->phone ?? '—' }}" data-worker-status="{{ $worker->email_verified_at ? 'Activo' : 'Inactivo' }}"
+                    data-worker-registered="{{ $worker->created_at->format('d/m/Y H:i') }}" data-worker-photo="{{ $worker->photo ? storage_asset($worker->photo) : '' }}">
+                    <i data-lucide="eye" class="w-4 h-4"></i><span>Ver</span>
+                </button>
+                <button class="report-worker-btn flex items-center justify-center gap-1 py-2 text-green-700 bg-green-50 rounded-lg text-sm"
+                    data-worker-id="{{ $worker->id }}" data-worker-name="{{ $worker->name }}">
+                    <i data-lucide="file-text" class="w-4 h-4"></i><span>Reporte</span>
+                </button>
+                <button class="edit-worker-btn flex items-center justify-center gap-1 py-2 text-emerald-700 bg-emerald-50 rounded-lg text-sm"
+                    data-worker-id="{{ $worker->id }}" data-worker-name="{{ $worker->name }}" data-worker-email="{{ $worker->email }}"
+                    data-worker-phone="{{ $worker->phone }}" data-worker-status="{{ $worker->email_verified_at ? 'active' : 'inactive' }}">
+                    <i data-lucide="pencil" class="w-4 h-4"></i><span>Editar</span>
+                </button>
+                {{-- Eliminar --}}
+                @if($worker->email_verified_at)
+                    <button disabled class="flex items-center justify-center gap-1 py-2 text-gray-400 bg-gray-100 rounded-lg text-sm cursor-not-allowed opacity-60"
+                            title="Desactive al trabajador antes de eliminar">
+                        <i data-lucide="trash" class="w-4 h-4"></i><span>Borrar</span>
+                    </button>
+                @else
+                    <button type="button"
+                            class="delete-worker-card-btn flex items-center justify-center gap-1 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-sm transition-colors"
+                            data-action="{{ route('admin.workers.destroy', $worker) }}"
+                            data-name="{{ $worker->name }}">
+                        <i data-lucide="trash" class="w-4 h-4"></i><span>Borrar</span>
+                    </button>
+                @endif
+            </div>
+
+        </div>
+        @empty
+        <div class="py-8 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed text-sm">No hay trabajadores registrados</div>
+        @endforelse
+    </div>
+
     <div class="mt-4">{{ $workers->links() }}</div>
 </div>
 
-<!-- Modal de edición -->
+{{-- editModal: max-h para pantallas pequeñas --}}
 <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Editar Trabajador</h3>
             <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
@@ -188,6 +238,23 @@
                 <div id="editEmailError" class="text-red-500 text-sm mt-1 hidden"></div>
             </div>
 
+            <!-- Teléfono -->
+            <div>
+                <label for="editPhone" class="block text-sm font-medium text-emerald-700 mb-2">Teléfono</label>
+                <input type="tel" name="phone" id="editPhone" 
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                       class="w-full border border-emerald-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('phone') border-red-500 @enderror">
+                <div id="editPhoneError" class="text-red-500 text-sm mt-1 hidden"></div>
+            </div>
+
+            <!-- Foto -->
+            <div>
+                <label for="editPhoto" class="block text-sm font-medium text-emerald-700 mb-2">Foto (Opcional)</label>
+                <input type="file" name="photo" id="editPhoto" accept="image/*"
+                       class="w-full border border-emerald-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                <div id="editPhotoError" class="text-red-500 text-sm mt-1 hidden"></div>
+            </div>
+
             <!-- Información del Sistema -->
             <div class="bg-gray-50 rounded p-4">
                 <h4 class="text-sm font-semibold text-emerald-700 mb-2">Información del Sistema</h4>
@@ -206,13 +273,13 @@
                 </div>
             </div>
 
-            <!-- Botones -->
-            <div class="flex items-center justify-end space-x-3 pt-4 border-t">
-                <button type="button" onclick="closeEditModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors">
+            {{-- Responsive: stacked on mobile, row on sm+ --}}
+            <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-4 border-t">
+                <button type="button" onclick="closeEditModal()" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors text-center">
                     Cancelar
                 </button>
-                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors">
-                    <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
+                <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors inline-flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i>
                     Actualizar Trabajador
                 </button>
             </div>
@@ -232,7 +299,8 @@
         
         <div class="space-y-6">
             <!-- Foto y Datos Personales -->
-            <div class="flex items-start gap-6">
+            {{-- Foto e Info apiladas en móvil, lado a lado en sm+ --}}
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                 <!-- Foto -->
                 <div class="flex-shrink-0">
                     <div id="viewPhotoContainer" class="w-32 h-32 rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center overflow-hidden">
@@ -390,12 +458,13 @@
 <script>
 let currentWorkerId = null;
 
-function openEditModal(id, name, email, status) {
+function openEditModal(id, name, email, phone, status) {
     currentWorkerId = id;
     
     // Llenar el formulario
     document.getElementById('editName').value = name;
     document.getElementById('editEmail').value = email;
+    document.getElementById('editPhone').value = phone || '';
     
     // Actualizar el select de estado
     const statusSelect = document.getElementById('editStatusSelect');
@@ -425,9 +494,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = this.getAttribute('data-worker-id');
             const name = this.getAttribute('data-worker-name');
             const email = this.getAttribute('data-worker-email');
+            const phone = this.getAttribute('data-worker-phone') || ''; // Ensure phone exists via data attribute or is empty
             const status = this.getAttribute('data-worker-status');
             
-            openEditModal(id, name, email, status);
+            openEditModal(id, name, email, phone, status);
         });
     });
     
@@ -494,9 +564,9 @@ async function openReportModal(workerId, workerName) {
         
         // Llenar totales
         document.getElementById('reportTotalTasks').textContent = data.totals.tasks;
-        document.getElementById('reportTotalHours').textContent = Number(data.totals.hours).toFixed(2);
+        document.getElementById('reportTotalHours').textContent = Number(data.totals.hours).toFixed(0);
         document.getElementById('reportTotalKilos').textContent = Number(data.totals.kilos).toFixed(3);
-        document.getElementById('reportTotalPayment').textContent = '$' + Number(data.totals.payment).toFixed(2);
+        document.getElementById('reportTotalPayment').textContent = '$' + Number(data.totals.payment).toFixed(0);
         
         // Llenar resumen por cultivo
         if (data.cropTotals && data.cropTotals.length > 0) {
@@ -510,9 +580,9 @@ async function openReportModal(workerId, workerName) {
                 row.innerHTML = `
                     <td class="py-3 pr-4 font-medium">${crop.crop}</td>
                     <td class="py-3 pr-4 text-right">${crop.tasks_count}</td>
-                    <td class="py-3 pr-4 text-right">${Number(crop.total_hours).toFixed(2)}</td>
+                    <td class="py-3 pr-4 text-right">${Number(crop.total_hours).toFixed(0)}</td>
                     <td class="py-3 pr-4 text-right">${Number(crop.total_kilos).toFixed(3)}</td>
-                    <td class="py-3 pr-4 text-right font-semibold text-emerald-700">$${Number(crop.total_payment).toFixed(2)}</td>
+                    <td class="py-3 pr-4 text-right font-semibold text-emerald-700">$${Number(crop.total_payment).toFixed(0)}</td>
                 `;
                 cropTableBody.appendChild(row);
             });
@@ -541,15 +611,15 @@ async function openReportModal(workerId, workerName) {
                 tasksHTML += `<td class="py-3 pr-4"><div class="text-sm text-gray-900 max-w-xs">${task.description}</div></td>`;
                 tasksHTML += `<td class="py-3 pr-4"><span class="font-medium">${task.crop}</span></td>`;
                 tasksHTML += `<td class="py-3 pr-4">${task.plot}</td>`;
-                tasksHTML += `<td class="py-3 pr-4 text-right">${task.hours > 0 ? Number(task.hours).toFixed(2) : '<span class="text-gray-400">-</span>'}</td>`;
+                tasksHTML += `<td class="py-3 pr-4 text-right">${task.hours > 0 ? Number(task.hours).toFixed(0) : '<span class="text-gray-400">-</span>'}</td>`;
                 tasksHTML += `<td class="py-3 pr-4 text-right">${task.kilos > 0 ? Number(task.kilos).toFixed(3) : '<span class="text-gray-400">-</span>'}</td>`;
-                tasksHTML += `<td class="py-3 pr-4 text-right font-semibold text-emerald-700">$${Number(task.total).toFixed(2)}</td>`;
+                tasksHTML += `<td class="py-3 pr-4 text-right font-semibold text-emerald-700">$${Number(task.total).toFixed(0)}</td>`;
                 tasksHTML += '</tr>';
             });
             
             tasksHTML += '</tbody><tfoot><tr class="bg-emerald-50 font-semibold">';
             tasksHTML += '<td colspan="7" class="py-3 pr-4 text-right">Total Acumulado:</td>';
-            tasksHTML += `<td class="py-3 pr-4 text-right text-emerald-700 text-lg">$${Number(data.totals.payment).toFixed(2)}</td>`;
+            tasksHTML += `<td class="py-3 pr-4 text-right text-emerald-700 text-lg">$${Number(data.totals.payment).toFixed(0)}</td>`;
             tasksHTML += '</tr></tfoot></table></div>';
             
             tasksContainer.innerHTML = tasksHTML;
@@ -654,6 +724,11 @@ document.getElementById('editWorkerForm').addEventListener('submit', async funct
     const submitButton = this.querySelector('button[type="submit"]');
     const originalText = submitButton.innerHTML;
     
+    // Add _method PUT and status manually if needed, though FormData captures inputs
+    formData.append('_method', 'PUT');
+    // Ensure status is captured correctly from the select
+    formData.set('status', document.getElementById('editStatusSelect').value);
+    
     try {
         // Mostrar estado de carga
         submitButton.disabled = true;
@@ -664,27 +739,16 @@ document.getElementById('editWorkerForm').addEventListener('submit', async funct
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json',
+                // 'Content-Type': 'multipart/form-data', // Do NOT set Content-Type header manually when using FormData
             },
-            body: JSON.stringify({
-                _method: 'PUT',
-                name: formData.get('name'),
-                email: formData.get('email'),
-                status: document.getElementById('editStatusSelect').value
-            })
+            body: formData
         });
         
         const data = await response.json();
         
         if (data.success) {
-            // Actualizar la fila en la tabla
-            updateWorkerRow(currentWorkerId, data.worker);
-            
-            // Cerrar modal
-            closeEditModal();
-            
-            // Mostrar notificación de éxito
-            showNotification(data.message, 'success');
+            sessionStorage.setItem('toastMessage', data.message);
+            window.location.reload();
         } else {
             // Mostrar errores de validación
             if (data.errors) {
@@ -717,20 +781,64 @@ function showEditError(elementId, message) {
 function updateWorkerRow(workerId, workerData) {
     const workerRow = document.querySelector(`tr[data-worker-id="${workerId}"]`);
     if (workerRow) {
+        // Actualizar foto
+        const photoCell = workerRow.querySelector('td:first-child');
+        if (workerData.photo) {
+            photoCell.innerHTML = `<img src="${workerData.photo}" alt="Foto" class="h-10 w-10 rounded-full object-cover border border-gray-200">`;
+        } else {
+            photoCell.innerHTML = `<div class="h-10 w-10 rounded-full border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-xs text-gray-400">—</div>`;
+        }
+
         // Actualizar nombre
         workerRow.querySelector('.worker-name').textContent = workerData.name;
         
         // Actualizar email
         workerRow.querySelector('.worker-email').textContent = workerData.email;
+
+        // Actualizar teléfono
+        const phoneCell = workerRow.querySelector('td:nth-child(4) div');
+        if (phoneCell) {
+            phoneCell.textContent = workerData.phone || '—';
+        }
         
         // Actualizar estado
-        const statusBadge = workerRow.querySelector('.status-badge span');
+        const statusBadge = workerRow.querySelector('.status-badge');
         if (workerData.status === 'active') {
-            statusBadge.className = 'px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700';
-            statusBadge.textContent = 'Activo';
+            statusBadge.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700">Activo</span>';
         } else {
-            statusBadge.className = 'px-2 py-1 text-xs rounded bg-gray-100 text-gray-700';
-            statusBadge.textContent = 'Inactivo';
+            statusBadge.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">Inactivo</span>';
+        }
+
+        // --- ACTUALIZAR ATRIBUTOS DATA PARA FUTURAS ACCIONES (VITAL) ---
+        
+        // Botón Editar
+        const editBtn = workerRow.querySelector('.edit-worker-btn');
+        if (editBtn) {
+            editBtn.setAttribute('data-worker-name', workerData.name);
+            editBtn.setAttribute('data-worker-email', workerData.email);
+            editBtn.setAttribute('data-worker-phone', workerData.phone || '');
+            editBtn.setAttribute('data-worker-status', workerData.status);
+        }
+
+        // --- ACTUALIZAR BOTÓN DE ELIMINAR (NUEVO) ---
+        updateDeleteButton(workerRow, workerData.status, `/admin/workers/${workerId}`);
+
+        // Botón Ver Detalles
+        const viewBtn = workerRow.querySelector('.view-worker-btn');
+        if (viewBtn) {
+            viewBtn.setAttribute('data-worker-name', workerData.name);
+            viewBtn.setAttribute('data-worker-email', workerData.email);
+            viewBtn.setAttribute('data-worker-phone', workerData.phone || '—');
+            viewBtn.setAttribute('data-worker-status', workerData.status === 'active' ? 'Activo' : 'Inactivo');
+            if (workerData.photo) {
+                viewBtn.setAttribute('data-worker-photo', workerData.photo);
+            }
+        }
+
+        // Botón Reporte
+        const reportBtn = workerRow.querySelector('.report-worker-btn');
+        if (reportBtn) {
+            reportBtn.setAttribute('data-worker-name', workerData.name);
         }
     }
 }
@@ -750,6 +858,72 @@ function showNotification(message, type = 'info') {
 document.getElementById('editModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeEditModal();
+    }
+});
+
+// Función para actualizar el botón de eliminar dinámicamente
+function updateDeleteButton(row, status, destroyUrl) {
+    const container = row.querySelector('.delete-action-container');
+    if (!container) return;
+
+    if (status === 'active') {
+        container.innerHTML = `
+            <button disabled class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded bg-gray-100 text-gray-400 cursor-not-allowed opacity-60" title="No se puede eliminar un trabajador activo. Debe desactivarlo primero.">
+                <i data-lucide="trash" class="w-4 h-4"></i>
+            </button>
+        `;
+    } else {
+        container.innerHTML = `
+            <form method="POST" action="${destroyUrl}" class="inline" data-confirm="true" data-message="¿Eliminar este trabajador? Esta acción no se puede deshacer.">
+                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+                <input type="hidden" name="_method" value="DELETE">
+                <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
+                    <i data-lucide="trash" class="w-4 h-4"></i>
+                </button>
+            </form>
+        `;
+    }
+    
+    // Reinicializar iconos de Lucide
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
+// Handler para botones Eliminar en tarjetas móviles
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.delete-worker-card-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const action = this.getAttribute('data-action');
+            const name = this.getAttribute('data-name');
+            Swal.fire({
+                title: '¿Eliminar trabajador?',
+                text: `Se eliminará a "${name}". Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+            }).then(result => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = action;
+                    form.innerHTML = `
+                        <input type="hidden" name="_token" value="${document.querySelector('meta[name=csrf-token]').content}">
+                        <input type="hidden" name="_method" value="DELETE">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+    });
+    // Restaurar Toast por SessionStorage (después de una edición exitosa de trabajador)
+    if (sessionStorage.getItem('toastMessage')) {
+        showNotification(sessionStorage.getItem('toastMessage'), 'success');
+        sessionStorage.removeItem('toastMessage');
     }
 });
 </script>

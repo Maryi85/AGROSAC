@@ -87,14 +87,14 @@
             @if($entry->unit_cost)
             <div>
                 <label class="block text-sm font-medium text-gray-700">Costo Unitario</label>
-                <p class="mt-1 text-sm text-gray-900 font-semibold">${{ number_format($entry->unit_cost, 2) }}</p>
+                <p class="mt-1 text-sm text-gray-900 font-semibold">${{ number_format($entry->unit_cost, 0) }}</p>
             </div>
             @endif
 
             @if($entry->total_cost)
             <div>
                 <label class="block text-sm font-medium text-gray-700">Costo Total</label>
-                <p class="mt-1 text-2xl font-bold text-emerald-600">${{ number_format($entry->total_cost, 2) }}</p>
+                <p class="mt-1 text-2xl font-bold text-emerald-600">${{ number_format($entry->total_cost, 0) }}</p>
             </div>
             @endif
 

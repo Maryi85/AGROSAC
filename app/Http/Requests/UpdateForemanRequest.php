@@ -25,6 +25,8 @@ class UpdateForemanRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $this->route('foreman')->id],
             'status' => ['sometimes', 'string', 'in:active,inactive'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'photo' => ['nullable', 'image', 'max:2048'],
         ];
     }
 

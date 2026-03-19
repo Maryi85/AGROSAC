@@ -4,99 +4,190 @@
     <meta charset="utf-8">
     <title>Reporte de Insumos - AGROSAC</title>
     <style>
+        @page {
+            margin: 10mm 15mm;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
             color: #333;
+            line-height: 1.4;
         }
+
+        /* --- Colors --- */
+        /* Corporate Green: #10b981 */
+        
+        /* --- Utilities --- */
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
+
+        /* --- Header --- */
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #10b981;
+            width: 100%;
+            margin-bottom: 20px;
             padding-bottom: 15px;
+            border-bottom: 3px solid #10b981;
         }
-        .header h1 {
+        .header-table { width: 100%; }
+        .header-logo { width: 60px; height: auto; }
+        .header-title { 
+            font-size: 18pt; 
+            font-weight: bold; 
+            color: #10b981; 
             margin: 0;
-            color: #10b981;
-            font-size: 24px;
         }
-        .header p {
-            margin: 5px 0;
-            color: #666;
+        .header-subtitle { 
+            font-size: 10pt; 
+            color: #666; 
+            margin-top: 5px;
         }
-        table {
+
+        /* --- Data Table --- */
+        .data-table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 9pt;
             margin-bottom: 20px;
         }
-        table th {
-            background: #10b981;
-            color: white;
+        .data-table th {
+            background-color: #10b981;
+            color: #fff;
             padding: 10px;
             text-align: left;
-            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 8pt;
         }
-        table td {
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-            font-size: 11px;
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+            vertical-align: middle;
         }
-        table tr:nth-child(even) {
-            background: #f9fafb;
-        }
+        .data-table tr:nth-child(even) { background-color: #f9fafb; }
+        
+        /* --- Badges --- */
         .badge {
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: 8pt;
             font-weight: bold;
+            display: inline-block;
         }
-        .badge-success {
-            background: #dcfce7;
-            color: #166534;
-        }
-        .badge-danger {
-            background: #fef2f2;
-            color: #991b1b;
-        }
+        .badge-active { background: #dcfce7; color: #166534; }
+        .badge-inactive { background: #fef2f2; color: #991b1b; }
+
+        /* --- Footer --- */
         .footer {
-            margin-top: 40px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
             text-align: center;
-            font-size: 10px;
-            color: #666;
+            font-size: 8pt;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 10px;
         }
+
+        /* --- Summary Section --- */
+        .summary-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 50%;
+        }
+        .summary-title {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+        .summary-row {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .summary-label { color: #6b7280; }
+        .summary-value { font-weight: bold; color: #111; float: right; }
     </style>
 </head>
 <body>
+
+    <!-- Header -->
     <div class="header">
-        <h1>AGROSAC</h1>
-        <p>Reporte de Insumos</p>
-        <p>Generado el: {{ now()->format('d/m/Y H:i:s') }}</p>
+        <table class="header-table">
+            <tr>
+                <td style="width: 60px; vertical-align: middle;">
+                    <img src="{{ public_path('AGROSACLOGO.png') }}" class="header-logo" alt="Logo">
+                </td>
+                <td style="vertical-align: middle; padding-left: 15px;">
+                    <h1 class="header-title">AGROSAC</h1>
+                    <div class="header-subtitle">Sistema de Gestión Agrícola</div>
+                </td>
+                <td style="text-align: right; vertical-align: middle;">
+                    <div style="font-size: 14pt; font-weight: bold; color: #333;">REPORTE DE INSUMOS</div>
+                    <div style="font-size: 9pt; color: #666;">Generado: {{ now()->format('d/m/Y H:i') }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <table>
+    <!-- Summary -->
+    <table style="width: 100%; margin-bottom: 20px;">
+        <tr>
+            <td style="vertical-align: top; width: 60%;">
+            </td>
+            <td style="vertical-align: top; width: 40%;">
+                <div class="summary-box" style="width: 100%;">
+                    <div class="summary-title">Resumen</div>
+                    <div class="summary-row">
+                        <span class="summary-label">Total Insumos:</span>
+                        <span class="summary-value">{{ $supplies->count() }}</span>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Data Table -->
+    <table class="data-table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Unidad</th>
-                <th>Estado</th>
-                <th>Fecha de Registro</th>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 35%;">Nombre</th>
+                <th style="width: 20%;">Unidad</th>
+                <th style="width: 20%;">Costo Unit.</th>
+                <th style="width: 15%; text-align: center;">Estado</th>
             </tr>
         </thead>
         <tbody>
             @forelse($supplies as $supply)
                 <tr>
                     <td>{{ $supply->id }}</td>
-                    <td>{{ $supply->name }}</td>
-                    <td>{{ $supply->unit ?? 'N/A' }}</td>
+                    <td class="font-bold">{{ $supply->name }}</td>
                     <td>
-                        <span class="badge {{ $supply->status === 'active' ? 'badge-success' : 'badge-danger' }}">
+                        {{ $supply->unit }}
+                        @if(isset($units) && isset($units[$supply->unit]))
+                            <span style="color: #666; font-size: 8pt;">({{ $units[$supply->unit] }})</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if((int)$supply->unit_cost)
+                            ${{ number_format((int)$supply->unit_cost, 0) }}
+                        @else
+                            <span style="color: #999;">-</span>
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        <span class="badge {{ $supply->status === 'active' ? 'badge-active' : 'badge-inactive' }}">
                             {{ $statuses[$supply->status] ?? ucfirst($supply->status) }}
                         </span>
                     </td>
-                    <td>{{ $supply->created_at->format('d/m/Y') }}</td>
                 </tr>
             @empty
                 <tr>
@@ -106,10 +197,12 @@
         </tbody>
     </table>
 
+    <!-- Footer -->
     <div class="footer">
-        <p>Total de insumos: {{ $supplies->count() }}</p>
-        <p>AGROSAC - Sistema de Gestión Agrícola</p>
+        AGROSAC - Sistema de Gestión Agrícola &copy; {{ date('Y') }}
+        <br>
+        Este documento es un reporte generado automáticamente.
     </div>
+
 </body>
 </html>
-

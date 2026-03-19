@@ -60,6 +60,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the loans assigned to this user.
+     */
+    public function loans()
+    {
+        return $this->hasMany(Loan::class);
+    }
+
+    /**
+     * Get the supply movements created by this user.
+     */
+    public function createdMovements()
+    {
+        return $this->hasMany(SupplyMovement::class, 'created_by');
+    }
+
+    /**
      * Send the password reset notification.
      *
      * @param  string  $token

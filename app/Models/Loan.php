@@ -10,6 +10,7 @@ class Loan extends Model
     protected $fillable = [
         'tool_id',
         'user_id',
+        'task_id',
         'quantity',
         'out_at',
         'due_at',
@@ -39,6 +40,11 @@ class Loan extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
     }
 
     public function approvedBy(): BelongsTo

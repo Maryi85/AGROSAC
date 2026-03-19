@@ -15,9 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('category')->nullable();
+            $table->text('description')->nullable();
+            $table->string('brand')->nullable();
+            $table->string('model')->nullable();
+            $table->string('serial_number')->nullable();
             $table->string('status')->default('operational')->index(); // operational, lost, damaged, retired
-            $table->unsignedInteger('total_qty')->default(0);
-            $table->unsignedInteger('available_qty')->default(0);
+            $table->string('photo')->nullable();
             $table->index(['name', 'category']);
             $table->timestamps();
         });

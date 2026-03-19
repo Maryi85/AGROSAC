@@ -19,11 +19,17 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tool_id')->constrained('tools')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->timestampTz('out_at')->useCurrent();
-            $table->timestampTz('due_at')->nullable();
-            $table->timestampTz('returned_at')->nullable();
+            $table->unsignedInteger('quantity')->default(1);
+            $table->timestamp('out_at')->nullable();
+            $table->timestamp('due_at')->nullable();
+            $table->timestamp('returned_at')->nullable();
             $table->string('condition_return')->nullable();
-            $table->string('status')->default('out')->index(); // out, returned, lost, damaged
+            $table->string('status')->default('pending')->index(); // pending, approved, rejected, out, returned, lost, damaged
+            $table->text('request_notes')->nullable();
+            $table->text('admin_notes')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users');
+            $table->timestamp('approved_at')->nullable();
+            $table->foreignId('returned_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

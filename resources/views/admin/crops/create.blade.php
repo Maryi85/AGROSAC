@@ -53,7 +53,7 @@
                 <!-- Rendimiento por hectárea -->
                 <div>
                     <label for="yield_per_hectare" class="block text-sm font-medium text-emerald-800 mb-2">Rendimiento por Hectárea (kg)</label>
-                    <input type="number" name="yield_per_hectare" id="yield_per_hectare" value="{{ old('yield_per_hectare') }}" step="0.01" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 5000.50">
+                    <input type="number" name="yield_per_hectare" id="yield_per_hectare" value="{{ old('yield_per_hectare') }}" step="1" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 5000.50">
                     <p class="text-xs text-gray-500 mt-1">Rendimiento esperado en kilogramos por hectárea</p>
                     @error('yield_per_hectare')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>

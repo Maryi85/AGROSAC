@@ -1,71 +1,60 @@
 @extends('foreman.layout')
 
 @section('header')
-<div class="flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-emerald-700">Registrar Nuevo Consumo de Insumo</h2>
-    <a href="{{ route('foreman.supply-consumptions.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded transition-colors">
-        <i data-lucide="arrow-left" class="w-5 h-5"></i>
-        <span>Volver</span>
-    </a>
-</div>
+<h2 class="text-lg font-semibold text-emerald-700">Registrar Consumo de Insumo</h2>
 @endsection
 
 @section('content')
-<div class="bg-white border rounded p-6">
-    @if ($errors->any())
-        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500">
-            <div class="text-red-800 font-medium mb-2">Se encontraron los siguientes errores:</div>
-            <ul class="text-red-700 list-disc list-inside">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form action="{{ route('foreman.supply-consumptions.store') }}" method="POST" class="space-y-6">
+<div class="bg-white border rounded p-4">
+    <form method="POST" action="{{ route('foreman.supply-consumptions.store') }}" class="space-y-4">
         @csrf
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label for="supply_id" class="block text-sm font-medium text-gray-700 mb-1">Insumo</label>
-                <select name="supply_id" id="supply_id" class="w-full border border-emerald-200 rounded px-3 py-2" required>
-                    <option value="">Seleccione un insumo</option>
-                    @foreach($supplies as $supply)
-                        <option value="{{ $supply->id }}" 
-                                data-unit="{{ $supply->unit }}" 
-                                data-unit-cost="{{ $supply->unit_cost }}"
-                                {{ old('supply_id') == $supply->id ? 'selected' : '' }}>
-                            {{ $supply->name }} ({{ $supply->unit }}) - ${{ number_format($supply->unit_cost, 2) }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('supply_id')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="qty" class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
-                <input type="number" step="0.001" class="w-full border border-emerald-200 rounded px-3 py-2" 
-                       id="qty" name="qty" value="{{ old('qty') }}" required>
-                <p class="text-xs text-gray-500 mt-1" id="unit-info">Seleccione un insumo para ver la unidad</p>
-                @error('qty')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-
-            <div>
-                <label for="used_at" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Uso</label>
-                <input type="date" class="w-full border border-emerald-200 rounded px-3 py-2" 
-                       id="used_at" name="used_at" value="{{ old('used_at', date('Y-m-d')) }}" required>
-                @error('used_at')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+        <!-- Insumo -->
+        <div>
+            <label for="supply_id" class="block text-sm mb-1 text-emerald-800">Insumo</label>
+            <select id="supply_id" name="supply_id" 
+                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('supply_id') border-red-500 @enderror" 
+                    required>
+                <option value="">Seleccionar insumo</option>
+                @foreach($supplies as $supply)
+                    <option value="{{ $supply->id }}" {{ old('supply_id') == $supply->id ? 'selected' : '' }}
+                            data-unit="{{ $supply->unit }}" data-unit-cost="{{ (int)$supply->unit_cost }}">
+                        {{ $supply->name }} ({{ $supply->unit }}) - ${{ number_format((int)$supply->unit_cost, 0) }}
+                    </option>
+                @endforeach
+            </select>
+            @error('supply_id')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        
+        <!-- Cantidad -->
+        <div>
+            <label for="qty" class="block text-sm mb-1 text-emerald-800">Cantidad</label>
+            <input type="number" step="0.001" min="0.001" id="qty" name="qty" value="{{ old('qty') }}" 
+                   class="w-full border border-emerald-200 rounded px-3 py-2 @error('qty') border-red-500 @enderror" 
+                   required />
+            <p class="text-xs text-gray-500 mt-1" id="unit-info">Seleccione un insumo para ver la unidad</p>
+            @error('qty')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        
+        <!-- Información de costo -->
+        <div class="bg-blue-50 border border-blue-200 rounded p-4">
+            <h4 class="text-sm font-semibold text-blue-800 mb-2">Información de Costo</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Costo por Unidad</label>
+                    <p id="unit-cost-display" class="text-sm text-gray-900 mt-1">$0.00</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Costo Total</label>
+                    <p id="total-cost-display" class="text-sm text-gray-900 mt-1 font-semibold">$0.00</p>
+                </div>
             </div>
         </div>
-
+        
         <!-- Información Relacionada (Opcional) -->
         <div class="border-t pt-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Información Relacionada (Opcional)</h3>
@@ -124,7 +113,7 @@
                         <option value="">Seleccionar tarea</option>
                         @foreach($tasks as $task)
                             <option value="{{ $task->id }}" {{ old('task_id') == $task->id ? 'selected' : '' }}>
-                                {{ $task->name }}
+                                {{ $task->type }} - {{ $task->scheduled_for->format('d/m/Y') }}
                             </option>
                         @endforeach
                     </select>
@@ -134,39 +123,48 @@
                 </div>
             </div>
         </div>
-
-        <!-- Información de costo -->
-        <div class="bg-blue-50 border border-blue-200 rounded p-4">
-            <h4 class="text-sm font-semibold text-blue-800 mb-2">Información de Costo</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Costo por Unidad</label>
-                    <p id="unit-cost-display" class="text-sm text-gray-900 mt-1">$0.00</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Costo Total</label>
-                    <p id="total-cost-display" class="text-sm text-gray-900 mt-1 font-semibold">$0.00</p>
-                </div>
-            </div>
+        
+        <!-- Fecha de uso -->
+        <div>
+            <label for="used_at" class="block text-sm mb-1 text-emerald-800">Fecha de Uso</label>
+            <input type="date" id="used_at" name="used_at" value="{{ old('used_at', date('Y-m-d')) }}" 
+                   class="w-full border border-emerald-200 rounded px-3 py-2 @error('used_at') border-red-500 @enderror" 
+                   required />
+            @error('used_at')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
         </div>
-
-        <div class="flex items-center gap-3">
-            <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
-                <i data-lucide="save" class="w-5 h-5"></i>
-                <span>Guardar</span>
-            </button>
+        
+        <!-- Información adicional -->
+        <div class="bg-green-50 border border-green-200 rounded p-4">
+            <h4 class="text-sm font-semibold text-green-800 mb-2">Información Importante</h4>
+            <ul class="text-xs text-green-700 space-y-1">
+                <li>• El consumo se registrará inmediatamente en el sistema</li>
+                <li>• El costo total se calculará automáticamente basado en la cantidad y el costo por unidad</li>
+                <li>• Puede asociar el consumo a un cultivo, lote o tarea específica</li>
+                <li>• Esta información será utilizada para reportes y análisis de costos</li>
+            </ul>
+        </div>
+        
+        <!-- Botones -->
+        <div class="flex items-center gap-2 pt-4">
             <a href="{{ route('foreman.supply-consumptions.index') }}" 
-               class="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded-lg transition-colors">
-                <i data-lucide="x" class="w-5 h-5"></i>
-                <span>Cancelar</span>
+               class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Volver</span>
             </a>
+            <button type="submit" 
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded inline-flex items-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Registrar Consumo</span>
+            </button>
         </div>
     </form>
 </div>
 
 <script>
+// Actualizar información de costo en tiempo real
 document.addEventListener('DOMContentLoaded', function() {
-    // Actualizar información de costo en tiempo real
     const supplySelect = document.getElementById('supply_id');
     const qtyInput = document.getElementById('qty');
     const unitInfo = document.getElementById('unit-info');
@@ -183,15 +181,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const unitCost = unitCostStr ? parseFloat(unitCostStr) : 0;
             
             if (unit) {
-                unitInfo.textContent = `Unidad: ${unit}`;
+            unitInfo.textContent = `Unidad: ${unit}`;
             }
             
             // Mostrar el precio unitario registrado en la entrada de insumos
-            unitCostDisplay.textContent = `$${unitCost.toFixed(2)}`;
+            unitCostDisplay.textContent = `$${unitCost.toFixed(0)}`;
             
             // Calcular y mostrar el precio total cuando se ingresa la cantidad
             const totalCost = qty * unitCost;
-            totalCostDisplay.textContent = `$${totalCost.toFixed(2)}`;
+            totalCostDisplay.textContent = `$${totalCost.toFixed(0)}`;
         } else {
             unitInfo.textContent = 'Seleccione un insumo para ver la unidad';
             unitCostDisplay.textContent = '$0.00';
@@ -211,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Actualizar al cargar la página si hay valores predefinidos
     if (supplySelect.value) {
-        updateCostInfo();
+    updateCostInfo();
     }
     
     // Función para actualizar el lote cuando se selecciona un cultivo
@@ -250,3 +248,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+

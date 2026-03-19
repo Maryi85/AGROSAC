@@ -6,13 +6,13 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <!-- Botones de acción -->
-    <div class="mb-6 flex justify-start gap-4">
-        <a href="{{ route('admin.supply-movements.create', ['type' => 'entry']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 border border-green-200 rounded">
+    {{-- Responsive: wrap on mobile --}}
+    <div class="mb-6 flex flex-wrap gap-2">
+        <a href="{{ route('admin.supply-movements.create', ['type' => 'entry']) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 border border-green-200 rounded">
             <i data-lucide="plus-circle" class="w-4 h-4"></i>
             <span>Entrada de Insumo</span>
         </a>
-        <a href="{{ route('admin.supply-movements.create', ['type' => 'exit']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded">
+        <a href="{{ route('admin.supply-movements.create', ['type' => 'exit']) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded">
             <i data-lucide="minus-circle" class="w-4 h-4"></i>
             <span>Salida de Insumo</span>
         </a>
@@ -66,10 +66,10 @@
                         <div class="font-medium text-gray-900">{{ rtrim(rtrim(number_format($movement->quantity, 2, '.', ','), '0'), '.') }}</div>
                     </td>
                     <td class="py-3 pr-4">
-                        <div class="text-sm text-gray-600">${{ number_format($movement->unit_cost, 2) }}</div>
+                        <div class="text-sm text-gray-600">${{ number_format((int)$movement->unit_cost, 0) }}</div>
                     </td>
                     <td class="py-3 pr-4">
-                        <div class="font-semibold text-gray-900">${{ number_format($movement->total_cost, 2) }}</div>
+                        <div class="font-semibold text-gray-900">${{ number_format((int)$movement->total_cost, 0) }}</div>
                     </td>
                     <td class="py-3 pr-4">
                         <div class="text-sm text-gray-600 max-w-xs truncate" title="{{ $movement->reason }}">
@@ -89,8 +89,8 @@
                                     data-supply-name="{{ $movement->supply->name }}"
                                     data-supply-unit="{{ $movement->supply->unit }}"
                                     data-quantity="{{ rtrim(rtrim(number_format($movement->quantity, 2, '.', ','), '0'), '.') }}"
-                                    data-unit-cost="{{ number_format($movement->unit_cost, 2) }}"
-                                    data-total-cost="{{ number_format($movement->total_cost, 2) }}"
+                                    data-unit-cost="{{ number_format((int)$movement->unit_cost, 0) }}"
+                                    data-total-cost="{{ number_format((int)$movement->total_cost, 0) }}"
                                     data-reason="{{ $movement->reason ?? '' }}"
                                     data-notes="{{ $movement->notes ?? '' }}"
                                     data-crop-name="{{ $movement->crop->name ?? '' }}"
@@ -109,13 +109,7 @@
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </a>
                             
-                            <!-- Eliminar -->
-                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600 delete-movement-btn" 
-                                    data-movement-id="{{ $movement->id }}"
-                                    data-supply-name="{{ $movement->supply->name }}"
-                                    title="Eliminar">
-                                <i data-lucide="trash" class="w-4 h-4"></i>
-                            </button>
+
                         </div>
                     </td>
                 </tr>
@@ -133,7 +127,7 @@
 
 <!-- Modal de detalles -->
 <div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-800">Detalles del Movimiento</h3>
             <button type="button" onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
@@ -142,7 +136,8 @@
         </div>
         
         <div class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Fecha del Movimiento</label>
                     <p id="viewMovementDate" class="text-sm text-gray-900"></p>
@@ -153,7 +148,8 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Insumo</label>
                     <p id="viewSupplyName" class="text-sm text-gray-900"></p>
@@ -164,7 +160,8 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Costo Unitario</label>
                     <p id="viewUnitCost" class="text-sm text-gray-900"></p>
@@ -185,7 +182,8 @@
                 <p id="viewNotes" class="text-sm text-gray-900"></p>
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Cultivo</label>
                     <p id="viewCropName" class="text-sm text-gray-900"></p>
@@ -201,7 +199,8 @@
                 <p id="viewTaskDescription" class="text-sm text-gray-900"></p>
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Registrado por</label>
                     <p id="viewCreatedBy" class="text-sm text-gray-900"></p>
@@ -221,34 +220,10 @@
     </div>
 </div>
 
-<!-- Modal de confirmación de eliminación -->
-<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="p-2 bg-red-100 rounded-full">
-                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-800">Confirmar Eliminación</h3>
-        </div>
-        
-        <p class="text-gray-600 mb-6">
-            ¿Está seguro de que desea eliminar este movimiento de inventario? 
-            Esta acción actualizará automáticamente el stock del insumo.
-        </p>
-        
-        <div class="flex justify-end gap-2">
-            <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
-                Cancelar
-            </button>
-            <button type="button" onclick="confirmDelete()" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded transition-colors">
-                Eliminar
-            </button>
-        </div>
-    </div>
-</div>
+
 
 <script>
-let deleteMovementId = null;
+
 
 // Función para abrir el modal de detalles
 function openViewModal(movementId, movementDate, movementType, supplyName, supplyUnit, quantity, unitCost, totalCost, reason, notes, cropName, plotName, taskDescription, createdBy, createdAt) {
@@ -274,61 +249,7 @@ function closeViewModal() {
     document.getElementById('viewModal').style.display = 'none';
 }
 
-// Función para abrir el modal de confirmación de eliminación
-function openDeleteModal(movementId, supplyName) {
-    deleteMovementId = movementId;
-    document.getElementById('deleteModal').style.display = 'flex';
-}
 
-// Función para cerrar el modal de confirmación de eliminación
-function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-    deleteMovementId = null;
-}
-
-// Función para confirmar la eliminación
-async function confirmDelete() {
-    if (!deleteMovementId) return;
-    
-    const deleteButton = document.querySelector('#deleteModal button[onclick="confirmDelete()"]');
-    const originalText = deleteButton.innerHTML;
-    
-    // Mostrar estado de carga
-    deleteButton.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 inline mr-2 animate-spin"></i><span>Eliminando...</span>';
-    deleteButton.disabled = true;
-    
-    try {
-        const response = await fetch(`/admin/supply-movements/${deleteMovementId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        if (response.ok) {
-            // Cerrar el modal
-            closeDeleteModal();
-            
-            // Mostrar mensaje de éxito
-            showSuccessMessage('Movimiento de inventario eliminado correctamente');
-            
-            // Recargar la página
-            window.location.reload();
-        } else {
-            const errorData = await response.json();
-            showErrorMessage(errorData.message || 'Error al eliminar el movimiento');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showErrorMessage('Error al eliminar el movimiento: ' + error.message);
-    } finally {
-        // Restaurar el botón
-        deleteButton.innerHTML = originalText;
-        deleteButton.disabled = false;
-    }
-}
 
 // Función para mostrar mensaje de éxito
 function showSuccessMessage(message = 'Operación realizada correctamente') {
@@ -382,15 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Agregar eventos a los botones de eliminar
-    document.querySelectorAll('.delete-movement-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const movementId = this.getAttribute('data-movement-id');
-            const supplyName = this.getAttribute('data-supply-name');
-            
-            openDeleteModal(movementId, supplyName);
-        });
-    });
+
 });
 </script>
 @endsection

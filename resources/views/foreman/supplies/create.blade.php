@@ -21,30 +21,34 @@
         </div>
         
         <!-- Unidad de Medida -->
-        <div>
-            <label for="unit" class="block text-sm mb-1 text-emerald-800">Unidad de Medida</label>
-            <select id="unit" name="unit" 
-                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('unit') border-red-500 @enderror" 
-                    required>
-                <option value="">Seleccionar unidad</option>
-                @foreach($units as $value => $label)
-                    <option value="{{ $value }}" {{ old('unit') === $value ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
-            @error('unit')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
+            <div>
+                <label for="unit" class="block text-sm mb-1 text-emerald-800">Unidad de Medida</label>
+                <select id="unit" name="unit" 
+                        class="w-full border border-emerald-200 rounded px-3 py-2 @error('unit') border-red-500 @enderror" 
+                        required>
+                    <option value="">Seleccionar unidad</option>
+                    @foreach($units as $key => $label)
+                        <option value="{{ $key }}" {{ old('unit') === $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('unit')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
         </div>
-
-        <!-- Stock Mínimo -->
+        
+        <!-- Estado -->
         <div>
-            <label for="min_stock" class="block text-sm mb-1 text-emerald-800">Stock Mínimo</label>
-            <input type="number" step="0.01" min="0" name="min_stock" id="min_stock" 
-                   class="w-full border border-emerald-200 rounded px-3 py-2 @error('min_stock') border-red-500 @enderror" 
-                   value="{{ old('min_stock', 0) }}" required>
-            @error('min_stock')
+            <label for="status" class="block text-sm mb-1 text-emerald-800">Estado</label>
+            <select id="status" name="status" 
+                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('status') border-red-500 @enderror" 
+                    required>
+                <option value="">Seleccionar estado</option>
+                <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Activo</option>
+                <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>Inactivo</option>
+            </select>
+            @error('status')
                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
@@ -63,27 +67,13 @@
             </div>
         </div>
         
-        <!-- Estado -->
-        <div>
-            <label for="status" class="block text-sm mb-1 text-emerald-800">Estado</label>
-            <select id="status" name="status" 
-                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('status') border-red-500 @enderror" 
-                    required>
-                <option value="active" {{ old('status', 'active') === 'active' ? 'selected' : '' }}>Activo</option>
-                <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>Inactivo</option>
-            </select>
-            @error('status')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-        
         <!-- Información adicional -->
         <div class="bg-blue-50 border border-blue-200 rounded p-4">
             <h4 class="text-sm font-semibold text-blue-800 mb-2">Información Importante</h4>
             <ul class="text-xs text-blue-700 space-y-1">
                 <li>• El nombre del insumo debe ser único en el sistema</li>
                 <li>• Los insumos activos estarán disponibles para registrar consumos</li>
-                <li>• El stock mínimo ayudará a identificar cuándo se necesita reabastecimiento</li>
+                <li>• Una vez registrado, podrá crear consumos de este insumo en el módulo correspondiente</li>
             </ul>
         </div>
         
@@ -103,7 +93,6 @@
     </form>
 </div>
 
-@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Vista previa de la foto
@@ -128,5 +117,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
 @endsection
+

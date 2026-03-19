@@ -26,9 +26,27 @@ class StoreSupplyConsumptionRequest extends FormRequest
             'crop_id' => ['nullable', 'exists:crops,id'],
             'plot_id' => ['nullable', 'exists:plots,id'],
             'task_id' => ['nullable', 'exists:tasks,id'],
-            'qty' => ['required', 'numeric', 'min:0.001'],
+            'qty' => ['required', 'numeric', 'min:0.001', 'max:999999'],
             'used_at' => ['required', 'date'],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($this->has('supply_id') && $this->has('qty') && is_numeric($this->qty)) {
+                $supply = \App\Models\Supply::find($this->supply_id);
+                if ($supply && $this->qty > $supply->current_stock) {
+                    $validator->errors()->add(
+                        'qty',
+                        "La cantidad solicitada ({$this->qty}) supera el stock actual disponible ({$supply->current_stock} {$supply->unit})."
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -45,6 +63,7 @@ class StoreSupplyConsumptionRequest extends FormRequest
             'qty.required' => 'La cantidad es obligatoria.',
             'qty.numeric' => 'La cantidad debe ser un número.',
             'qty.min' => 'La cantidad debe ser mayor a 0.',
+            'qty.max' => 'La cantidad ingresada es demasiado grande.',
             'used_at.required' => 'La fecha de uso es obligatoria.',
             'used_at.date' => 'La fecha de uso debe ser una fecha válida.',
         ];

@@ -14,7 +14,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex items-center gap-3">
                     @if($worker->photo)
-                        <img src="{{ asset('storage/' . $worker->photo) }}" alt="Foto" class="h-16 w-16 rounded-full object-cover border border-gray-200">
+                        <img src="{{ storage_asset($worker->photo) }}" alt="Foto" class="h-16 w-16 rounded-full object-cover border border-gray-200">
                     @else
                         <div class="h-16 w-16 rounded-full border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-400">Sin foto</div>
                     @endif

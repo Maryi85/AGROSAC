@@ -1,16 +1,8 @@
 @extends('admin.layout')
 
 @section('header')
-<div class="flex items-center justify-between">
-    <div>
-        <h2 class="text-2xl font-bold text-gray-800">Dashboard Administrador</h2>
-        <p class="text-sm text-gray-600 mt-1">Panel de control general del sistema AGROSAC</p>
-    </div>
-    <div class="flex items-center gap-2 text-sm text-gray-500">
-        <i data-lucide="calendar" class="w-4 h-4"></i>
-        <span>{{ now()->format('d/m/Y') }}</span>
-    </div>
-</div>
+<h2 class="font-bold text-gray-800">Dashboard Administrador</h2>
+<p class="text-gray-600 mt-1">Panel de control general del sistema AGROSAC</p>
 @endsection
 
 @section('content')
@@ -163,8 +155,8 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-gray-600 mb-1">Trabajadores Activos</p>
-                <p class="text-2xl font-black text-emerald-700">{{ $activeUsers }}</p>
-                <p class="text-xs text-gray-500 mt-1">Total: {{ $totalUsers }}</p>
+                <p id="kpi-active-users" class="text-2xl font-black text-emerald-700">{{ $activeUsers }}</p>
+                <p id="kpi-total-users" class="text-xs text-gray-500 mt-1">Total: {{ $totalUsers }}</p>
             </div>
         </div>
 
@@ -181,8 +173,8 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-gray-600 mb-1">Tareas Pendientes</p>
-                <p class="text-2xl font-black text-amber-700">{{ $pendingTasks }}</p>
-                <p class="text-xs text-gray-500 mt-1">Completadas: {{ $completedTasks }}</p>
+                <p id="kpi-pending-tasks" class="text-2xl font-black text-amber-700">{{ $pendingTasks }}</p>
+                <p id="kpi-completed-tasks" class="text-xs text-gray-500 mt-1">Completadas: {{ $completedTasks }}</p>
             </div>
         </div>
 
@@ -199,8 +191,8 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-gray-600 mb-1">Cultivos Activos</p>
-                <p class="text-2xl font-black text-green-700">{{ $activeCrops }}</p>
-                <p class="text-xs text-gray-500 mt-1">Total: {{ $totalCrops }}</p>
+                <p id="kpi-active-crops" class="text-2xl font-black text-green-700">{{ $activeCrops }}</p>
+                <p id="kpi-total-crops" class="text-xs text-gray-500 mt-1">Total: {{ $totalCrops }}</p>
             </div>
         </div>
 
@@ -219,8 +211,8 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-gray-600 mb-1">Balance del Mes</p>
-                <p class="text-2xl font-black {{ $currentMonthBalance >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
-                    {{ $currentMonthBalance >= 0 ? '+' : '' }}$ {{ number_format($currentMonthBalance, 2) }}
+                <p id="kpi-month-balance" class="text-2xl font-black {{ $currentMonthBalance >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
+                    {{ $currentMonthBalance >= 0 ? '+' : '' }}$ {{ number_format($currentMonthBalance, 0) }}
                 </p>
                 <p class="text-xs text-gray-500 mt-1">{{ now()->format('F Y') }}</p>
             </div>
@@ -283,8 +275,8 @@
                     <div class="flex-1">
                         <p class="font-semibold text-gray-800 text-sm">{{ $supply->name }}</p>
                         <p class="text-xs text-gray-600">
-                            Stock: <span class="font-bold text-red-600">{{ number_format($supply->current_stock, 2) }}</span> {{ $supply->unit }}
-                            <span class="text-gray-500">/ Mínimo: {{ number_format($supply->min_stock, 2) }}</span>
+                            Stock: <span class="font-bold text-red-600">{{ number_format($supply->current_stock, 0) }}</span> {{ $supply->unit }}
+                            <span class="text-gray-500">/ Mínimo: {{ number_format($supply->min_stock, 0) }}</span>
                         </p>
                     </div>
                     <div class="text-right ml-3">
@@ -337,16 +329,16 @@
             <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-200">
                 <div class="text-center">
                     <p class="text-xs text-gray-600 mb-1">Ingresos</p>
-                    <p class="text-lg font-bold text-emerald-600">$ {{ number_format($currentMonthIncome, 2) }}</p>
+                    <p class="text-lg font-bold text-emerald-600">$ {{ number_format($currentMonthIncome, 0) }}</p>
                 </div>
                 <div class="text-center">
                     <p class="text-xs text-gray-600 mb-1">Gastos</p>
-                    <p class="text-lg font-bold text-amber-600">$ {{ number_format($currentMonthExpenses, 2) }}</p>
+                    <p class="text-lg font-bold text-amber-600">$ {{ number_format($currentMonthExpenses, 0) }}</p>
                 </div>
             </div>
         </div>
 
-        {{-- Lista de Cultivos Activos --}}
+        {{-- Lista de Cultivos (Scrollable) --}}
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
@@ -544,7 +536,7 @@
                                     if (label) {
                                         label += ': ';
                                     }
-                                    label += '$ ' + context.parsed.toFixed(2);
+                                    label += '$ ' + context.parsed.toFixed(0);
                                     return label;
                                 }
                             }
@@ -562,5 +554,39 @@
     if (window.lucide) {
         window.lucide.createIcons();
     }
+
+    // Polling para actualización en tiempo real
+    function refreshDashboardStats() {
+        fetch('{{ route('admin.data') }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const stats = data.stats;
+                    
+                    // Actualizar KPIs
+                    if (document.getElementById('kpi-active-users')) 
+                        document.getElementById('kpi-active-users').textContent = stats.activeUsers;
+                    
+                    if (document.getElementById('kpi-pending-tasks')) 
+                        document.getElementById('kpi-pending-tasks').textContent = stats.pendingTasks;
+                    
+                    if (document.getElementById('kpi-completed-tasks')) 
+                        document.getElementById('kpi-completed-tasks').textContent = 'Completadas: ' + stats.completedTasks;
+                    
+                    if (document.getElementById('kpi-active-crops')) 
+                        document.getElementById('kpi-active-crops').textContent = stats.activeCrops;
+                    
+                    if (document.getElementById('kpi-month-balance')) {
+                        const balance = stats.currentMonthBalance;
+                        const el = document.getElementById('kpi-month-balance');
+                        el.textContent = (balance >= 0 ? '+' : '') + '$ ' + balance.toLocaleString('en-US', {minimumFractionDigits: 0});
+                        el.className = 'text-2xl font-black ' + (balance >= 0 ? 'text-emerald-700' : 'text-red-700');
+                    }
+                }
+            })
+            .catch(error => console.error('Error al actualizar stats:', error));
+    }
+
+    setInterval(refreshDashboardStats, 5000);
 </script>
 @endpush

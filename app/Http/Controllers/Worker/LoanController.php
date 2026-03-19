@@ -32,9 +32,9 @@ class LoanController extends Controller
         $tools = Tool::with('entries')
             ->where('status', 'operational')
             ->get()
-            ->filter(function($tool) {
-                return $tool->available_qty > 0;
-            })
+            ->filter(function ($tool) {
+            return $tool->available_qty > 0;
+        })
             ->values();
 
         return view('worker.loans.create', compact('tools'));
@@ -43,7 +43,7 @@ class LoanController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $request->validate([
             'tool_id' => 'required|exists:tools,id',
@@ -56,10 +56,14 @@ class LoanController extends Controller
 
         // Verificar que hay suficiente cantidad disponible
         if ($tool->available_qty < $request->quantity) {
-            return back()->withErrors(['quantity' => 'No hay suficientes herramientas disponibles. Disponible: ' . $tool->available_qty]);
+            $message = 'No hay suficientes herramientas disponibles. Disponible: ' . $tool->available_qty;
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->withErrors(['quantity' => $message]);
         }
 
-        Loan::create([
+        $loan = Loan::create([
             'tool_id' => $request->tool_id,
             'user_id' => auth()->id(),
             'quantity' => $request->quantity,
@@ -67,6 +71,14 @@ class LoanController extends Controller
             'request_notes' => $request->request_notes,
             'status' => 'pending',
         ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de préstamo enviada exitosamente.',
+                'loan' => $loan->fresh(['tool'])
+            ]);
+        }
 
         return redirect()->route('worker.loans.index')
             ->with('status', 'Solicitud de préstamo enviada. Esperando aprobación del administrador.');
@@ -108,16 +120,23 @@ class LoanController extends Controller
     /**
      * Process the return of a tool.
      */
-    public function processReturn(Request $request, Loan $loan)
+    public function processReturn(Request $request, Loan $loan): \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
     {
         // Verificar que el préstamo pertenece al usuario autenticado y está aprobado
         if ($loan->user_id !== auth()->id()) {
-            abort(403, 'No tienes permisos para devolver este préstamo.');
+            $message = 'No tienes permisos para devolver este préstamo.';
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 403);
+            }
+            abort(403, $message);
         }
 
         if (!$loan->isOut()) {
-            return redirect()->route('worker.loans.index')
-                ->with('error', 'Este préstamo no está en estado de préstamo activo.');
+            $message = 'Este préstamo no está en estado de préstamo activo.';
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('worker.loans.index')->with('error', $message);
         }
 
         $request->validate([
@@ -135,15 +154,27 @@ class LoanController extends Controller
                 'status' => 'returned_by_worker', // Estado intermedio
             ]);
 
-            // NO actualizar la cantidad disponible de la herramienta aún
-            // Esto se hará cuando el administrador confirme la devolución
-
             DB::commit();
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Herramienta devuelta exitosamente. Esperando confirmación.',
+                    'loan' => $loan->fresh(['tool'])
+                ]);
+            }
 
             return redirect()->route('worker.loans.index')
                 ->with('status', 'Herramienta devuelta exitosamente. Esperando confirmación del administrador.');
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             DB::rollback();
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al procesar la devolución: ' . $e->getMessage()
+                ], 500);
+            }
             return back()->withErrors(['error' => 'Error al procesar la devolución: ' . $e->getMessage()]);
         }
     }

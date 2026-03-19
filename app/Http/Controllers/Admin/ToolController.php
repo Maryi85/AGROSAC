@@ -76,35 +76,36 @@ class ToolController extends Controller
     public function store(StoreToolRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        
+
         // Manejar la subida de la foto
         if ($request->hasFile('photo')) {
             try {
                 $photo = $request->file('photo');
-                
+
                 // Generar nombre de archivo seguro (sin espacios ni caracteres especiales)
                 $originalName = $photo->getClientOriginalName();
                 $extension = $photo->getClientOriginalExtension();
                 $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
                 $photoName = time() . '_' . $safeName . '.' . $extension;
-                
+
                 // Asegurar que el directorio existe
                 $directory = storage_path('app/public/photos/tools');
                 if (!File::exists($directory)) {
                     File::makeDirectory($directory, 0755, true);
                 }
-                
+
                 // Guardar la foto usando Storage directamente
                 $path = Storage::disk('public')->putFileAs('photos/tools', $photo, $photoName);
-                
+
                 if ($path) {
                     $data['photo'] = $path;
                 }
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e) {
                 \Log::error('Error al procesar la foto de herramienta: ' . $e->getMessage());
             }
         }
-        
+
         $tool = Tool::create($data);
 
         return redirect()->route(route_prefix() . 'tools.index')
@@ -141,7 +142,7 @@ class ToolController extends Controller
     public function update(UpdateToolRequest $request, Tool $tool): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
-        
+
         // Manejar la subida de la foto
         if ($request->hasFile('photo')) {
             try {
@@ -149,32 +150,33 @@ class ToolController extends Controller
                 if ($tool->photo && Storage::disk('public')->exists($tool->photo)) {
                     Storage::disk('public')->delete($tool->photo);
                 }
-                
+
                 $photo = $request->file('photo');
-                
+
                 // Generar nombre de archivo seguro (sin espacios ni caracteres especiales)
                 $originalName = $photo->getClientOriginalName();
                 $extension = $photo->getClientOriginalExtension();
                 $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
                 $photoName = time() . '_' . $safeName . '.' . $extension;
-                
+
                 // Asegurar que el directorio existe
                 $directory = storage_path('app/public/photos/tools');
                 if (!File::exists($directory)) {
                     File::makeDirectory($directory, 0755, true);
                 }
-                
+
                 // Guardar la foto usando Storage directamente
                 $path = Storage::disk('public')->putFileAs('photos/tools', $photo, $photoName);
-                
+
                 if ($path) {
                     $data['photo'] = $path;
                 }
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e) {
                 \Log::error('Error al procesar la foto de herramienta: ' . $e->getMessage());
             }
         }
-        
+
         $tool->update($data);
         $tool->refresh();
 
@@ -199,15 +201,26 @@ class ToolController extends Controller
             ->with('status', 'Herramienta actualizada correctamente');
     }
 
-    public function destroy(Tool $tool): RedirectResponse
+    public function destroy(Tool $tool, Request $request): RedirectResponse|JsonResponse
     {
-        // Verificar si la herramienta tiene préstamos activos
-        if ($tool->loans()->where('status', 'active')->exists()) {
-            return redirect()->route(route_prefix() . 'tools.index')
-                ->with('error', 'No se puede eliminar una herramienta que tiene préstamos activos.');
+        // Verificar si la herramienta tiene movimientos (entradas o salidas)
+        if ($tool->entries()->exists() || $tool->loans()->exists()) {
+            $message = 'No se puede eliminar una herramienta con historial de movimientos (entradas o salidas).';
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route(route_prefix() . 'tools.index')->with('error', $message);
         }
 
         $tool->delete();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Herramienta eliminada correctamente',
+                'id' => $tool->id
+            ]);
+        }
 
         return redirect()->route(route_prefix() . 'tools.index')
             ->with('status', 'Herramienta eliminada correctamente');

@@ -45,7 +45,7 @@
             </div>
             <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div class="text-sm font-medium text-green-700">Total Horas</div>
-                <div class="text-2xl font-bold text-green-900 mt-2">{{ number_format($totalHours ?? 0, 2) }}</div>
+                <div class="text-2xl font-bold text-green-900 mt-2">{{ number_format($totalHours ?? 0, 0) }}</div>
             </div>
             <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
                 <div class="text-sm font-medium text-orange-700">Total Kilos</div>
@@ -53,7 +53,7 @@
             </div>
             <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                 <div class="text-sm font-medium text-emerald-700">Total Acumulado</div>
-                <div class="text-2xl font-bold text-emerald-900 mt-2">${{ number_format($totalPayment ?? 0, 2) }}</div>
+                <div class="text-2xl font-bold text-emerald-900 mt-2">${{ number_format($totalPayment ?? 0, 0) }}</div>
             </div>
         </div>
     </div>
@@ -78,9 +78,9 @@
                     <tr class="border-b hover:bg-gray-50">
                         <td class="py-3 pr-4 font-medium">{{ $cropTotal['crop'] }}</td>
                         <td class="py-3 pr-4 text-right">{{ $cropTotal['tasks_count'] }}</td>
-                        <td class="py-3 pr-4 text-right">{{ number_format($cropTotal['total_hours'], 2) }}</td>
+                        <td class="py-3 pr-4 text-right">{{ number_format($cropTotal['total_hours'], 0) }}</td>
                         <td class="py-3 pr-4 text-right">{{ number_format($cropTotal['total_kilos'], 3) }}</td>
-                        <td class="py-3 pr-4 text-right font-semibold text-emerald-700">${{ number_format($cropTotal['total_payment'] ?? 0, 2) }}</td>
+                        <td class="py-3 pr-4 text-right font-semibold text-emerald-700">${{ number_format($cropTotal['total_payment'] ?? 0, 0) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -128,7 +128,7 @@
                         <td class="py-3 pr-4">{{ $task->plot ? $task->plot->name : 'Sin lote' }}</td>
                         <td class="py-3 pr-4 text-right">
                             @if($task->hours > 0)
-                                {{ number_format($task->hours, 2) }}
+                                {{ number_format($task->hours, 0) }}
                             @else
                                 <span class="text-gray-400">-</span>
                             @endif
@@ -141,27 +141,27 @@
                             @endif
                         </td>
                         <td class="py-3 pr-4 text-right">
-                            @if($task->price_per_hour)
+                            @if((int)$task->price_per_hour)
                                 <div class="text-sm">
-                                    <div class="font-medium text-emerald-700">${{ number_format($task->price_per_hour, 2) }}/hora</div>
-                                    <div class="text-xs text-gray-500">{{ number_format($task->hours, 2) }}h × ${{ number_format($task->price_per_hour, 2) }}</div>
+                                    <div class="font-medium text-emerald-700">${{ number_format((int)$task->price_per_hour, 0) }}/hora</div>
+                                    <div class="text-xs text-gray-500">{{ number_format($task->hours, 0) }}h × ${{ number_format((int)$task->price_per_hour, 0) }}</div>
                                 </div>
-                            @elseif($task->price_per_day)
+                            @elseif((int)$task->price_per_day)
                                 <div class="text-sm">
-                                    <div class="font-medium text-emerald-700">${{ number_format($task->price_per_day, 2) }}/día</div>
-                                    <div class="text-xs text-gray-500">{{ number_format($task->hours / 8, 1) }}d × ${{ number_format($task->price_per_day, 2) }}</div>
+                                    <div class="font-medium text-emerald-700">${{ number_format((int)$task->price_per_day, 0) }}/día</div>
+                                    <div class="text-xs text-gray-500">{{ number_format($task->hours / 8, 1) }}d × ${{ number_format((int)$task->price_per_day, 0) }}</div>
                                 </div>
-                            @elseif($task->price_per_kg)
+                            @elseif((int)$task->price_per_kg)
                                 <div class="text-sm">
-                                    <div class="font-medium text-emerald-700">${{ number_format($task->price_per_kg, 2) }}/kg</div>
-                                    <div class="text-xs text-gray-500">{{ number_format($task->kilos, 3) }}kg × ${{ number_format($task->price_per_kg, 2) }}</div>
+                                    <div class="font-medium text-emerald-700">${{ number_format((int)$task->price_per_kg, 0) }}/kg</div>
+                                    <div class="text-xs text-gray-500">{{ number_format($task->kilos, 3) }}kg × ${{ number_format((int)$task->price_per_kg, 0) }}</div>
                                 </div>
                             @else
                                 <span class="text-gray-400">-</span>
                             @endif
                         </td>
                         <td class="py-3 pr-4 text-right font-semibold text-emerald-700">
-                            ${{ number_format($task->calculated_payment ?? $task->total_payment ?? 0, 2) }}
+                            ${{ number_format($task->calculated_payment ?? $task->total_payment ?? 0, 0) }}
                         </td>
                     </tr>
                     @endforeach
@@ -170,7 +170,7 @@
                     <tr class="bg-emerald-50 font-semibold">
                         <td colspan="8" class="py-3 pr-4 text-right">Total Acumulado:</td>
                         <td class="py-3 pr-4 text-right text-emerald-700 text-lg">
-                            ${{ number_format($totalPayment ?? 0, 2) }}
+                            ${{ number_format($totalPayment ?? 0, 0) }}
                         </td>
                     </tr>
                 </tfoot>

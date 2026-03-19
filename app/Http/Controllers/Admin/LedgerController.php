@@ -8,10 +8,7 @@ use App\Http\Requests\UpdateLedgerEntryRequest;
 use App\Models\LedgerEntry;
 use App\Models\Crop;
 use App\Models\Plot;
-use App\Models\SupplyConsumption;
-use App\Models\SupplyMovement;
-use App\Models\Task;
-use App\Models\ToolEntry;
+use App\Services\LedgerStatisticsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,6 +17,13 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class LedgerController extends Controller
 {
+    protected LedgerStatisticsService $statsService;
+
+    public function __construct(LedgerStatisticsService $statsService)
+    {
+        $this->statsService = $statsService;
+    }
+
     public function index(Request $request): View
     {
         $query = LedgerEntry::with(['crop', 'plot']);
@@ -83,56 +87,25 @@ class LedgerController extends Controller
 
     public function dashboard(): View
     {
-        // Estadísticas generales
-        $totalIncome = LedgerEntry::where('type', 'income')->sum('amount');
-        $totalExpenses = LedgerEntry::where('type', 'expense')->sum('amount');
-        $netProfit = $totalIncome - $totalExpenses;
+        // Estadísticas financieras generales
+        $summary = $this->statsService->getFinancialSummary();
 
-        // Ingresos por categoría
-        $incomeByCategory = LedgerEntry::where('type', 'income')
-            ->select('category', DB::raw('SUM(amount) as total'))
-            ->groupBy('category')
-            ->orderBy('total', 'desc')
-            ->get();
+        // Desglose por categoría
+        $incomeByCategory = $this->statsService->getIncomeByCategory();
+        $expensesByCategory = $this->statsService->getExpensesByCategory();
 
-        // Gastos por categoría (solo contables)
-        $expensesByCategory = LedgerEntry::where('type', 'expense')
-            ->select('category', DB::raw('SUM(amount) as total'))
-            ->groupBy('category')
-            ->orderBy('total', 'desc')
-            ->get();
+        // Ingresos y egresos por mes
+        $monthlyTrendData = $this->statsService->getMonthlyTrends(6);
 
-        // Calcular gastos adicionales por tipo
-        $totalSupplyCosts = SupplyConsumption::sum('total_cost') + 
-                           SupplyMovement::where('type', 'exit')->sum('total_cost');
-        $totalToolCosts = ToolEntry::where('type', 'purchase')
-                           ->whereNotNull('total_cost')
-                           ->sum('total_cost');
-        $totalTaskCosts = Task::sum('total_payment');
+        // Análisis por cultivo (Optimizado para evitar N+1)
+        $cropAnalysis = $this->statsService->getCropAnalysis();
         
-        // Calcular total de gastos (contables + insumos + herramientas + trabajadores)
-        $totalAllExpenses = $totalExpenses + $totalSupplyCosts + $totalToolCosts + $totalTaskCosts;
-        
-        // Calcular ganancia/pérdida total
-        $totalProfit = $totalIncome - $totalAllExpenses;
-
-        // Ingresos por cultivo
-        $incomeByCrop = LedgerEntry::where('type', 'income')
-            ->whereNotNull('crop_id')
-            ->with('crop')
-            ->select('crop_id', DB::raw('SUM(amount) as total'))
-            ->groupBy('crop_id')
-            ->orderBy('total', 'desc')
-            ->get();
-
-        // Gastos por cultivo
-        $expensesByCrop = LedgerEntry::where('type', 'expense')
-            ->whereNotNull('crop_id')
-            ->with('crop')
-            ->select('crop_id', DB::raw('SUM(amount) as total'))
-            ->groupBy('crop_id')
-            ->orderBy('total', 'desc')
-            ->get();
+        // Ingresos y Gastos por cultivo (para gráficos simples)
+        // Reutilizamos el análisis detallado para extraer esto si es necesario, 
+        // o llamamos a métodos específicos si la vista los requiere en formato distinto.
+        // Para mantener compatibilidad con la vista actual:
+        $incomeByCrop = $this->statsService->getIncomeByCrop();
+        $expensesByCrop = $this->statsService->getExpensesByCrop();
 
         // Movimientos recientes
         $recentEntries = LedgerEntry::with(['crop', 'plot'])
@@ -140,150 +113,15 @@ class LedgerController extends Controller
             ->limit(10)
             ->get();
 
-        // Ingresos y egresos por mes (últimos 6 meses) - para gráfico de tendencia
-        $monthlyTrendData = LedgerEntry::select(
-                DB::raw('DATE_FORMAT(occurred_at, "%Y-%m") as month'),
-                DB::raw('SUM(CASE WHEN type = "income" THEN amount ELSE 0 END) as income'),
-                DB::raw('SUM(CASE WHEN type = "expense" THEN amount ELSE 0 END) as ledger_expenses')
-            )
-            ->where('occurred_at', '>=', now()->subMonths(6)->startOfMonth())
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->map(function($item) {
-                // Calcular costos operativos para cada mes
-                $monthStart = $item->month . '-01';
-                $monthEnd = date('Y-m-t', strtotime($monthStart));
-                
-                // Costos de insumos del mes
-                $supplyCosts = SupplyConsumption::whereBetween('created_at', [$monthStart, $monthEnd])->sum('total_cost') +
-                              SupplyMovement::where('type', 'exit')
-                                  ->whereBetween('created_at', [$monthStart, $monthEnd])
-                                  ->sum('total_cost');
-                
-                // Costos de tareas (trabajadores) del mes
-                $taskCosts = Task::whereBetween('created_at', [$monthStart, $monthEnd])->sum('total_payment');
-                
-                // Costos de herramientas del mes (compras)
-                $toolCosts = ToolEntry::where('type', 'purchase')
-                    ->whereNotNull('total_cost')
-                    ->whereBetween('created_at', [$monthStart, $monthEnd])
-                    ->sum('total_cost');
-                
-                // Total de egresos = gastos contables + costos operativos
-                $totalExpenses = $item->ledger_expenses + $supplyCosts + $taskCosts + $toolCosts;
-                
-                // Formatear nombre del mes en español
-                $monthNames = [
-                    '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo',
-                    '04' => 'Abril', '05' => 'Mayo', '06' => 'Junio',
-                    '07' => 'Julio', '08' => 'Agosto', '09' => 'Septiembre',
-                    '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
-                ];
-                $monthParts = explode('-', $item->month);
-                $monthLabel = $monthNames[$monthParts[1]];
-                
-                return [
-                    'month' => $item->month,
-                    'month_label' => $monthLabel,
-                    'income' => $item->income,
-                    'expenses' => $totalExpenses
-                ];
-            });
-
-
-        // Análisis completo por cultivo (ingresos vs gastos totales)
-        $crops = Crop::with('plot')->get();
-        $cropAnalysis = [];
-        
-        foreach ($crops as $crop) {
-            // Ingresos contables del cultivo
-            $ledgerIncome = LedgerEntry::where('type', 'income')
-                ->where('crop_id', $crop->id)
-                ->sum('amount');
-            
-            // Gastos contables del cultivo
-            $ledgerExpenses = LedgerEntry::where('type', 'expense')
-                ->where('crop_id', $crop->id)
-                ->sum('amount');
-            
-            // Costos de insumos consumidos (SupplyConsumption)
-            $supplyConsumptionCosts = SupplyConsumption::where('crop_id', $crop->id)
-                ->sum('total_cost');
-            
-            // Costos de movimientos de insumos (solo salidas/consumos)
-            $supplyMovementCosts = SupplyMovement::where('crop_id', $crop->id)
-                ->where('type', 'exit')
-                ->sum('total_cost');
-            
-            // Costos de trabajadores (tareas)
-            $taskCosts = Task::where('crop_id', $crop->id)
-                ->sum('total_payment');
-            
-            // Costos de herramientas: calcular proporcionalmente basado en tareas
-            // Obtener el total de costos de herramientas (compras)
-            $totalToolPurchases = ToolEntry::where('type', 'purchase')
-                ->whereNotNull('total_cost')
-                ->sum('total_cost');
-            
-            // Obtener el total de tareas y tareas por cultivo para distribución proporcional
-            $totalTasks = Task::whereNotNull('crop_id')->count();
-            $cropTasks = Task::where('crop_id', $crop->id)->count();
-            
-            // Calcular costo de herramientas proporcional al cultivo
-            $toolCosts = 0;
-            if ($totalTasks > 0 && $totalToolPurchases > 0) {
-                // Distribuir proporcionalmente basado en número de tareas
-                $toolCosts = ($cropTasks / $totalTasks) * $totalToolPurchases;
-            }
-            
-            // Total de costos (insumos + trabajadores + herramientas)
-            $totalCropCosts = $supplyConsumptionCosts + $supplyMovementCosts + $taskCosts + $toolCosts;
-            
-            // Total general (gastos + costos)
-            $totalCropExpenses = $ledgerExpenses + $totalCropCosts;
-            
-            // Ganancia/Pérdida
-            $cropProfit = $ledgerIncome - $totalCropExpenses;
-            
-            $cropAnalysis[] = [
-                'crop' => $crop,
-                'income' => $ledgerIncome,
-                'expenses' => [
-                    'ledger' => $ledgerExpenses,
-                    'supply_consumption' => $supplyConsumptionCosts,
-                    'supply_movement' => $supplyMovementCosts,
-                    'tasks' => $taskCosts,
-                    'tools' => $toolCosts,
-                    'total_costs' => $totalCropCosts,
-                    'total' => $totalCropExpenses,
-                ],
-                'profit' => $cropProfit,
-            ];
-        }
-        
-        // Ordenar por ganancia/pérdida
-        usort($cropAnalysis, function($a, $b) {
-            return $b['profit'] <=> $a['profit'];
-        });
-
-        return view('admin.ledger.dashboard', compact(
-            'totalIncome',
-            'totalExpenses',
-            'netProfit',
+        return view('admin.ledger.dashboard', array_merge($summary, compact(
             'incomeByCategory',
             'expensesByCategory',
             'incomeByCrop',
             'expensesByCrop',
             'recentEntries',
             'monthlyTrendData',
-            'cropAnalysis',
-            'totalSupplyCosts',
-            'totalToolCosts',
-            'totalTaskCosts',
-            'totalAllExpenses',
-            'totalProfit'
-        ));
+            'cropAnalysis'
+        )));
     }
 
     public function create(): View
@@ -315,7 +153,7 @@ class LedgerController extends Controller
 
     public function store(StoreLedgerEntryRequest $request): RedirectResponse
     {
-        $entry = LedgerEntry::create($request->validated());
+        LedgerEntry::create($request->validated());
 
         return redirect()->route('admin.ledger.index')
             ->with('status', 'Movimiento contable registrado correctamente');
@@ -327,15 +165,8 @@ class LedgerController extends Controller
         return view('admin.ledger.show', compact('ledgerEntry'));
     }
 
-
-
     public function update(UpdateLedgerEntryRequest $request, LedgerEntry $ledger)
     {
-        \Illuminate\Support\Facades\Log::info('Ledger update request', [
-            'id' => $ledger->id,
-            'data' => $request->all()
-        ]);
-
         $ledger->update($request->validated());
 
         if ($request->wantsJson()) {
@@ -363,102 +194,16 @@ class LedgerController extends Controller
      */
     public function downloadDashboardPdf()
     {
-        // Reutilizar la lógica del dashboard
-        $totalIncome = LedgerEntry::where('type', 'income')->sum('amount');
-        $totalExpenses = LedgerEntry::where('type', 'expense')->sum('amount');
-        $netProfit = $totalIncome - $totalExpenses;
+        $summary = $this->statsService->getFinancialSummary();
+        $incomeByCategory = $this->statsService->getIncomeByCategory();
+        $expensesByCategory = $this->statsService->getExpensesByCategory();
+        $cropAnalysis = $this->statsService->getCropAnalysis();
 
-        $incomeByCategory = LedgerEntry::where('type', 'income')
-            ->select('category', DB::raw('SUM(amount) as total'))
-            ->groupBy('category')
-            ->orderBy('total', 'desc')
-            ->get();
-
-        $expensesByCategory = LedgerEntry::where('type', 'expense')
-            ->select('category', DB::raw('SUM(amount) as total'))
-            ->groupBy('category')
-            ->orderBy('total', 'desc')
-            ->get();
-
-        // Calcular costos totales
-        $totalSupplyCosts = SupplyConsumption::sum('total_cost') + 
-                           SupplyMovement::where('type', 'exit')->sum('total_cost');
-        $totalToolCosts = ToolEntry::where('type', 'purchase')
-                           ->whereNotNull('total_cost')
-                           ->sum('total_cost');
-        $totalTaskCosts = Task::sum('total_payment');
-
-        // Análisis completo por cultivo
-        $crops = Crop::with('plot')->get();
-        $cropAnalysis = [];
-        
-        // Obtener el total de costos de herramientas para distribución proporcional
-        $totalToolPurchases = ToolEntry::where('type', 'purchase')
-            ->whereNotNull('total_cost')
-            ->sum('total_cost');
-        $totalTasks = Task::whereNotNull('crop_id')->count();
-        
-        foreach ($crops as $crop) {
-            $ledgerIncome = LedgerEntry::where('type', 'income')
-                ->where('crop_id', $crop->id)
-                ->sum('amount');
-            
-            $ledgerExpenses = LedgerEntry::where('type', 'expense')
-                ->where('crop_id', $crop->id)
-                ->sum('amount');
-            
-            $supplyConsumptionCosts = SupplyConsumption::where('crop_id', $crop->id)
-                ->sum('total_cost');
-            
-            $supplyMovementCosts = SupplyMovement::where('crop_id', $crop->id)
-                ->where('type', 'exit')
-                ->sum('total_cost');
-            
-            $taskCosts = Task::where('crop_id', $crop->id)
-                ->sum('total_payment');
-            
-            // Costos de herramientas proporcionales
-            $cropTasks = Task::where('crop_id', $crop->id)->count();
-            $toolCosts = 0;
-            if ($totalTasks > 0 && $totalToolPurchases > 0) {
-                $toolCosts = ($cropTasks / $totalTasks) * $totalToolPurchases;
-            }
-            
-            $totalCropCosts = $supplyConsumptionCosts + $supplyMovementCosts + $taskCosts + $toolCosts;
-            $totalCropExpenses = $ledgerExpenses + $totalCropCosts;
-            $cropProfit = $ledgerIncome - $totalCropExpenses;
-            
-            $cropAnalysis[] = [
-                'crop' => $crop,
-                'income' => $ledgerIncome,
-                'expenses' => [
-                    'ledger' => $ledgerExpenses,
-                    'supply_consumption' => $supplyConsumptionCosts,
-                    'supply_movement' => $supplyMovementCosts,
-                    'tasks' => $taskCosts,
-                    'tools' => $toolCosts,
-                    'total_costs' => $totalCropCosts,
-                    'total' => $totalCropExpenses,
-                ],
-                'profit' => $cropProfit,
-            ];
-        }
-        
-        usort($cropAnalysis, function($a, $b) {
-            return $b['profit'] <=> $a['profit'];
-        });
-
-        $pdf = Pdf::loadView('admin.ledger.pdf.dashboard', compact(
-            'totalIncome',
-            'totalExpenses',
-            'netProfit',
+        $pdf = Pdf::loadView('admin.ledger.pdf.dashboard', array_merge($summary, compact(
             'incomeByCategory',
             'expensesByCategory',
-            'cropAnalysis',
-            'totalSupplyCosts',
-            'totalToolCosts',
-            'totalTaskCosts'
-        ));
+            'cropAnalysis'
+        )));
 
         return $pdf->download('dashboard-contable-' . now()->format('Y-m-d') . '.pdf');
     }
@@ -468,64 +213,7 @@ class LedgerController extends Controller
      */
     public function downloadCropAnalysisPdf()
     {
-        $crops = Crop::with('plot')->get();
-        $cropAnalysis = [];
-        
-        // Obtener el total de costos de herramientas para distribución proporcional
-        $totalToolPurchases = ToolEntry::where('type', 'purchase')
-            ->whereNotNull('total_cost')
-            ->sum('total_cost');
-        $totalTasks = Task::whereNotNull('crop_id')->count();
-        
-        foreach ($crops as $crop) {
-            $ledgerIncome = LedgerEntry::where('type', 'income')
-                ->where('crop_id', $crop->id)
-                ->sum('amount');
-            
-            $ledgerExpenses = LedgerEntry::where('type', 'expense')
-                ->where('crop_id', $crop->id)
-                ->sum('amount');
-            
-            $supplyConsumptionCosts = SupplyConsumption::where('crop_id', $crop->id)
-                ->sum('total_cost');
-            
-            $supplyMovementCosts = SupplyMovement::where('crop_id', $crop->id)
-                ->where('type', 'exit')
-                ->sum('total_cost');
-            
-            $taskCosts = Task::where('crop_id', $crop->id)
-                ->sum('total_payment');
-            
-            // Costos de herramientas proporcionales
-            $cropTasks = Task::where('crop_id', $crop->id)->count();
-            $toolCosts = 0;
-            if ($totalTasks > 0 && $totalToolPurchases > 0) {
-                $toolCosts = ($cropTasks / $totalTasks) * $totalToolPurchases;
-            }
-            
-            $totalCropCosts = $supplyConsumptionCosts + $supplyMovementCosts + $taskCosts + $toolCosts;
-            $totalCropExpenses = $ledgerExpenses + $totalCropCosts;
-            $cropProfit = $ledgerIncome - $totalCropExpenses;
-            
-            $cropAnalysis[] = [
-                'crop' => $crop,
-                'income' => $ledgerIncome,
-                'expenses' => [
-                    'ledger' => $ledgerExpenses,
-                    'supply_consumption' => $supplyConsumptionCosts,
-                    'supply_movement' => $supplyMovementCosts,
-                    'tasks' => $taskCosts,
-                    'tools' => $toolCosts,
-                    'total_costs' => $totalCropCosts,
-                    'total' => $totalCropExpenses,
-                ],
-                'profit' => $cropProfit,
-            ];
-        }
-        
-        usort($cropAnalysis, function($a, $b) {
-            return $b['profit'] <=> $a['profit'];
-        });
+        $cropAnalysis = $this->statsService->getCropAnalysis();
 
         $pdf = Pdf::loadView('admin.ledger.pdf.crop-analysis', compact('cropAnalysis'));
 

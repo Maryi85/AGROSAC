@@ -30,20 +30,35 @@
             </p>
             
             <!-- Controles de dibujo -->
+            @if($hasData)
+            <div class="mb-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 flex items-center gap-2">
+                <i data-lucide="lock" class="w-3 h-3 flex-shrink-0"></i>
+                La delimitación está bloqueada porque existen <strong>{{ $hasDataLabel }}</strong> registrados en el sistema.
+            </div>
+            @endif
             <div class="mb-2 flex gap-2 flex-wrap">
                 <button type="button" id="draw-polygon" class="px-3 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded text-sm">
                     <i data-lucide="square" class="w-4 h-4 inline"></i> Dibujar Área
                 </button>
-                <button type="button" id="delete-polygon" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded text-sm">
+                <button type="button" id="delete-polygon"
+                    @if($hasData) disabled title="No se puede eliminar la delimitación mientras haya datos registrados" @endif
+                    class="px-3 py-1 border rounded text-sm inline-flex items-center gap-1
+                        {{ $hasData ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60' : 'bg-red-100 hover:bg-red-200 text-red-700 border-red-200' }}">
                     <i data-lucide="trash-2" class="w-4 h-4 inline"></i> Eliminar Área
                 </button>
-                <button type="button" id="clear-all" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded text-sm">
+                <button type="button" id="clear-all"
+                    @if($hasData) disabled title="No se puede limpiar mientras haya datos registrados" @endif
+                    class="px-3 py-1 border rounded text-sm inline-flex items-center gap-1
+                        {{ $hasData ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200' }}">
                     <i data-lucide="x" class="w-4 h-4 inline"></i> Limpiar Todo
                 </button>
             </div>
+
             
-            <div id="farmMap" style="width: 100%; height: 500px; border: 2px solid #10b981; border-radius: 8px; overflow: hidden;"></div>
-            <div class="mt-2 grid grid-cols-2 gap-4">
+            {{-- Altura responsiva: 250px en móvil, hasta 500px en desktop --}}
+            <div id="farmMap" style="width: 100%; height: clamp(250px, 55vw, 500px); border: 2px solid #10b981; border-radius: 8px; overflow: hidden;"></div>
+            {{-- Una columna en móvil, dos en sm+ --}}
+            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs mb-1 text-emerald-800">Latitud (Centro)</label>
                     <input type="text" name="latitude" id="latitude" value="{{ old('latitude', $farmSettings->latitude) }}" readonly class="w-full border border-emerald-200 rounded px-3 py-2 bg-gray-50" />
@@ -58,13 +73,79 @@
             <input type="hidden" name="boundary" id="boundary" value="{{ old('boundary', $farmSettings->boundary ? json_encode($farmSettings->boundary) : '') }}" />
         </div>
         
-        <div class="flex items-center gap-2">
-            <a href="{{ route('admin.index') }}" class="px-3 py-2 border rounded inline-flex items-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i><span>Volver</span></a>
-            <button class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors"><i data-lucide="save" class="w-4 h-4"></i><span>Guardar</span></button>
+        {{-- Responsive: full-width en móvil, auto en sm+ --}}
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.index') }}" class="w-full sm:w-auto px-3 py-2 border rounded inline-flex items-center justify-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i><span>Volver</span></a>
+            <button class="w-full sm:w-auto px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center justify-center gap-2 transition-colors"><i data-lucide="save" class="w-4 h-4"></i><span>Guardar</span></button>
         </div>
     </form>
+
+    {{-- Sección peligrosa --}}
+    <div class="mt-8 border border-red-200 rounded p-4 bg-red-50">
+        <h3 class="text-sm font-semibold text-red-700 mb-1 flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i> Zona de peligro
+        </h3>
+        <p class="text-xs text-red-600 mb-3">
+            Eliminar la configuración de la finca solo es posible si no existen lotes, cultivos, tareas, insumos, herramientas, préstamos, entradas contables ni trabajadores registrados en el sistema.
+        </p>
+        <button type="button" onclick="document.getElementById('modal-delete-farm').classList.remove('hidden')"
+            class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm inline-flex items-center gap-2 transition-colors">
+            <i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar configuración de la finca
+        </button>
+    </div>
+
+    {{-- Form DELETE (oculto) --}}
+    <form id="form-delete-farm" method="POST" action="{{ route('admin.farm-settings.destroy') }}">
+        @csrf
+        @method('DELETE')
+    </form>
 </div>
+
+{{-- Modal de confirmación --}}
+<div id="modal-delete-farm" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="bg-red-100 p-2 rounded-full"><i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i></div>
+            <h3 class="text-base font-semibold text-gray-900">¿Eliminar configuración de la finca?</h3>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+            Esta acción eliminará permanentemente la configuración de la finca. Solo procederá si no hay datos registrados en el sistema.
+            Para confirmar, escribe <strong>ELIMINAR</strong> a continuación:
+        </p>
+        <input type="text" id="confirm-delete-input" placeholder="Escribe ELIMINAR"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:border-red-400">
+        <div class="flex justify-end gap-2">
+            <button type="button" onclick="document.getElementById('modal-delete-farm').classList.add('hidden')"
+                class="px-4 py-2 border rounded text-sm hover:bg-gray-50">Cancelar</button>
+            <button type="button" id="btn-confirm-delete"
+                class="px-4 py-2 bg-red-600 text-white rounded text-sm opacity-50 cursor-not-allowed transition-all"
+                disabled>Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const confirmInput = document.getElementById('confirm-delete-input');
+    const confirmBtn = document.getElementById('btn-confirm-delete');
+
+    confirmInput.addEventListener('input', () => {
+        if (confirmInput.value === 'ELIMINAR') {
+            confirmBtn.disabled = false;
+            confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            confirmBtn.classList.add('hover:bg-red-700');
+        } else {
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            confirmBtn.classList.remove('hover:bg-red-700');
+        }
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        document.getElementById('form-delete-farm').submit();
+    });
+</script>
 @endsection
+
 
 @push('scripts')
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
@@ -87,7 +168,7 @@
     const oldLng = {{ old('longitude', 'null') }};
     const existingBoundary = @json($farmSettings->boundary ?? null);
     
-    const defaultLocation = [-77.0428, -12.0464];
+    const defaultLocation = [-74.0721, 4.7110]; // Bogotá, Colombia
     const initialLocation = (oldLat && oldLng) ? [parseFloat(oldLng), parseFloat(oldLat)] :
                            (farmLat && farmLng) ? [parseFloat(farmLng), parseFloat(farmLat)] :
                            defaultLocation;
@@ -276,7 +357,7 @@
     }
 
     function geocodeAddress(address) {
-        fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${mapboxgl.accessToken}&country=pe`)
+        fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${mapboxgl.accessToken}&country=co`)
             .then(response => response.json())
             .then(data => {
                 if (data.features && data.features.length > 0) {

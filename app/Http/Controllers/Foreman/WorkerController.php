@@ -10,8 +10,12 @@ use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+use App\Traits\UploadsImages;
+
 class WorkerController extends Controller
 {
+    use UploadsImages;
+
     public function index(Request $request): View
     {
         $query = User::where('role', 'worker');
@@ -62,6 +66,8 @@ class WorkerController extends Controller
                     'id' => $worker->id,
                     'name' => $worker->name,
                     'email' => $worker->email,
+                    'phone' => $worker->phone,
+                    'photo' => $worker->photo ? asset('storage/' . $worker->photo) : null,
                     'status' => $worker->email_verified_at ? 'active' : 'inactive',
                     'created_at' => $worker->created_at->format('d/m/Y H:i'),
                     'updated_at' => $worker->updated_at->format('d/m/Y H:i'),
@@ -102,6 +108,8 @@ class WorkerController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users,email,' . $worker->id,
+                'phone' => 'nullable|string|max:20',
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'status' => 'nullable|string|in:active,inactive',
             ]);
 
@@ -115,7 +123,22 @@ class WorkerController extends Controller
                 unset($validated['status']);
             }
 
+            // Manejo de foto
+            if ($request->hasFile('photo')) {
+                // eliminar anterior
+                if ($worker->photo) {
+                    $this->deleteImage($worker->photo);
+                }
+
+                // subir nueva
+                $path = $this->uploadImage($request->file('photo'), 'users');
+                if ($path) {
+                    $validated['photo'] = $path;
+                }
+            }
+
             $worker->update($validated);
+            $worker->refresh();
 
             // Si es una petición AJAX, devolver JSON
             if ($request->ajax()) {
@@ -126,6 +149,8 @@ class WorkerController extends Controller
                         'id' => $worker->id,
                         'name' => $worker->name,
                         'email' => $worker->email,
+                        'phone' => $worker->phone,
+                        'photo' => $worker->photo ? asset('storage/' . $worker->photo) : null,
                         'status' => $worker->email_verified_at ? 'active' : 'inactive'
                     ]
                 ]);

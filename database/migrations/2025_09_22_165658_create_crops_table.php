@@ -14,7 +14,12 @@ return new class extends Migration
         Schema::create('crops', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->string('status')->default('active')->index();
+            $table->text('description')->nullable();
+            $table->string('variety')->nullable();
+            $table->decimal('yield_per_hectare', 10, 2)->nullable(); // kg/ha
+            $table->foreignId('plot_id')->nullable()->constrained('plots')->onDelete('set null');
+            $table->string('photo')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active')->index();
             $table->timestamps();
         });
     }

@@ -93,7 +93,7 @@
                 </label>
                 <div class="relative">
                     <span class="absolute left-3 top-2 text-gray-500">$</span>
-                    <input type="number" name="unit_cost" id="unit_cost" step="0.01" min="0" 
+                    <input type="number" name="unit_cost" id="unit_cost" step="1" min="0" 
                            value="{{ old('unit_cost') }}"
                            class="w-full border border-gray-300 rounded-md pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('unit_cost') border-red-500 @enderror">
                 </div>
@@ -159,8 +159,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Formatear el total con 2 decimales y separador de miles
         const formattedTotal = new Intl.NumberFormat('es-CO', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
         }).format(total);
         
         // Actualizar el campo de precio total
@@ -173,6 +173,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Calcular al cargar la página si hay valores
     calculateTotal();
+    
+    // Validación de tipo de entrada (compra requiere precio > 0)
+    const typeSelect = document.getElementById('type');
+    
+    function toggleUnitCostRequirement() {
+        const isPurchase = typeSelect.value === 'purchase';
+        const label = document.querySelector('label[for="unit_cost"]');
+        
+        if (isPurchase) {
+            unitCostInput.setAttribute('required', 'required');
+            unitCostInput.setAttribute('min', '1'); // Debe ser mayor a 0
+            if (label && !label.querySelector('.text-red-500')) {
+                label.innerHTML += ' <span class="text-red-500">*</span>';
+            }
+        } else {
+            unitCostInput.removeAttribute('required');
+            unitCostInput.setAttribute('min', '0'); // Puede ser 0 para otros tipos
+            if (label && label.querySelector('.text-red-500')) {
+                label.querySelector('.text-red-500').remove();
+            }
+        }
+    }
+    
+    typeSelect.addEventListener('change', toggleUnitCostRequirement);
+    toggleUnitCostRequirement(); // Inicializar estado
 });
 </script>
 @endsection

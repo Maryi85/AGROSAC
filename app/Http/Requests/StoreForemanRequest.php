@@ -24,6 +24,8 @@ class StoreForemanRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'photo' => ['nullable', 'image', 'max:2048'], // Max 2MB
         ];
     }
 
@@ -39,6 +41,8 @@ class StoreForemanRequest extends FormRequest
             'email.email' => 'El email debe tener un formato válido.',
             'email.unique' => 'Ya existe un usuario con este email.',
             'email.max' => 'El email no puede tener más de 255 caracteres.',
+            'photo.image' => 'El archivo debe ser una imagen.',
+            'photo.max' => 'La imagen no puede pesar más de 2MB.',
         ];
     }
 }

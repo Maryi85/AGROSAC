@@ -40,9 +40,10 @@
                     <!-- Teléfono -->
                     <div>
                         <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                        <input type="text" id="phone" name="phone" value="{{ old('phone') }}" 
+                        <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                class="w-full border border-emerald-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('phone') border-red-500 @enderror" 
-                               placeholder="Ej: +57 300 000 0000">
+                               placeholder="Ej: 3000000000">
                         @error('phone')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror

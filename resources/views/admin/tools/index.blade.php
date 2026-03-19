@@ -11,14 +11,14 @@
 <div class="bg-white border rounded p-4">
     <!-- Filtros de búsqueda -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <div class="flex items-end justify-between gap-4 mb-4">
-            <h3 class="text-lg font-semibold text-emerald-700">Buscar Herramientas</h3>
-            <div class="flex gap-2">
-                <a href="{{ route(route_prefix() . 'tools.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded font-medium transition-colors">
+        <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+            <h3 class="text-lg font-semibold text-emerald-700 w-full sm:w-auto">Buscar Herramientas</h3>
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                <a href="{{ route(route_prefix() . 'tools.pdf', request()->query()) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded font-medium transition-colors">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                     <span>Descargar PDF</span>
                 </a>
-                <a href="{{ route(route_prefix() . 'tools.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded font-medium transition-colors">
+                <a href="{{ route(route_prefix() . 'tools.create') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded font-medium transition-colors">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                     <span>Nueva Herramienta</span>
                 </a>
@@ -28,8 +28,8 @@
         <x-search-bar placeholder="Buscar herramientas..." />
     </div>
 
-    <!-- Tabla de herramientas -->
-    <div class="overflow-x-auto">
+    <!-- Tabla de herramientas (Desktop) -->
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
@@ -49,7 +49,7 @@
                 <tr class="border-b hover:bg-gray-50" data-tool-id="{{ $tool->id }}">
                     <td class="py-3 pr-4">
                         @if(!empty($tool->photo))
-                            <img src="{{ asset('storage/' . $tool->photo) }}" alt="{{ $tool->name }}" class="w-12 h-12 object-cover rounded-full border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <img src="{{ storage_asset($tool->photo) }}" alt="{{ $tool->name }}" class="w-12 h-12 object-cover rounded-full border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="w-12 h-12 bg-gray-100 rounded-full border border-gray-200 flex items-center justify-center hidden">
                                 <i data-lucide="image" class="w-5 h-5 text-gray-400"></i>
                             </div>
@@ -112,7 +112,6 @@
                     </td>
                     <td class="py-3 pr-4 text-right">
                         <div class="flex items-center gap-1 justify-end">
-                            <!-- Ver detalles -->
                             <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-100 text-blue-600 view-tool-btn" 
                                     data-tool-id="{{ $tool->id }}"
                                     data-tool-name="{{ $tool->name }}"
@@ -126,9 +125,6 @@
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                             
-
-                            
-                            <!-- Editar -->
                             <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-100 text-emerald-600 edit-tool-btn" 
                                     data-tool-id="{{ $tool->id }}"
                                     data-tool-name="{{ $tool->name }}"
@@ -136,18 +132,17 @@
                                     data-tool-status="{{ $tool->status }}"
                                     data-tool-total-qty="{{ $tool->total_qty }}"
                                     data-tool-available-qty="{{ $tool->available_qty }}"
-                                    data-tool-photo="{{ $tool->photo ? asset('storage/' . $tool->photo) : '' }}"
+                                    data-tool-photo="{{ $tool->photo ? storage_asset($tool->photo) : '' }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
                             
-                            <!-- Eliminar -->
-                            @if($tool->loans()->where('status', 'active')->exists())
-                                <button class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" title="No se puede eliminar una herramienta con préstamos activos" disabled>
+                            @if($tool->entries()->exists() || $tool->loans()->exists())
+                                <button class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" title="No se puede eliminar" disabled>
                                     <i data-lucide="trash" class="w-4 h-4"></i>
                                 </button>
                             @else
-                                <form method="POST" action="{{ route(route_prefix() . 'tools.destroy', $tool) }}" class="inline" data-confirm="true" data-message="¿Eliminar esta herramienta? Esta acción no se puede deshacer.">
+                                <form method="POST" action="{{ route(route_prefix() . 'tools.destroy', $tool) }}" class="inline" data-confirm="true" data-message="¿Eliminar esta herramienta?">
                                     @csrf
                                     @method('DELETE')
                                     <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
@@ -165,6 +160,121 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+
+    <!-- Cards Vista Móvil -->
+    <div class="md:hidden space-y-4">
+        @forelse ($tools as $tool)
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden" data-tool-id="{{ $tool->id }}">
+            <div class="p-4 flex gap-4">
+                <!-- Foto -->
+                <div class="flex-shrink-0">
+                    @if(!empty($tool->photo))
+                        <img src="{{ storage_asset($tool->photo) }}" alt="{{ $tool->name }}" class="w-16 h-16 object-cover rounded-lg border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center hidden">
+                            <i data-lucide="image" class="w-8 h-8 text-gray-400"></i>
+                        </div>
+                    @else
+                        <div class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                            <i data-lucide="image" class="w-8 h-8 text-gray-400"></i>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Info Principal -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-lg leading-tight truncate tool-name">{{ $tool->name }}</h4>
+                            <p class="text-sm text-gray-500 tool-category">{{ ucfirst(str_replace('_', ' ', $tool->category)) }}</p>
+                        </div>
+                        @php
+                            $inventoryStatus = $tool->inventory_status ?? 'available';
+                            $statusClasses = [
+                                'available' => 'bg-green-100 text-green-700',
+                                'damaged' => 'bg-orange-100 text-orange-700',
+                                'lost' => 'bg-red-100 text-red-700',
+                                'empty' => 'bg-gray-100 text-gray-700',
+                            ];
+                            $statusLabels = [
+                                'available' => 'Disp.',
+                                'damaged' => 'Dañada',
+                                'lost' => 'Perdida',
+                                'empty' => 'Vacía',
+                            ];
+                        @endphp
+                        <span class="px-2 py-1 text-xs font-semibold rounded {{ $statusClasses[$inventoryStatus] }}">
+                            {{ $statusLabels[$inventoryStatus] }}
+                        </span>
+                    </div>
+
+                    <!-- Estadísticas Rápidas -->
+                    <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="block text-xs text-gray-500">Disponible</span>
+                            <span class="font-bold {{ $tool->available_qty > 0 ? 'text-green-600' : 'text-gray-500' }}">{{ $tool->available_qty }}</span>
+                        </div>
+                         <div class="bg-gray-50 p-2 rounded">
+                            <span class="block text-xs text-gray-500">Total</span>
+                            <span class="font-bold text-gray-700">{{ $tool->total_entries }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción (Grandes) -->
+            <div class="grid grid-cols-3 border-t border-gray-100 divide-x divide-gray-100 bg-gray-50">
+                <button type="button" class="py-3 flex items-center justify-center gap-2 text-blue-600 font-medium hover:bg-blue-50 active:bg-blue-100 transition-colors view-tool-btn"
+                        data-tool-id="{{ $tool->id }}"
+                        data-tool-name="{{ $tool->name }}"
+                        data-tool-category="{{ $tool->category }}"
+                        data-tool-status="{{ $tool->status }}"
+                        data-tool-total-entries="{{ $tool->total_entries }}"
+                        data-tool-available-qty="{{ $tool->available_qty }}"
+                        data-tool-created="{{ $tool->created_at->format('d/m/Y H:i') }}"
+                        data-tool-updated="{{ $tool->updated_at->format('d/m/Y H:i') }}">
+                    <i data-lucide="eye" class="w-5 h-5"></i>
+                    <span>Ver</span>
+                </button>
+
+                <button type="button" class="py-3 flex items-center justify-center gap-2 text-emerald-600 font-medium hover:bg-emerald-50 active:bg-emerald-100 transition-colors edit-tool-btn"
+                        data-tool-id="{{ $tool->id }}"
+                        data-tool-name="{{ $tool->name }}"
+                        data-tool-category="{{ $tool->category }}"
+                        data-tool-status="{{ $tool->status }}"
+                        data-tool-total-qty="{{ $tool->total_qty }}"
+                        data-tool-available-qty="{{ $tool->available_qty }}"
+                        data-tool-photo="{{ $tool->photo ? storage_asset($tool->photo) : '' }}">
+                    <i data-lucide="pencil" class="w-5 h-5"></i>
+                    <span>Editar</span>
+                </button>
+
+                @if($tool->entries()->exists() || $tool->loans()->exists())
+                    <button class="py-3 flex items-center justify-center gap-2 text-gray-400 font-medium cursor-not-allowed opacity-60">
+                         <i data-lucide="trash" class="w-5 h-5"></i>
+                         <span>Borrar</span>
+                    </button>
+                @else
+                    <form method="POST" action="{{ route(route_prefix() . 'tools.destroy', $tool) }}" class="flex-1 flex" data-confirm="true" data-message="¿Eliminar esta herramienta?">
+                        @csrf
+                        @method('DELETE')
+                        <button class="flex-1 py-3 flex items-center justify-center gap-2 text-red-600 font-medium hover:bg-red-50 active:bg-red-100 transition-colors">
+                            <i data-lucide="trash" class="w-5 h-5"></i>
+                            <span>Borrar</span>
+                        </button>
+                    </form>
+                @endif
+            </div>
+        </div>
+        @empty
+        <div class="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-4">
+                <i data-lucide="wrench" class="w-6 h-6 text-emerald-600"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900">No hay herramientas</h3>
+            <p class="text-gray-500 mt-1">Registra herramientas para verlas aquí.</p>
+        </div>
+        @endforelse
     </div>
 
     <div class="mt-4">{{ $tools->links() }}</div>
@@ -253,7 +363,6 @@
         </div>
         <form id="editForm" class="space-y-4" enctype="multipart/form-data">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="_method" value="PUT">
             
             <!-- Nombre -->
             <div>
@@ -290,14 +399,14 @@
                 <label class="block text-sm mb-1 text-emerald-800">Foto de la Herramienta</label>
                 <div id="editPhotoPreview" class="mb-3">
                     <p class="text-sm text-gray-600 mb-2">Foto actual:</p>
-                    <img id="editCurrentPhoto" src="" alt="Foto actual" class="max-w-xs rounded border border-emerald-200" style="display: none;">
+                    <img id="editCurrentPhoto" src="" alt="Foto actual" class="w-32 h-32 object-cover rounded border border-emerald-200" style="display: none;">
                 </div>
                 <input type="file" name="photo" id="editPhoto" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif,.JPG,.JPEG,.PNG,.GIF" 
                        class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                 <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, JPEG, PNG, GIF. Tamaño máximo: 2MB. Dejar vacío para mantener la foto actual.</p>
                 <div id="editPhotoNewPreview" class="mt-3 hidden">
                     <p class="text-sm text-gray-600 mb-2">Nueva foto:</p>
-                    <img id="editPhotoNewPreviewImg" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
+                    <img id="editPhotoNewPreviewImg" src="" alt="Vista previa" class="w-32 h-32 object-cover rounded border border-emerald-200">
                 </div>
             </div>
             
@@ -327,7 +436,6 @@ function openEditModal(id, name, category, status, total_qty, available_qty, pho
     document.getElementById('editName').value = name;
     document.getElementById('editCategory').value = category;
     document.getElementById('editStatus').value = status;
-    // Nota: total_qty y available_qty son campos computados, no se editan directamente
     
     // Manejar la foto
     const photoPreview = document.getElementById('editPhotoPreview');

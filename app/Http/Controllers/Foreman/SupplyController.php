@@ -151,8 +151,33 @@ class SupplyController extends Controller
             }
         }
         
+        // Detectar si el unit_cost cambió
+        $costChanged = false;
+        if (isset($data['unit_cost']) && $data['unit_cost'] != $supply->unit_cost) {
+            $costChanged = true;
+        }
+
         $supply->update($data);
         $supply->refresh();
+        
+        // Actualizar el costo total en movimientos y consumos históricos si cambió el costo unitario
+        if ($costChanged) {
+            foreach ($supply->movements as $movement) {
+                // Para ingresos ('in'), total_cost es qty * unit_cost
+                if ($movement->type === 'in') {
+                    $movement->update([
+                        'total_cost' => $movement->qty * $supply->unit_cost
+                    ]);
+                }
+            }
+
+            foreach ($supply->consumptions as $consumption) {
+                $consumption->update([
+                    'total_cost' => $consumption->qty * $supply->unit_cost
+                ]);
+            }
+        }
+
         
         // Si es una petición AJAX, devolver JSON
         if ($request->ajax() || $request->wantsJson()) {
@@ -183,9 +208,19 @@ class SupplyController extends Controller
         }
 
         $supplyName = $supply->name;
-        $supply->delete();
-        return redirect()->route('foreman.supplies.index')
-            ->with('status', 'Insumo eliminado correctamente');
+
+        try {
+            $supply->delete();
+            return redirect()->route('foreman.supplies.index')
+                ->with('status', 'Insumo eliminado correctamente');
+        } catch (\Illuminate\Database\QueryException $e) {
+            $errorCode = $e->errorInfo[1] ?? 0;
+            if ($errorCode == 1451) {
+                return redirect()->route('foreman.supplies.index')
+                    ->with('error', 'No se puede eliminar el insumo porque tiene movimientos o registros asociados en el sistema. Es recomendable cambiar su estado a "Inactivo" en lugar de eliminarlo.');
+            }
+            throw $e;
+        }
     }
 
     public function downloadPdf(Request $request)

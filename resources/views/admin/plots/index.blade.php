@@ -9,13 +9,13 @@
 @section('content')
 <div class="bg-white border rounded p-4">
 
-    <!-- Botón para agregar nuevo lote -->
-    <div class="mb-6 flex justify-between items-center">
-        <a href="{{ route('admin.plots.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+    {{-- Responsive: wrap on mobile --}}
+    <div class="mb-6 flex flex-wrap gap-2 justify-between items-center">
+        <a href="{{ route('admin.plots.create') }}" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>Nuevo Lote</span>
         </a>
-        <a href="{{ route('admin.plots.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+        <a href="{{ route('admin.plots.pdf', request()->query()) }}" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
             <i data-lucide="file-text" class="w-5 h-5"></i>
             <span>Descargar PDF</span>
         </a>
@@ -134,7 +134,7 @@
         </table>
         <!-- Modal de edición -->
         <div x-show="open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto p-4">
-            <div class="bg-white border rounded p-6 w-full max-w-4xl my-4" @click.away="closeModal()">
+            <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-4xl my-4 max-h-[94vh] overflow-y-auto" @click.away="closeModal()">
                 <h3 class="text-lg font-semibold text-emerald-700 mb-4">Editar Lote</h3>
                 <form method="POST" :action="'/admin/plots/' + plotId" class="space-y-4" @submit.prevent="submitForm">
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
@@ -163,8 +163,9 @@
                             <span class="text-xs text-emerald-800">Área calculada: </span>
                             <span id="calculatedAreaDisplayModal" class="text-xs font-semibold text-emerald-700">0.0000 ha</span>
                         </div>
-                        <div id="plotMapModal" style="width: 100%; height: 400px; border: 2px solid #10b981; border-radius: 8px; overflow: hidden; position: relative; background-color: #f0f0f0;"></div>
-                        <div class="mt-2 grid grid-cols-2 gap-4">
+                        {{-- Responsive: 1 col on mobile, 2 on sm+ --}}
+                        <div id="plotMapModal" style="width: 100%; height: clamp(220px, 45vw, 400px); border: 2px solid #10b981; border-radius: 8px; overflow: hidden; position: relative; background-color: #f0f0f0;"></div>
+                        <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs mb-1 text-emerald-800">Latitud (Centro)</label>
                                 <input type="text" name="latitude" id="latitudeModal" x-model="latitude" readonly class="w-full border border-emerald-200 rounded px-3 py-2 bg-gray-50 text-xs" />
@@ -182,7 +183,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm mb-1 text-emerald-800">Área (ha) <span class="text-red-500">*</span></label>
-                            <input type="number" step="0.01" min="0.01" name="area" id="areaModal" x-model="area" class="w-full border border-emerald-200 rounded px-3 py-2" :class="errors.area ? 'border-red-500' : ''" required />
+                            <input type="number" step="1" min="0" name="area" id="areaModal" x-model="area" class="w-full border border-emerald-200 rounded px-3 py-2" :class="errors.area ? 'border-red-500' : ''" required />
                             <div x-show="errors.area" class="text-sm text-red-600 mt-1" x-text="errors.area"></div>
                         </div>
                         <div>
@@ -199,9 +200,10 @@
                         <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1"></i>
                         <span>Al inhabilitar este lote, asegúrese de que no tenga cultivos activos.</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button" class="px-3 py-2 border rounded inline-flex items-center gap-2" @click="closeModal()"><i data-lucide="x" class="w-4 h-4"></i><span>Cancelar</span></button>
-                        <button type="submit" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center gap-2 transition-colors"><i data-lucide="save" class="w-4 h-4"></i><span>Actualizar</span></button>
+                    {{-- Responsive: full-width on mobile --}}
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" class="w-full sm:w-auto px-3 py-2 border rounded inline-flex items-center justify-center gap-2" @click="closeModal()"><i data-lucide="x" class="w-4 h-4"></i><span>Cancelar</span></button>
+                        <button type="submit" class="w-full sm:w-auto px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded inline-flex items-center justify-center gap-2 transition-colors"><i data-lucide="save" class="w-4 h-4"></i><span>Actualizar</span></button>
                     </div>
                 </form>
             </div>
@@ -439,7 +441,7 @@ document.addEventListener('alpine:init', () => {
                                 // Calcular y mostrar área
                                 const areaHa = this.calculatePolygonArea(boundaryData.coordinates[0]);
                                 document.getElementById('calculatedAreaDisplayModal').textContent = areaHa.toFixed(4) + ' ha';
-                                document.getElementById('areaModal').value = areaHa.toFixed(2);
+                                document.getElementById('areaModal').value = areaHa.toFixed(0);
                             }
                         } catch (e) {
                             console.error('Error cargando polígono del lote:', e);
@@ -504,7 +506,26 @@ document.addEventListener('alpine:init', () => {
                                         'line-dasharray': [4, 2]
                                     }
                                 });
-                                
+
+                                // Agregar capa de etiquetas con el nombre de cada lote
+                                this.plotMap.addLayer({
+                                    'id': 'existing-plots-labels',
+                                    'type': 'symbol',
+                                    'source': 'existing-plots',
+                                    'layout': {
+                                        'text-field': ['get', 'name'],
+                                        'text-size': 13,
+                                        'text-anchor': 'center',
+                                        'text-allow-overlap': true,
+                                        'text-ignore-placement': true
+                                    },
+                                    'paint': {
+                                        'text-color': '#7f1d1d',
+                                        'text-halo-color': 'rgba(255, 255, 255, 0.85)',
+                                        'text-halo-width': 2
+                                    }
+                                });
+
                                 console.log('Lotes existentes agregados correctamente al modal');
                                 
                                 // Agregar marcadores para los lotes existentes si tienen coordenadas
@@ -679,8 +700,8 @@ document.addEventListener('alpine:init', () => {
                 const areaHa = this.calculatePolygonArea(polygon.geometry.coordinates[0]);
                 if (areaDisplay) areaDisplay.textContent = areaHa.toFixed(4) + ' ha';
                 if (areaInput) {
-                    areaInput.value = areaHa.toFixed(2);
-                    this.area = areaHa.toFixed(2);
+                    areaInput.value = areaHa.toFixed(0);
+                    this.area = areaHa.toFixed(0);
                 }
 
             } else {

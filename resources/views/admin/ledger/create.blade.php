@@ -1,7 +1,8 @@
 @extends('admin.layout')
 
 @section('header')
-<h2 class="text-lg font-semibold text-emerald-700">Registrar Movimiento Contable</h2>
+<h2 class="font-bold text-gray-800">Registrar Movimiento</h2>
+<p class="text-gray-600 mt-1">Ingresa un nuevo registro contable</p>
 @endsection
 
 @section('content')
@@ -48,7 +49,7 @@
         <!-- Monto -->
         <div>
             <label for="amount" class="block text-sm mb-1 text-emerald-800">Monto</label>
-            <input type="number" step="0.01" min="0.01" id="amount" name="amount" value="{{ old('amount') }}" 
+            <input type="number" step="1" min="0" id="amount" name="amount" value="{{ old('amount') }}" 
                    class="w-full border border-emerald-200 rounded px-3 py-2 @error('amount') border-red-500 @enderror" 
                    required />
             @error('amount')

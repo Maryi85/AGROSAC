@@ -24,6 +24,7 @@ class CropController extends Controller
         
         $crops = Crop::query()
             ->with('plot')
+            ->withCount(['tasks', 'supplyConsumptions', 'ledgerEntries'])
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($status !== '', fn ($q) => $q->where('status', $status))
             ->orderBy('status', 'desc')
@@ -114,21 +115,10 @@ class CropController extends Controller
             ->with('status', 'Cultivo creado correctamente');
     }
 
-    public function edit(Crop $crop): View
+    public function edit(Crop $crop): RedirectResponse
     {
-        // Obtener lotes activos que NO tienen un cultivo activo, 
-        // o el lote actual del cultivo (para permitir mantenerlo)
-        $plots = Plot::where('status', 'active')
-            ->where(function ($query) use ($crop) {
-                $query->whereDoesntHave('crops', function ($q) {
-                    $q->where('status', 'active');
-                })
-                ->orWhere('id', $crop->plot_id); // Incluir el lote actual del cultivo
-            })
-            ->orderBy('name')
-            ->get();
-        
-        return view('admin.crops.edit', compact('crop', 'plots'));
+        // La edición se realiza mediante el modal en el listado de cultivos
+        return redirect()->route('admin.crops.index');
     }
 
     public function update(UpdateCropRequest $request, Crop $crop): RedirectResponse|JsonResponse

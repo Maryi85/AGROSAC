@@ -27,7 +27,7 @@ class ForemanController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%');
+                    ->orWhere('email', 'like', '%' . $search . '%');
             });
         }
 
@@ -35,7 +35,8 @@ class ForemanController extends Controller
         if ($request->filled('status') && $request->status !== 'all') {
             if ($request->status === 'active') {
                 $query->whereNotNull('email_verified_at');
-            } else {
+            }
+            else {
                 $query->whereNull('email_verified_at');
             }
         }
@@ -54,10 +55,32 @@ class ForemanController extends Controller
     {
         // Generar contraseña temporal
         $tempPassword = Str::random(8);
-        
+        $data = $request->validated();
+
+        // Procesar foto si se envía
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $originalName = $photo->getClientOriginalName();
+            $extension = $photo->getClientOriginalExtension();
+            $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+            $photoName = time() . '_' . $safeName . '.' . $extension;
+
+            $directory = storage_path('app/public/photos/users');
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+
+            $path = $photo->storeAs('photos/users', $photoName, 'public');
+            if ($path) {
+                $data['photo'] = $path;
+            }
+        }
+
         $foreman = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'photo' => $data['photo'] ?? null,
             'password' => Hash::make($tempPassword),
             'role' => 'foreman',
             'email_verified_at' => now(), // Activar inmediatamente
@@ -66,9 +89,10 @@ class ForemanController extends Controller
         // Enviar correo con las credenciales
         try {
             $foreman->notify(new ForemanCredentialsNotification($tempPassword));
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Error al enviar correo de credenciales al mayordomo: ' . $e->getMessage());
-            // Continuar aunque falle el envío del correo
+        // Continuar aunque falle el envío del correo
         }
 
         return redirect()->route('admin.foremen.index')
@@ -86,14 +110,10 @@ class ForemanController extends Controller
         return view('admin.foremen.show', compact('foreman'));
     }
 
-    public function edit(User $foreman): View
+    public function edit(User $foreman): RedirectResponse
     {
-        // Verificar que sea un mayordomo
-        if ($foreman->role !== 'foreman') {
-            abort(404);
-        }
-
-        return view('admin.foremen.edit', compact('foreman'));
+        // La edición se realiza mediante el modal en el listado de mayordomos
+        return redirect()->route('admin.foremen.index');
     }
 
     public function update(UpdateForemanRequest $request, User $foreman): RedirectResponse|JsonResponse
@@ -105,25 +125,26 @@ class ForemanController extends Controller
 
         try {
             $data = $request->validated();
-            
-            
+
+
             // Debug temporal
             Log::info('Status field received:', [
                 'has_status' => $request->has('status'),
                 'status_value' => $request->get('status')
             ]);
-            
+
             // Manejar el cambio de estado si se proporciona
             if ($request->has('status')) {
                 if ($request->status === 'active') {
                     $data['email_verified_at'] = now();
-                } else {
+                }
+                else {
                     // Verificar que no sea el último mayordomo activo
                     $activeForemanCount = User::where('role', 'foreman')
                         ->whereNotNull('email_verified_at')
                         ->where('id', '!=', $foreman->id)
                         ->count();
-                    
+
                     if ($activeForemanCount < 1) {
                         if ($request->ajax()) {
                             return response()->json([
@@ -131,24 +152,48 @@ class ForemanController extends Controller
                                 'message' => 'No se puede desactivar el último mayordomo activo del sistema.'
                             ]);
                         }
-                        
+
                         return redirect()->route('admin.foremen.index')
                             ->with('error', 'No se puede desactivar el último mayordomo activo del sistema.');
                     }
-                    
+
                     $data['email_verified_at'] = null;
                 }
                 unset($data['status']); // Remover el campo status ya que no existe en la tabla
             }
-            
+
+            // Manejo de foto
+            if ($request->hasFile('photo')) {
+                // eliminar anterior
+                if ($foreman->photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($foreman->photo)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($foreman->photo);
+                }
+
+                $photo = $request->file('photo');
+                $originalName = $photo->getClientOriginalName();
+                $extension = $photo->getClientOriginalExtension();
+                $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+                $photoName = time() . '_' . $safeName . '.' . $extension;
+
+                $directory = storage_path('app/public/photos/users');
+                if (!\Illuminate\Support\Facades\File::exists($directory)) {
+                    \Illuminate\Support\Facades\File::makeDirectory($directory, 0755, true);
+                }
+
+                $path = $photo->storeAs('photos/users', $photoName, 'public');
+                if ($path) {
+                    $data['photo'] = $path;
+                }
+            }
+
             $foreman->update($data);
-            
+
 
             // Si es una petición AJAX, devolver JSON
             if ($request->ajax()) {
                 // Refrescar el modelo para obtener los datos actualizados
                 $foreman->refresh();
-                
+
                 $response = [
                     'success' => true,
                     'message' => 'Mayordomo actualizado correctamente',
@@ -156,17 +201,21 @@ class ForemanController extends Controller
                         'id' => $foreman->id,
                         'name' => $foreman->name,
                         'email' => $foreman->email,
-                        'status' => $foreman->email_verified_at ? 'active' : 'inactive'
+                        'phone' => $foreman->phone,
+                        'photo' => $foreman->photo ? asset('storage/' . $foreman->photo) : null,
+                        'status' => $foreman->email_verified_at ? 'active' : 'inactive',
+                        'destroy_route' => route('admin.foremen.destroy', $foreman)
                     ]
                 ];
-                
-                
+
+
                 return response()->json($response);
             }
 
             return redirect()->route('admin.foremen.index')
                 ->with('status', 'Mayordomo actualizado correctamente');
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             // Si es una petición AJAX, devolver error JSON
             if ($request->ajax()) {
                 return response()->json([
@@ -180,7 +229,7 @@ class ForemanController extends Controller
         }
     }
 
-    public function destroy(User $foreman): RedirectResponse
+    public function destroy(User $foreman, Request $request): RedirectResponse|JsonResponse
     {
         // Verificar que sea un mayordomo
         if ($foreman->role !== 'foreman') {
@@ -189,18 +238,44 @@ class ForemanController extends Controller
 
         // Verificar que el mayordomo esté inactivo
         if ($foreman->email_verified_at) {
-            return redirect()->route('admin.foremen.index')
-                ->with('error', 'No se puede eliminar un mayordomo activo. Debe desactivarlo primero.');
+            $message = 'No se puede eliminar un mayordomo activo. Debe desactivarlo primero.';
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('admin.foremen.index')->with('error', $message);
         }
 
         // Verificar que no sea el último mayordomo
         $foremanCount = User::where('role', 'foreman')->count();
         if ($foremanCount <= 1) {
-            return redirect()->route('admin.foremen.index')
-                ->with('error', 'No se puede eliminar el último mayordomo del sistema.');
+            $message = 'No se puede eliminar el último mayordomo del sistema.';
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('admin.foremen.index')->with('error', $message);
         }
 
-        $foreman->delete();
+        try {
+            $foreman->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            $errorCode = $e->errorInfo[1] ?? 0;
+            if ($errorCode == 1451) {
+                $message = 'No se puede eliminar el mayordomo porque tiene registros asociados en el sistema (préstamos, tareas, etc.). Es recomendable desactivarlo en lugar de eliminarlo.';
+                if ($request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return redirect()->route('admin.foremen.index')->with('error', $message);
+            }
+            throw $e;
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Mayordomo eliminado correctamente',
+                'id' => $foreman->id
+            ]);
+        }
 
         return redirect()->route('admin.foremen.index')
             ->with('status', 'Mayordomo eliminado correctamente');
@@ -219,17 +294,17 @@ class ForemanController extends Controller
             $activeForemanCount = User::where('role', 'foreman')
                 ->whereNotNull('email_verified_at')
                 ->count();
-            
+
             if ($activeForemanCount <= 1) {
                 $errorMessage = 'No se puede desactivar el último mayordomo activo del sistema.';
-                
+
                 if ($request->ajax()) {
                     return response()->json([
                         'success' => false,
                         'message' => $errorMessage
                     ]);
                 }
-                
+
                 return redirect()->route('admin.foremen.index')
                     ->with('error', $errorMessage);
             }
@@ -239,7 +314,8 @@ class ForemanController extends Controller
         if ($foreman->email_verified_at) {
             $foreman->update(['email_verified_at' => null]);
             $message = 'Mayordomo desactivado correctamente';
-        } else {
+        }
+        else {
             $foreman->update(['email_verified_at' => now()]);
             $message = 'Mayordomo activado correctamente';
         }
@@ -253,7 +329,9 @@ class ForemanController extends Controller
                     'id' => $foreman->id,
                     'name' => $foreman->name,
                     'email' => $foreman->email,
-                    'status' => $foreman->email_verified_at ? 'active' : 'inactive'
+                    'phone' => $foreman->phone,
+                    'status' => $foreman->email_verified_at ? 'active' : 'inactive',
+                    'destroy_route' => route('admin.foremen.destroy', $foreman)
                 ]
             ]);
         }
@@ -271,14 +349,15 @@ class ForemanController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%');
+                    ->orWhere('email', 'like', '%' . $search . '%');
             });
         }
 
         if ($request->filled('status') && $request->status !== 'all') {
             if ($request->status === 'active') {
                 $query->whereNotNull('email_verified_at');
-            } else {
+            }
+            else {
                 $query->whereNull('email_verified_at');
             }
         }

@@ -13,7 +13,8 @@ class ToolEntryController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = ToolEntry::with(['tool', 'createdBy']);
+        $query = ToolEntry::with(['tool', 'createdBy'])
+            ->whereNotIn('type', ['damage', 'loss']);
 
         // Filtro por herramienta
         if ($request->filled('tool_id') && $request->tool_id !== 'all') {
@@ -53,7 +54,6 @@ class ToolEntryController extends Controller
             'donation' => 'Donación',
             'transfer' => 'Transferencia',
             'repair' => 'Reparación',
-            'damage' => 'Daño',
         ];
 
         return view('admin.tools.entries.index', compact('entries', 'tools', 'types'));
@@ -86,7 +86,16 @@ class ToolEntryController extends Controller
             'tool_id' => 'required|exists:tools,id',
             'quantity' => 'required|integer|min:1',
             'type' => 'required|in:purchase,donation,transfer,repair,damage',
-            'unit_cost' => 'nullable|numeric|min:0',
+            'unit_cost' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->type === 'purchase' && (is_null($value) || $value <= 0)) {
+                        $fail('El costo unitario debe ser mayor a 0 para compras.');
+                    }
+                },
+            ],
             'entry_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',
             'invoice_number' => 'nullable|string|max:255',
@@ -136,7 +145,16 @@ class ToolEntryController extends Controller
             'tool_id' => 'required|exists:tools,id',
             'quantity' => 'required|integer|min:1',
             'type' => 'required|in:purchase,donation,transfer,repair,damage',
-            'unit_cost' => 'nullable|numeric|min:0',
+            'unit_cost' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->type === 'purchase' && (is_null($value) || $value <= 0)) {
+                        $fail('El costo unitario debe ser mayor a 0 para compras.');
+                    }
+                },
+            ],
             'entry_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',
             'invoice_number' => 'nullable|string|max:255',
@@ -151,6 +169,12 @@ class ToolEntryController extends Controller
 
     public function destroy(ToolEntry $toolEntry): RedirectResponse
     {
+        // Validar que la entrada esté intacta
+        if ($toolEntry->available_qty < $toolEntry->quantity) {
+             return redirect()->route('admin.tool-entries.index')
+                ->with('error', 'No se puede eliminar esta entrada porque ya ha sido utilizada (préstamos, daños o pérdidas).');
+        }
+
         $entryInfo = $toolEntry->tool->name . ' (Entrada: ' . $toolEntry->quantity . ')';
         $toolEntry->delete();
         return redirect()->route('admin.tool-entries.index')

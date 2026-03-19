@@ -9,10 +9,10 @@
 @section('content')
 <!-- Filtros -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-    <div class="flex items-end justify-between gap-4 mb-4">
-        <h3 class="text-lg font-semibold text-emerald-700">Buscar Herramientas</h3>
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+        <h3 class="text-lg font-semibold text-emerald-700 w-full sm:w-auto">Buscar Herramientas</h3>
         <a href="{{ route('foreman.tool-damage.create') }}" 
-           class="inline-flex items-center gap-2 px-6 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded font-medium transition-colors">
+           class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 rounded font-medium transition-colors w-full sm:w-auto">
             <i data-lucide="alert-triangle" class="w-5 h-5"></i>
             <span>Registrar Daño/Pérdida</span>
         </a>
@@ -44,7 +44,7 @@
                 <tr class="border-b hover:bg-gray-50">
                     <td class="py-3 px-4">
                         @if($tool->photo)
-                            <img src="{{ asset('storage/' . $tool->photo) }}" alt="{{ $tool->name }}" class="w-10 h-10 rounded-full object-cover border border-gray-200">
+                            <img src="{{ storage_asset($tool->photo) }}" alt="{{ $tool->name }}" class="w-10 h-10 rounded-full object-cover border border-gray-200">
                         @else
                             <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
                                 <i data-lucide="image" class="w-5 h-5"></i>
@@ -151,3 +151,4 @@
     @endif
 </div>
 @endsection
+

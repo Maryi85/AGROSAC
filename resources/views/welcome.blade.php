@@ -10,10 +10,12 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
 
-    <!-- Styles -->
-        @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        <!-- Scripts and Styles -->
+        @if (file_exists(public_path('hot')) || file_exists(public_path('build/manifest.json')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @else
+        @endif
+
+        @if (!file_exists(public_path('build/manifest.json')) && !file_exists(public_path('hot')))
             <style>
             * {
                 margin: 0;
@@ -440,7 +442,79 @@
             .nav-links a:hover {
                 opacity: 0.8;
             }
+
+            /* ===== ESTILOS PARA MENÚ HAMBURGUESA ===== */
+            .menu-toggle {
+                display: none;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                padding: 10px;
+                z-index: 20;
+            }
+
+            .menu-toggle span {
+                display: block;
+                width: 25px;
+                height: 3px;
+                background: white;
+                margin: 5px 0;
+                transition: all 0.3s ease;
+                border-radius: 3px;
+            }
+
+            .mobile-menu {
+                background: transparent;
+                backdrop-filter: blur(10px);
+                padding: 20px;
+                text-align: center;
+                position: absolute;
+                top: 100px;
+                left: 0;
+                right: 0;
+                z-index: 15;
+            }
+
+            .mobile-menu ul {
+                list-style: none;
+            }
+
+            .mobile-menu li {
+                margin-bottom: 15px;
+            }
+
+            .mobile-menu a {
+                color: white;
+                text-decoration: none;
+                font-size: 1.2rem;
+                font-weight: 500;
+                display: block;
+                padding: 10px;
+                border-radius: 8px;
+            }
+
+            .mobile-menu a:hover {
+                background: rgba(76, 175, 80, 0.3);
+            }
+
+            /* Clase hidden */
+            .hidden {
+                display: none !important;
+            }
             
+            /* Ajuste para evitar que el menú móvil quede visible al agrandar la pantalla */
+            @media (min-width: 769px) {
+                .mobile-menu {
+                    display: none !important;
+                }
+                .nav-links {
+                    display: flex !important;
+                }
+                .menu-toggle {
+                    display: none !important;
+                }
+            }
+
             @media (max-width: 768px) {
                 .hero h1 {
                     font-size: 2.5rem;
@@ -456,7 +530,11 @@
                 }
                 
                 .nav-links {
-                    display: none;
+                    display: none !important;
+                }
+                
+                .menu-toggle {
+                    display: block !important;
                 }
             }
             </style>
@@ -473,6 +551,7 @@
                 <ul class="nav-links">
                     <li><a href="#features">Características</a></li>
                     <li><a href="#about">Acerca de</a></li>
+                    <li><a href="{{ route('developers.index') }}">Desarrolladores</a></li>
             @if (Route::has('login'))
                     @auth
                             <li><a href="{{ url('/dashboard') }}">Dashboard</a></li>
@@ -484,9 +563,37 @@
                         @endauth
                     @endif
                 </ul>
+
+                <!-- BOTÓN MENÚ MÓVIL -->
+                <div class="menu-toggle">
+                    <button id="menuBtn" style="background: transparent; border: none; cursor: pointer;">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
+
+    <!-- MENÚ MÓVIL - FONDO TRANSPARENTE -->
+    <div id="mobileMenu" class="mobile-menu hidden">
+        <ul>
+            <li><a href="#features" onclick="closeMenu()">Características</a></li>
+            <li><a href="#about" onclick="closeMenu()">Acerca de</a></li>
+            <li><a href="{{ route('developers.index') }}" onclick="closeMenu()">Desarrolladores</a></li>
+            @if (Route::has('login'))
+                @auth
+                    <li><a href="{{ url('/dashboard') }}" onclick="closeMenu()">Dashboard</a></li>
+                @else
+                    <li><a href="{{ route('login') }}" onclick="closeMenu()">Iniciar Sesión</a></li>
+                    @if (Route::has('register'))
+                        <li><a href="{{ route('register') }}" onclick="closeMenu()">Registrarse</a></li>
+                    @endif
+                @endauth
+            @endif
+        </ul>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -515,8 +622,8 @@
                     @if (Route::has('login'))
                         @auth
                             <a href="{{ url('/dashboard') }}" class="btn btn-primary">Ir al Dashboard</a>
-                        @endif
-            @endif
+                        @endauth
+                    @endif
                 </div>
             </div>
         </div>
@@ -614,10 +721,10 @@
                 <div style="flex: 1; min-width: 300px;">
                     <span style="color: #4CAF50; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem; display: block; margin-bottom: 1rem;">Sobre Nosotros</span>
                     <h2 style="font-size: 2.5rem; font-weight: 700; color: #1a202c; line-height: 1.2; margin-bottom: 1.5rem;">Transformamos la gestión agrícola tradicional</h2>
-                    <p style="color: #64748b; font-size: 1.1rem; line-height: 1.7; margin-bottom: 1.5rem;">
+                    <p style="color: #64748b; font-size: 1.1rem; line-height: 1.7; margin-bottom: 1.5rem; text-align: justify;">
                         AGROSAC nace con la misión de simplificar y potenciar la administración de fincas y negocios agrícolas. Entendemos los desafíos del campo y hemos desarrollado una solución tecnológica que se adapta a las necesidades reales de los productores.
                     </p>
-                    <p style="color: #64748b; font-size: 1.1rem; line-height: 1.7; margin-bottom: 2rem;">
+                    <p style="color: #64748b; font-size: 1.1rem; line-height: 1.7; margin-bottom: 2rem; text-align: justify;">
                         Nuestro software integra contabilidad, gestión de personal, inventarios y análisis de cultivos en una sola plataforma intuitiva y accesible desde cualquier lugar.
                     </p>
                     
@@ -708,6 +815,38 @@
             // Cambiar slide cada 4 segundos
             setInterval(nextSlide, 4000);
         });
+    </script>
+
+    <!-- SCRIPT DEL MENÚ HAMBURGUESA - CORREGIDO -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBtn = document.getElementById("menuBtn");
+            const mobileMenu = document.getElementById("mobileMenu");
+            
+            if (menuBtn && mobileMenu) {
+                menuBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    mobileMenu.classList.toggle("hidden");
+                });
+            }
+
+            // Cerrar menú al hacer clic en cualquier enlace
+            const menuLinks = document.querySelectorAll('#mobileMenu a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (mobileMenu) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        function closeMenu() {
+            const menu = document.getElementById("mobileMenu");
+            if (menu) {
+                menu.classList.add("hidden");
+            }
+        }
     </script>
     </body>
 </html>

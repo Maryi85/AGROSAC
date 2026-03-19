@@ -17,9 +17,9 @@
         </div>
     @endif
 
-    <!-- Botón de descarga PDF -->
-    <div class="mb-4 flex justify-end">
-        <a href="{{ route(route_prefix() . 'loans.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+    {{-- PDF button: full-width on mobile --}}
+    <div class="mb-4 flex">
+        <a href="{{ route(route_prefix() . 'loans.pdf', request()->query()) }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
             <i data-lucide="file-text" class="w-5 h-5"></i>
             <span>Descargar PDF</span>
         </a>
@@ -30,8 +30,8 @@
         <x-search-bar placeholder="Buscar por herramienta o trabajador..." />
     </div>
 
-    <!-- Tabla de préstamos -->
-    <div class="overflow-x-auto">
+    {{-- Tabla Desktop --}}
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
@@ -45,12 +45,18 @@
                     <th class="py-3 pr-4 text-right">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-gray-100" id="loans-table-body">
                 @forelse ($loans as $loan)
-                <tr class="border-b hover:bg-gray-50" data-loan-id="{{ $loan->id }}">
+                <tr class="hover:bg-gray-50 transition-colors" id="loan-row-{{ $loan->id }}">
                     <td class="py-3 pr-4">
                         <div class="font-medium text-gray-900">{{ $loan->tool->name }}</div>
                         <div class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $loan->tool->category)) }}</div>
+                        @if($loan->task)
+                            <div class="mt-1 flex items-center gap-1 text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 max-w-fit">
+                                <i data-lucide="briefcase" class="w-3 h-3"></i>
+                                <span class="truncate">{{ Str::limit($loan->task->description, 20) }}</span>
+                            </div>
+                        @endif
                     </td>
                     <td class="py-3 pr-4">
                         <div class="font-medium text-gray-900">{{ $loan->user->name }}</div>
@@ -92,12 +98,12 @@
                                 'damaged' => 'bg-orange-100 text-orange-700',
                             ];
                         @endphp
-                        <span class="px-2 py-1 text-xs rounded {{ $statusClasses[$loan->status] ?? 'bg-gray-100 text-gray-700' }}">
+                        <span id="loan-status-badge-{{ $loan->id }}" class="px-2 py-1 text-xs rounded {{ $statusClasses[$loan->status] ?? 'bg-gray-100 text-gray-700' }}">
                             {{ $statuses[$loan->status] }}
                         </span>
                     </td>
                     <td class="py-3 pr-4 text-right">
-                        <div class="flex items-center gap-1 justify-end">
+                        <div class="flex items-center gap-1 justify-end" id="loan-actions-{{ $loan->id }}">
                             <!-- Ver detalles -->
                             <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600 view-loan-btn" 
                                     data-loan-id="{{ $loan->id }}"
@@ -113,6 +119,7 @@
                                     data-condition="{{ $loan->condition_return ?? 'Sin observaciones' }}"
                                     data-request-notes="{{ $loan->request_notes ?? 'Sin notas' }}"
                                     data-admin-notes="{{ $loan->admin_notes ?? 'Sin observaciones' }}"
+                                    data-task-name="{{ $loan->task ? $loan->task->description . ' (' . ($loan->task->plot->name ?? 'Lote General') . ')' : '' }}"
                                     title="Ver detalles">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
@@ -178,14 +185,16 @@
                                 </form>
                             @endif
                             
-                            <!-- Eliminar -->
-                            <form method="POST" action="{{ route(route_prefix() . 'loans.destroy', $loan) }}" class="inline" data-confirm="true" data-message="¿Eliminar este préstamo? Esta acción no se puede deshacer.">
-                                @csrf
-                                @method('DELETE')
-                                <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
-                                    <i data-lucide="trash" class="w-4 h-4"></i>
-                                </button>
-                            </form>
+                            @if($loan->status === 'rejected')
+                                <!-- Eliminar (sólo permitido si está rechazado) -->
+                                <form method="POST" action="{{ route(route_prefix() . 'loans.destroy', $loan) }}" class="inline" data-confirm="true" data-message="¿Eliminar este préstamo? Esta acción no se puede deshacer.">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
+                                        <i data-lucide="trash" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -198,12 +207,63 @@
         </table>
     </div>
 
+    {{-- Mobile Cards --}}
+    <div class="md:hidden space-y-3">
+        @forelse ($loans as $loan)
+        @php
+            $statusClasses = ['pending'=>'bg-yellow-100 text-yellow-700','approved'=>'bg-blue-100 text-blue-700','rejected'=>'bg-red-100 text-red-700','out'=>'bg-green-100 text-green-700','returned_by_worker'=>'bg-orange-100 text-orange-700','returned'=>'bg-gray-100 text-gray-700','lost'=>'bg-red-100 text-red-700','damaged'=>'bg-orange-100 text-orange-700'];
+        @endphp
+        <div class="bg-white border rounded-lg p-4 shadow-sm" id="loan-card-{{ $loan->id }}">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <div class="font-semibold text-gray-900">{{ $loan->tool->name }}</div>
+                    <div class="text-xs text-gray-500">{{ $loan->user->name }}</div>
+                </div>
+                <span id="loan-status-badge-{{ $loan->id }}" class="px-2 py-1 text-xs rounded {{ $statusClasses[$loan->status] ?? 'bg-gray-100 text-gray-700' }}">{{ $statuses[$loan->status] }}</span>
+            </div>
+            <div class="text-sm text-gray-600 space-y-1 mb-3">
+                <div class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-emerald-500"></i><span>{{ $loan->created_at->format('d/m/Y') }}</span></div>
+                <div class="flex items-center gap-2"><i data-lucide="box" class="w-4 h-4 text-emerald-500"></i><span>Cantidad: {{ $loan->quantity }}</span></div>
+            </div>
+            <div class="flex flex-wrap gap-2 border-t pt-3" id="loan-actions-{{ $loan->id }}">
+                <button type="button" class="view-loan-btn flex-1 flex items-center justify-center gap-1 py-2 text-blue-600 bg-blue-50 rounded-lg text-sm"
+                    data-loan-id="{{ $loan->id }}" data-tool-name="{{ $loan->tool->name }}" data-tool-category="{{ $loan->tool->category }}"
+                    data-worker-name="{{ $loan->user->name }}" data-worker-email="{{ $loan->user->email }}" data-quantity="{{ $loan->quantity }}"
+                    data-out-at="{{ $loan->out_at ? $loan->out_at->format('d/m/Y H:i') : 'No prestado' }}" data-due-at="{{ $loan->due_at ? $loan->due_at->format('d/m/Y') : 'Sin fecha límite' }}"
+                    data-returned-at="{{ $loan->returned_at ? $loan->returned_at->format('d/m/Y H:i') : 'No devuelto' }}" data-status="{{ $loan->status }}"
+                    data-condition="{{ $loan->condition_return ?? 'Sin observaciones' }}" data-request-notes="{{ $loan->request_notes ?? 'Sin notas' }}"
+                    data-admin-notes="{{ $loan->admin_notes ?? 'Sin observaciones' }}" data-task-name="{{ $loan->task ? $loan->task->description : '' }}">
+                    <i data-lucide="eye" class="w-4 h-4"></i><span>Ver</span>
+                </button>
+                @if($loan->status === 'pending')
+                    <button type="button" class="approve-loan-btn flex-1 flex items-center justify-center gap-1 py-2 text-green-700 bg-green-50 rounded-lg text-sm" data-loan-id="{{ $loan->id }}" data-worker-name="{{ $loan->user->name }}" data-tool-name="{{ $loan->tool->name }}"><i data-lucide="check" class="w-4 h-4"></i><span>Aprobar</span></button>
+                    <button type="button" class="reject-loan-btn flex-1 flex items-center justify-center gap-1 py-2 text-red-700 bg-red-50 rounded-lg text-sm" data-loan-id="{{ $loan->id }}" data-worker-name="{{ $loan->user->name }}" data-tool-name="{{ $loan->tool->name }}"><i data-lucide="x" class="w-4 h-4"></i><span>Rechazar</span></button>
+                @elseif($loan->status === 'returned_by_worker')
+                    <button type="button" class="confirm-return-btn flex-1 flex items-center justify-center gap-1 py-2 text-green-700 bg-green-50 rounded-lg text-sm" data-loan-id="{{ $loan->id }}" data-worker-name="{{ $loan->user->name }}" data-tool-name="{{ $loan->tool->name }}"><i data-lucide="check-circle" class="w-4 h-4"></i><span>Confirmar</span></button>
+                @endif
+                @if($loan->status === 'rejected')
+                    <!-- Eliminar -->
+                    <form method="POST" action="{{ route(route_prefix() . 'loans.destroy', $loan) }}" class="flex-none" data-confirm="true" data-message="¿Eliminar este préstamo? Esta acción no se puede deshacer.">
+                        @csrf
+                        @method('DELETE')
+                        <button class="inline-flex items-center justify-center w-9 h-9 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
+                            <i data-lucide="trash" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                @endif
+            </div>
+        </div>
+        @empty
+        <div class="py-8 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed text-sm">No hay préstamos registrados</div>
+        @endforelse
+    </div>
+
     <div class="mt-4">{{ $loans->links() }}</div>
 </div>
 
 <!-- Modal de detalles -->
 <div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Detalles del Préstamo</h3>
             <button type="button" onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
@@ -223,6 +283,13 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Categoría</label>
                         <p id="viewToolCategory" class="text-sm text-gray-900 mt-1"></p>
+                    </div>
+                    <div id="viewTaskRow" class="md:col-span-2" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700">Tarea Relacionada</label>
+                        <div class="mt-1 flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                            <i data-lucide="briefcase" class="w-4 h-4 text-blue-600"></i>
+                            <p id="viewTaskName" class="text-sm font-semibold text-blue-900"></p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -286,7 +353,7 @@
 
 <!-- Modal de aprobación -->
 <div id="approveModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center gap-3 mb-4">
             <div class="p-2 bg-green-100 rounded-full">
                 <i data-lucide="check" class="w-5 h-5 text-green-600"></i>
@@ -329,7 +396,7 @@
 
 <!-- Modal de rechazo -->
 <div id="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center gap-3 mb-4">
             <div class="p-2 bg-red-100 rounded-full">
                 <i data-lucide="x" class="w-5 h-5 text-red-600"></i>
@@ -372,7 +439,7 @@
 
 <!-- Modal de confirmación de devolución -->
 <div id="confirmReturnModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center gap-3 mb-4">
             <div class="p-2 bg-green-100 rounded-full">
                 <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
@@ -414,9 +481,8 @@
 </div>
 
 <script>
-// Función para abrir el modal de detalles
-function openViewModal(id, toolName, toolCategory, workerName, workerEmail, quantity, outAt, dueAt, returnedAt, status, condition) {
-    // Llenar los campos del modal de detalles
+// === MODAL DE DETALLES (VIEW) ===
+function openViewModal(id, toolName, toolCategory, workerName, workerEmail, quantity, outAt, dueAt, returnedAt, status, condition, taskName) {
     document.getElementById('viewToolName').textContent = toolName;
     document.getElementById('viewToolCategory').textContent = toolCategory.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
     document.getElementById('viewWorkerName').textContent = workerName;
@@ -425,37 +491,37 @@ function openViewModal(id, toolName, toolCategory, workerName, workerEmail, quan
     document.getElementById('viewOutAt').textContent = outAt;
     document.getElementById('viewDueAt').textContent = dueAt;
     document.getElementById('viewReturnedAt').textContent = returnedAt;
-    document.getElementById('viewCondition').textContent = condition;
-    
-    // Configurar el estado con el badge apropiado
-    const statusElement = document.getElementById('viewStatus');
-    const statusLabels = {
-        'out': 'Prestado',
-        'returned': 'Devuelto',
-        'lost': 'Perdido',
-        'damaged': 'Dañado'
-    };
-    
-    if (status === 'out') {
-        statusElement.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">Prestado</span>';
-    } else if (status === 'returned') {
-        statusElement.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700">Devuelto</span>';
-    } else if (status === 'lost') {
-        statusElement.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700">Perdido</span>';
+    document.getElementById('viewCondition').textContent = condition || 'Sin observaciones';
+
+    const taskRow = document.getElementById('viewTaskRow');
+    if (taskName) {
+        document.getElementById('viewTaskName').textContent = taskName;
+        taskRow.style.display = 'block';
     } else {
-        statusElement.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">Dañado</span>';
+        taskRow.style.display = 'none';
     }
-    
-    // Mostrar el modal
+
+    const statusElement = document.getElementById('viewStatus');
+    const statusMap = {
+        'pending': '<span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">Pendiente</span>',
+        'approved': '<span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">Aprobado</span>',
+        'rejected': '<span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">Rechazado</span>',
+        'out': '<span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">Prestado</span>',
+        'returned_by_worker': '<span class="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700">Devuelto por Trabajador</span>',
+        'returned': '<span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">Devuelto y Confirmado</span>',
+        'lost': '<span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">Perdido</span>',
+        'damaged': '<span class="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700">Dañado</span>',
+    };
+    statusElement.innerHTML = statusMap[status] || '<span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">' + status + '</span>';
+
     document.getElementById('viewModal').style.display = 'flex';
 }
 
-// Función para cerrar el modal de detalles
 function closeViewModal() {
     document.getElementById('viewModal').style.display = 'none';
 }
 
-// Funciones para el modal de aprobación
+// === MODAL DE APROBACIÓN ===
 function openApproveModal(loanId, workerName, toolName) {
     document.getElementById('approveWorkerName').textContent = workerName;
     document.getElementById('approveToolName').textContent = toolName;
@@ -470,7 +536,7 @@ function closeApproveModal() {
     document.getElementById('approveAdminNotes').value = '';
 }
 
-// Funciones para el modal de rechazo
+// === MODAL DE RECHAZO ===
 function openRejectModal(loanId, workerName, toolName) {
     document.getElementById('rejectWorkerName').textContent = workerName;
     document.getElementById('rejectToolName').textContent = toolName;
@@ -485,7 +551,7 @@ function closeRejectModal() {
     document.getElementById('rejectAdminNotes').value = '';
 }
 
-// Funciones para el modal de confirmación de devolución
+// === MODAL DE CONFIRMACIÓN DE DEVOLUCIÓN ===
 function openConfirmReturnModal(loanId, workerName, toolName) {
     document.getElementById('confirmWorkerName').textContent = workerName;
     document.getElementById('confirmToolName').textContent = toolName;
@@ -500,77 +566,174 @@ function closeConfirmReturnModal() {
     document.getElementById('confirmAdminNotes').value = '';
 }
 
-// Inicialización cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    // Asegurar que el modal esté oculto por defecto
-    const viewModal = document.getElementById('viewModal');
-    if (viewModal) {
-        viewModal.style.display = 'none';
+// === STATUS HELPERS ===
+function getLoanStatusClass(status) {
+    const map = {
+        'pending': 'bg-yellow-100 text-yellow-700',
+        'approved': 'bg-blue-100 text-blue-700',
+        'rejected': 'bg-red-100 text-red-700',
+        'out': 'bg-green-100 text-green-700',
+        'returned_by_worker': 'bg-orange-100 text-orange-700',
+        'returned': 'bg-gray-100 text-gray-700',
+        'lost': 'bg-red-100 text-red-700',
+        'damaged': 'bg-orange-100 text-orange-700',
+    };
+    return map[status] || 'bg-gray-100 text-gray-700';
+}
+
+function getLoanStatusText(status) {
+    const map = {
+        'pending': 'Pendiente',
+        'approved': 'Aprobado',
+        'rejected': 'Rechazado',
+        'out': 'Prestado',
+        'returned_by_worker': 'Devuelto por Trabajador',
+        'returned': 'Devuelto y Confirmado',
+        'lost': 'Perdido',
+        'damaged': 'Dañado',
+    };
+    return map[status] || status;
+}
+
+// === AJAX HANDLER ===
+const handleLoanAction = async (form) => {
+    const formData = new FormData(form);
+    const url = form.action;
+    const methodInput = form.querySelector('input[name="_method"]');
+    const method = methodInput ? methodInput.value : form.method;
+
+    try {
+        const response = await fetch(url, {
+            method: method.toUpperCase() === 'DELETE' ? 'POST' : method,
+            body: formData,
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (window.Swal) {
+                Swal.fire({ title: '¡Éxito!', text: data.message, icon: 'success', timer: 1800, showConfirmButton: false });
+            }
+
+            if (data.id) {
+                // Eliminar fila
+                document.getElementById(`loan-row-${data.id}`)?.remove();
+                document.getElementById(`loan-card-${data.id}`)?.remove();
+            } else if (data.loan) {
+                // Actualizar badge de estado
+                const badge1 = document.getElementById(`loan-status-badge-${data.loan.id}`);
+                if (badge1) {
+                    badge1.className = `px-2 py-1 text-xs rounded ${getLoanStatusClass(data.loan.status)}`;
+                    badge1.textContent = getLoanStatusText(data.loan.status);
+                }
+                setTimeout(() => location.reload(), 1800);
+            }
+        } else {
+            if (window.Swal) {
+                Swal.fire('Error', data.message || 'Error al procesar la solicitud', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (window.Swal) Swal.fire('Error', 'Error de red o del servidor', 'error');
     }
-    
-    // Agregar eventos a los botones de ver detalles
-    document.querySelectorAll('.view-loan-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const id = this.getAttribute('data-loan-id');
-            const toolName = this.getAttribute('data-tool-name');
-            const toolCategory = this.getAttribute('data-tool-category');
-            const workerName = this.getAttribute('data-worker-name');
-            const workerEmail = this.getAttribute('data-worker-email');
-            const quantity = this.getAttribute('data-quantity');
-            const outAt = this.getAttribute('data-out-at');
-            const dueAt = this.getAttribute('data-due-at');
-            const returnedAt = this.getAttribute('data-returned-at');
-            const status = this.getAttribute('data-status');
-            const condition = this.getAttribute('data-condition');
-            
-            openViewModal(id, toolName, toolCategory, workerName, workerEmail, quantity, outAt, dueAt, returnedAt, status, condition);
-        });
-    });
+};
 
-    // Agregar eventos a los botones de aprobar
-    document.querySelectorAll('.approve-loan-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const loanId = this.getAttribute('data-loan-id');
-            const workerName = this.getAttribute('data-worker-name');
-            const toolName = this.getAttribute('data-tool-name');
-            
-            openApproveModal(loanId, workerName, toolName);
-        });
-    });
+// === DOM READY ===
+document.addEventListener('DOMContentLoaded', function() {
+    // Delegated click handler for all action buttons
+    document.addEventListener('click', function(e) {
+        const viewBtn = e.target.closest('.view-loan-btn');
+        if (viewBtn) {
+            e.preventDefault();
+            const d = viewBtn.dataset;
+            openViewModal(d.loanId, d.toolName, d.toolCategory, d.workerName, d.workerEmail,
+                d.quantity, d.outAt, d.dueAt, d.returnedAt, d.status, d.condition, d.taskName);
+        }
 
-    // Agregar eventos a los botones de rechazar
-    document.querySelectorAll('.reject-loan-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const loanId = this.getAttribute('data-loan-id');
-            const workerName = this.getAttribute('data-worker-name');
-            const toolName = this.getAttribute('data-tool-name');
-            
-            openRejectModal(loanId, workerName, toolName);
-        });
-    });
+        const approveBtn = e.target.closest('.approve-loan-btn');
+        if (approveBtn) {
+            e.preventDefault();
+            openApproveModal(approveBtn.dataset.loanId, approveBtn.dataset.workerName, approveBtn.dataset.toolName);
+        }
 
-    // Agregar eventos a los botones de confirmar devolución
-    document.querySelectorAll('.confirm-return-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const loanId = this.getAttribute('data-loan-id');
-            const workerName = this.getAttribute('data-worker-name');
-            const toolName = this.getAttribute('data-tool-name');
-            
-            openConfirmReturnModal(loanId, workerName, toolName);
-        });
-    });
-    
-    // Agregar evento de tecla Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeViewModal();
+        const rejectBtn = e.target.closest('.reject-loan-btn');
+        if (rejectBtn) {
+            e.preventDefault();
+            openRejectModal(rejectBtn.dataset.loanId, rejectBtn.dataset.workerName, rejectBtn.dataset.toolName);
+        }
+
+        const confirmBtn = e.target.closest('.confirm-return-btn');
+        if (confirmBtn) {
+            e.preventDefault();
+            openConfirmReturnModal(confirmBtn.dataset.loanId, confirmBtn.dataset.workerName, confirmBtn.dataset.toolName);
         }
     });
-    
-    // Agregar evento de clic fuera del modal
-    viewModal.addEventListener('click', function(e) {
-        if (e.target === viewModal) {
+
+    // Intercept all loan forms for AJAX + confirmation
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (!form.getAttribute('action')?.includes('loans')) return;
+        if (form.id === 'search-form') return;
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const message = form.getAttribute('data-message') || '¿Confirmar acción?';
+        const confirmAction = form.getAttribute('data-confirm') === 'true';
+
+        const doSubmit = () => {
+            // Close the modal AFTER capturing data (handleLoanAction reads form at call time)
+            const formId = form.id;
+            handleLoanAction(form).then(() => {
+                if (formId === 'approveForm') closeApproveModal();
+                if (formId === 'rejectForm') closeRejectModal();
+                if (formId === 'confirmReturnForm') closeConfirmReturnModal();
+            });
+        };
+
+        if (confirmAction) {
+            if (window.Swal) {
+                Swal.fire({
+                    title: '¿Confirmar acción?',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Sí, confirmar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) doSubmit();
+                });
+            } else if (confirm(message)) {
+                doSubmit();
+            }
+        } else {
+            doSubmit();
+        }
+    }, true);
+
+    // Close modals on backdrop click
+    window.addEventListener('click', (e) => {
+        if (e.target.id === 'viewModal') closeViewModal();
+        if (e.target.id === 'approveModal') closeApproveModal();
+        if (e.target.id === 'rejectModal') closeRejectModal();
+        if (e.target.id === 'confirmReturnModal') closeConfirmReturnModal();
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
             closeViewModal();
+            closeApproveModal();
+            closeRejectModal();
+            closeConfirmReturnModal();
         }
     });
 });

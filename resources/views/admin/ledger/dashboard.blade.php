@@ -1,26 +1,22 @@
 @extends('admin.layout')
 
 @section('header')
-<div class="flex items-center justify-between">
-    <div>
-        <h2 class="text-3xl font-extrabold text-gray-900">Dashboard Contable</h2>
-        <p class="text-sm text-gray-600 mt-1">Panel de control financiero de AGROSAC</p>
-    </div>
-    <div class="flex items-center gap-3">
-        <a href="{{ route('admin.ledger.dashboard.pdf') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all hover:shadow-lg">
-            <i data-lucide="file-text" class="w-4 h-4"></i>
-            <span>Descargar PDF</span>
-        </a>
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-100 rounded-xl text-sm text-gray-600">
-            <i data-lucide="calendar" class="w-4 h-4"></i>
-            <span>{{ now()->format('d/m/Y') }}</span>
-        </div>
-    </div>
-</div>
+<h2 class="font-extrabold text-gray-900">Dashboard Contable</h2>
+<p class="text-gray-600 mt-1">Panel de control financiero de AGROSAC</p>
 @endsection
 
 @section('content')
 <div class="space-y-6">
+    <div class="flex flex-col sm:flex-row gap-2 justify-end mb-4 no-print">
+        <a href="{{ route('admin.ledger.dashboard.pdf') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all text-sm">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            <span>Descargar PDF</span>
+        </a>
+        <div class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm text-gray-600">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span>{{ now()->format('d/m/Y') }}</span>
+        </div>
+    </div>
     <style>
         /* Modern Card Styles */
         .kpi-card {
@@ -251,7 +247,7 @@
             </div>
             <div>
                 <p class="text-sm font-medium text-gray-600 mb-1">Total Ingresos</p>
-                <p class="text-3xl font-black text-emerald-700">${{ number_format($totalIncome, 2) }}</p>
+                <p class="text-3xl font-black text-emerald-700">${{ number_format($totalIncome, 0) }}</p>
             </div>
         </div>
         
@@ -268,7 +264,7 @@
             </div>
             <div>
                 <p class="text-sm font-medium text-gray-600 mb-1">Total Gastos</p>
-                <p class="text-3xl font-black text-red-700">${{ number_format($totalExpenses, 2) }}</p>
+                <p class="text-3xl font-black text-red-700">${{ number_format($totalExpenses, 0) }}</p>
             </div>
         </div>
         
@@ -285,7 +281,7 @@
             </div>
             <div>
                 <p class="text-sm font-medium text-gray-600 mb-1">Total Costos</p>
-                <p class="text-3xl font-black text-orange-700">${{ number_format($totalSupplyCosts + $totalToolCosts + $totalTaskCosts, 2) }}</p>
+                <p class="text-3xl font-black text-orange-700">${{ number_format($totalSupplyCosts + $totalToolCosts + $totalTaskCosts, 0) }}</p>
             </div>
         </div>
         
@@ -305,7 +301,7 @@
             <div>
                 <p class="text-sm font-medium text-gray-600 mb-1">Resultado Final</p>
                 <p class="text-3xl font-black {{ $totalProfit >= 0 ? 'text-purple-700' : 'text-red-700' }}">
-                    {{ $totalProfit >= 0 ? '+' : '' }}${{ number_format($totalProfit, 2) }}
+                    {{ $totalProfit >= 0 ? '+' : '' }}${{ number_format($totalProfit, 0) }}
                 </p>
             </div>
         </div>
@@ -404,7 +400,7 @@
                     <h3 class="text-lg font-bold text-gray-800">Desglose de Costos Operativos</h3>
                 </div>
                 <span class="text-xs font-semibold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
-                    ${{ number_format($totalSupplyCosts + $totalToolCosts + $totalTaskCosts, 2) }}
+                    ${{ number_format($totalSupplyCosts + $totalToolCosts + $totalTaskCosts, 0) }}
                 </span>
             </div>
         </div>
@@ -415,7 +411,7 @@
                         <div class="w-3 h-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-lg"></div>
                         <span class="text-sm font-semibold text-gray-700">Insumos</span>
                     </div>
-                    <span class="text-sm font-bold text-orange-600">${{ number_format($totalSupplyCosts, 2) }}</span>
+                    <span class="text-sm font-bold text-orange-600">${{ number_format($totalSupplyCosts, 0) }}</span>
                 </div>
             </div>
             <div class="data-item cost-item">
@@ -424,7 +420,7 @@
                         <div class="w-3 h-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-lg"></div>
                         <span class="text-sm font-semibold text-gray-700">Herramientas</span>
                     </div>
-                    <span class="text-sm font-bold text-orange-600">${{ number_format($totalToolCosts, 2) }}</span>
+                    <span class="text-sm font-bold text-orange-600">${{ number_format($totalToolCosts, 0) }}</span>
                 </div>
             </div>
             <div class="data-item cost-item">
@@ -433,7 +429,7 @@
                         <div class="w-3 h-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-lg"></div>
                         <span class="text-sm font-semibold text-gray-700">Trabajadores</span>
                     </div>
-                    <span class="text-sm font-bold text-orange-600">${{ number_format($totalTaskCosts, 2) }}</span>
+                    <span class="text-sm font-bold text-orange-600">${{ number_format($totalTaskCosts, 0) }}</span>
                 </div>
             </div>
         </div>
@@ -490,34 +486,34 @@
                             </td>
                             <td class="py-4 px-6 text-right">
                                 <span class="font-bold text-emerald-600">
-                                    ${{ number_format($analysis['income'], 2) }}
+                                    ${{ number_format($analysis['income'], 0) }}
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
                                 <span class="font-semibold text-red-600">
-                                    ${{ number_format($analysis['expenses']['ledger'], 2) }}
+                                    ${{ number_format($analysis['expenses']['ledger'], 0) }}
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
                                 <span class="font-semibold text-orange-600">
-                                    ${{ number_format($totalCosts, 2) }}
+                                    ${{ number_format($totalCosts, 0) }}
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
                                 <span class="font-bold text-gray-900">
-                                    ${{ number_format($totalGeneral, 2) }}
+                                    ${{ number_format($totalGeneral, 0) }}
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
                                 @if($cropProfit >= 0)
                                     <span class="badge-modern badge-income">
                                         <i data-lucide="trending-up" class="w-3 h-3"></i>
-                                        +${{ number_format($cropProfit, 2) }}
+                                        +${{ number_format($cropProfit, 0) }}
                                     </span>
                                 @else
                                     <span class="badge-modern badge-expense">
                                         <i data-lucide="trending-down" class="w-3 h-3"></i>
-                                        ${{ number_format($cropProfit, 2) }}
+                                        ${{ number_format($cropProfit, 0) }}
                                     </span>
                                 @endif
                             </td>
@@ -574,7 +570,7 @@
                             <td class="py-3 px-4 text-gray-700 text-sm">{{ ucfirst(str_replace('_', ' ', $entry->category)) }}</td>
                             <td class="py-3 px-4 text-right">
                                 <span class="font-bold {{ $entry->type === 'income' ? 'text-emerald-600' : 'text-red-600' }}">
-                                    {{ $entry->type === 'income' ? '+' : '-' }}${{ number_format($entry->amount, 2) }}
+                                    {{ $entry->type === 'income' ? '+' : '-' }}${{ number_format($entry->amount, 0) }}
                                 </span>
                             </td>
                             <td class="py-3 px-4 text-gray-700 text-sm">{{ $entry->crop ? $entry->crop->name : '—' }}</td>
@@ -650,7 +646,7 @@
             tooltip: {
                 y: {
                     formatter: function(value) {
-                        return '$ ' + value.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        return '$ ' + value.toLocaleString('es-PE', {minimumFractionDigits: 0, maximumFractionDigits: 0});
                     }
                 }
             }
@@ -694,8 +690,8 @@
                                 formatter: function (w) {
                                     const total = w.globals.seriesTotals.reduce((a, b) => a + parseFloat(b || 0), 0);
                                     return '$' + total.toLocaleString('en-US', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0
                                     });
                                 }
                             },
@@ -721,7 +717,7 @@
             tooltip: {
                 y: {
                     formatter: function(value) {
-                        return '$ ' + value.toLocaleString('es-PE', {minimumFractionDigits: 2});
+                        return '$ ' + value.toLocaleString('es-PE', {minimumFractionDigits: 0});
                     }
                 }
             }
@@ -766,8 +762,8 @@
                                 formatter: function (w) {
                                     const total = w.globals.seriesTotals.reduce((a, b) => a + parseFloat(b || 0), 0);
                                     return '$' + total.toLocaleString('en-US', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0
                                     });
                                 }
                             },
@@ -793,7 +789,7 @@
             tooltip: {
                 y: {
                     formatter: function(value) {
-                        return '$ ' + value.toLocaleString('es-PE', {minimumFractionDigits: 2});
+                        return '$ ' + value.toLocaleString('es-PE', {minimumFractionDigits: 0});
                     }
                 }
             }
@@ -867,7 +863,7 @@
             tooltip: {
                 y: {
                     formatter: function(value) {
-                        return '$ ' + value.toLocaleString('es-PE', {minimumFractionDigits: 2});
+                        return '$ ' + value.toLocaleString('es-PE', {minimumFractionDigits: 0});
                     }
                 }
             },

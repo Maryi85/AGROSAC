@@ -12,7 +12,7 @@
             <div class="flex items-center gap-4">
                 <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 shadow-sm">
                     @if($user->photo)
-                        <img src="{{ asset('storage/' . $user->photo) }}" alt="Foto de perfil" class="w-full h-full object-cover">
+                        <img src="{{ storage_asset($user->photo) }}" alt="Foto de perfil" class="w-full h-full object-cover">
                     @else
                         <div class="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-50 to-gray-100">
                             <i data-lucide="user" class="w-12 h-12"></i>
@@ -54,19 +54,20 @@
         @csrf
         @method('PUT')
 
-        <div class="flex items-center gap-4">
-            <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+        <div class="flex items-center gap-4 flex-wrap">
+            <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
                 @if($user->photo)
-                    <img id="photo-preview" src="{{ asset('storage/' . $user->photo) }}" alt="Foto de perfil" class="w-full h-full object-cover">
+                    <img id="photo-preview" src="{{ storage_asset($user->photo) }}" alt="Foto de perfil" class="w-full h-full object-cover">
                 @else
                     <div id="photo-placeholder" class="w-full h-full flex items-center justify-center text-gray-400">
                         <i data-lucide="user" class="w-8 h-8"></i>
                     </div>
                 @endif
             </div>
-            <div>
-                <p class="text-sm text-gray-600">Puedes actualizar tu foto de perfil y tu información de contacto.</p>
-                <input type="file" name="photo" id="photo-input" accept="image/*" class="mt-2 text-sm @error('photo') border-red-500 @enderror">
+            <div class="flex-1 min-w-0 overflow-hidden">
+                <p class="text-sm text-gray-600 mb-2">Puedes actualizar tu foto de perfil y tu información de contacto.</p>
+                <input type="file" name="photo" id="photo-input" accept="image/*"
+                       class="block w-full text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 @error('photo') border-red-500 @enderror">
                 @error('photo')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -88,18 +89,20 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}"
+                <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('phone') border-red-500 @enderror"
-                       placeholder="Ej: +57 300 000 0000">
+                       placeholder="Ej: 3000000000">
                 @error('phone')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
         </div>
 
-        <div class="flex justify-end gap-3">
-            <button type="button" onclick="toggleEditMode()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">Cancelar</button>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm">
+        {{-- Responsive: full-width on mobile --}}
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <button type="button" onclick="toggleEditMode()" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm text-center">Cancelar</button>
+            <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm text-center">
                 Guardar cambios
             </button>
         </div>

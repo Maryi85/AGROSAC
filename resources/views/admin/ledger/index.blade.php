@@ -1,22 +1,24 @@
 @extends('admin.layout')
 
 @section('header')
-<h2 class="text-lg font-semibold text-emerald-700">Gestión Contable</h2>
+<h2 class="font-semibold text-emerald-700">Gestión Contable</h2>
 @endsection
 
 @section('content')
 <div class="bg-white border rounded p-4">
     <!-- Barra de búsqueda y botones de acción -->
-    <div class="flex justify-between items-center mb-6 gap-4">
-        <x-search-bar placeholder="Buscar por categoría, cultivo, lote o referencia..." />
-        <div class="flex gap-2">
-            <a href="{{ route('admin.ledger.movements.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg whitespace-nowrap">
+    <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-6 gap-4">
+        <div class="flex-1">
+            <x-search-bar placeholder="Buscar por categoría, cultivo, lote o referencia..." />
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+            <a href="{{ route('admin.ledger.movements.pdf', request()->query()) }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg whitespace-nowrap text-sm">
                 <i data-lucide="file-text" class="w-4 h-4"></i>
-                <span>Descargar PDF</span>
+                <span>PDF</span>
             </a>
-            <a href="{{ route('admin.ledger.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg whitespace-nowrap">
+            <a href="{{ route('admin.ledger.create') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg whitespace-nowrap text-sm">
                 <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Nuevo Movimiento</span>
+                <span>Nuevo</span>
             </a>
         </div>
     </div>
@@ -26,14 +28,13 @@
         <table class="min-w-full text-sm">
             <thead>
                 <tr class="text-left text-emerald-800 border-b">
-                    <th class="py-3 pr-4">Fecha</th>
-                    <th class="py-3 pr-4">Tipo</th>
-                    <th class="py-3 pr-4">Categoría</th>
-                    <th class="py-3 pr-4">Monto</th>
-                    <th class="py-3 pr-4">Cultivo</th>
-                    <th class="py-3 pr-4">Lote</th>
-                    <th class="py-3 pr-4">Referencia</th>
-                    <th class="py-3 pr-4 text-right">Acciones</th>
+                    <th class="py-3 px-2 sm:pr-4">Fecha</th>
+                    <th class="py-3 px-2 sm:pr-4">Tipo</th>
+                    <th class="py-3 px-2 sm:pr-4 hidden md:table-cell">Categoría</th>
+                    <th class="py-3 px-2 sm:pr-4">Monto</th>
+                    <th class="py-3 px-2 sm:pr-4 hidden lg:table-cell">Cultivo</th>
+                    <th class="py-3 px-2 sm:pr-4 hidden xl:table-cell">Referencia</th>
+                    <th class="py-3 px-2 sm:pr-4 text-right">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -47,29 +48,22 @@
                             {{ $entry->type === 'income' ? 'Ingreso' : 'Gasto' }}
                         </span>
                     </td>
-                    <td class="py-3 pr-4">
+                    <td class="py-3 px-2 sm:pr-4 hidden md:table-cell">
                         <div class="text-sm text-gray-900">{{ $categories[$entry->category] }}</div>
                     </td>
                     <td class="py-3 pr-4">
                         <div class="text-sm font-medium {{ $entry->type === 'income' ? 'text-emerald-600' : 'text-red-600' }}">
-                            {{ $entry->type === 'income' ? '+' : '-' }}${{ number_format($entry->amount, 2) }}
+                            {{ $entry->type === 'income' ? '+' : '-' }}${{ number_format($entry->amount, 0) }}
                         </div>
                     </td>
-                    <td class="py-3 pr-4">
+                    <td class="py-3 px-2 sm:pr-4 hidden lg:table-cell">
                         @if($entry->crop)
                             <div class="text-sm text-gray-900">{{ $entry->crop->name }}</div>
                         @else
                             <div class="text-sm text-gray-500">—</div>
                         @endif
                     </td>
-                    <td class="py-3 pr-4">
-                        @if($entry->plot)
-                            <div class="text-sm text-gray-900">{{ $entry->plot->name }}</div>
-                        @else
-                            <div class="text-sm text-gray-500">—</div>
-                        @endif
-                    </td>
-                    <td class="py-3 pr-4">
+                    <td class="py-3 px-2 sm:pr-4 hidden xl:table-cell">
                         <div class="text-sm text-gray-900">{{ $entry->reference ?? '—' }}</div>
                     </td>
                     <td class="py-3 pr-4 text-right">
@@ -79,7 +73,7 @@
                                     data-entry-id="{{ $entry->id }}"
                                     data-type="{{ $entry->type }}"
                                     data-category="{{ $entry->category }}"
-                                    data-amount="{{ $entry->amount }}"
+                                    data-amount="{{ (int)$entry->amount }}"
                                     data-occurred-at="{{ $entry->occurred_at->format('d/m/Y') }}"
                                     data-crop-name="{{ $entry->crop ? $entry->crop->name : 'No especificado' }}"
                                     data-plot-name="{{ $entry->plot ? $entry->plot->name : 'No especificado' }}"
@@ -95,7 +89,7 @@
                                data-entry-id="{{ $entry->id }}"
                                data-type="{{ $entry->type }}"
                                data-category="{{ $entry->category }}"
-                               data-amount="{{ $entry->amount }}"
+                               data-amount="{{ (int)$entry->amount }}"
                                data-occurred-at="{{ $entry->occurred_at->format('Y-m-d') }}"
                                data-crop-id="{{ $entry->crop_id }}"
                                data-plot-id="{{ $entry->plot_id }}"
@@ -103,15 +97,6 @@
                                title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
-                            
-                            <!-- Eliminar -->
-                            <form method="POST" action="{{ route('admin.ledger.destroy', $entry) }}" class="inline" data-confirm="true" data-message="¿Eliminar este movimiento contable? Esta acción no se puede deshacer.">
-                                @csrf
-                                @method('DELETE')
-                                <button class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" title="Eliminar">
-                                    <i data-lucide="trash" class="w-4 h-4"></i>
-                                </button>
-                            </form>
                         </div>
                     </td>
                 </tr>
@@ -128,8 +113,8 @@
 </div>
 
 <!-- Modal de Edición -->
-<div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+<div id="editModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40" style="display: none;">
+    <div class="bg-white border-t sm:border border-gray-200 rounded-t-xl sm:rounded-lg p-6 w-full sm:max-w-2xl sm:mx-4 max-h-[90vh] overflow-y-auto shadow-2xl pb-safe">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Editar Movimiento Contable</h3>
             <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
@@ -175,7 +160,7 @@
                 <!-- Monto -->
                 <div>
                     <label for="edit_amount" class="block text-sm mb-1 text-emerald-800">Monto</label>
-                    <input type="number" step="0.01" min="0.01" id="edit_amount" name="amount" value="{{ old('amount') }}"
+                    <input type="number" step="1" min="0" id="edit_amount" name="amount" value="{{ old('amount') }}"
                            class="w-full border border-emerald-200 rounded px-3 py-2 @error('amount') border-red-500 @enderror" required />
                     @error('amount')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -255,8 +240,8 @@
 </div>
 
 <!-- Modal de detalles -->
-<div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+<div id="viewModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40" style="display: none;">
+    <div class="bg-white border-t sm:border border-gray-200 rounded-t-xl sm:rounded-lg p-6 w-full sm:max-w-2xl sm:mx-4 shadow-2xl pb-safe">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Detalles del Movimiento</h3>
             <button type="button" onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
@@ -350,7 +335,7 @@ function openViewModal(id, type, category, amount, occurredAt, cropName, plotNam
     
     // Configurar el monto con el color apropiado
     const amountElement = document.getElementById('viewAmount');
-    const formattedAmount = '$' + parseFloat(amount).toFixed(2);
+    const formattedAmount = '$' + parseFloat(amount).toFixed(0);
     if (type === 'income') {
         amountElement.innerHTML = '<span class="text-emerald-600 font-semibold">+' + formattedAmount + '</span>';
     } else {

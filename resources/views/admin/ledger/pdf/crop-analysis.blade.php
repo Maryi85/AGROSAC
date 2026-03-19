@@ -124,19 +124,19 @@
                             <br><small style="color: #666;">Lote: {{ $analysis['crop']->plot->name }}</small>
                         @endif
                     </td>
-                    <td class="text-right">${{ number_format($analysis['income'], 2) }}</td>
-                    <td class="text-right">${{ number_format($analysis['expenses']['ledger'], 2) }}</td>
+                    <td class="text-right">${{ number_format($analysis['income'], 0) }}</td>
+                    <td class="text-right">${{ number_format($analysis['expenses']['ledger'], 0) }}</td>
                     <td class="text-right">
-                        <div>Insumos: ${{ number_format($analysis['expenses']['supply_consumption'] + $analysis['expenses']['supply_movement'], 2) }}</div>
-                        <div style="font-size: 10px; margin-top: 2px;">Trabajadores: ${{ number_format($analysis['expenses']['tasks'], 2) }}</div>
-                        <div style="font-size: 10px; margin-top: 2px;">Herramientas: ${{ number_format($analysis['expenses']['tools'] ?? 0, 2) }}</div>
+                        <div>Insumos: ${{ number_format($analysis['expenses']['supply_consumption'] + $analysis['expenses']['supply_movement'], 0) }}</div>
+                        <div style="font-size: 10px; margin-top: 2px;">Trabajadores: ${{ number_format($analysis['expenses']['tasks'], 0) }}</div>
+                        <div style="font-size: 10px; margin-top: 2px;">Herramientas: ${{ number_format($analysis['expenses']['tools'] ?? 0, 0) }}</div>
                     </td>
-                    <td class="text-right"><strong>${{ number_format($totalGeneral, 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format($totalGeneral, 0) }}</strong></td>
                     <td class="text-right">
                         @if($analysis['profit'] >= 0)
-                            <span class="badge badge-success">+${{ number_format($analysis['profit'], 2) }}</span>
+                            <span class="badge badge-success">+${{ number_format($analysis['profit'], 0) }}</span>
                         @else
-                            <span class="badge badge-danger">${{ number_format($analysis['profit'], 2) }}</span>
+                            <span class="badge badge-danger">${{ number_format($analysis['profit'], 0) }}</span>
                         @endif
                     </td>
                 </tr>

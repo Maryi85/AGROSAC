@@ -15,6 +15,60 @@ class UpdateTaskRequest extends FormRequest
     }
 
     /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($this->has('supplies_data') && is_array($this->supplies_data)) {
+                $supplyIds = collect($this->supplies_data)->pluck('supply_id')->filter()->unique();
+                if ($supplyIds->isNotEmpty()) {
+                    $supplies = \App\Models\Supply::whereIn('id', $supplyIds)->get()->keyBy('id');
+                    $hasStockError = false;
+                    
+                    foreach ($this->supplies_data as $index => $item) {
+                        if (empty($item['supply_id']) || empty($item['quantity'])) continue;
+                        
+                        $supply = $supplies->get($item['supply_id']);
+                        if ($supply) {
+                            if ($item['quantity'] > $supply->current_stock) {
+                                $validator->errors()->add(
+                                    "supplies_data.{$index}.quantity",
+                                    "La cantidad solicitada ({$item['quantity']}) del insumo '{$supply->name}' supera el stock actual ({$supply->current_stock} {$supply->unit})."
+                                );
+                                $hasStockError = true;
+                            }
+                        }
+                    }
+                    
+                    if ($hasStockError && !$validator->errors()->has('supplies_data')) {
+                        $validator->errors()->add('supplies_data', 'Hay uno o más insumos cuya cantidad supera el stock actual disponible.');
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Strip empty supply rows before validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Si el formulario se envía sin insumos (se eliminaron todos), aseguramos que llegue como array vacío
+        if (!$this->has('supplies_data')) {
+            $this->merge(['supplies_data' => []]);
+        }
+
+        if ($this->has('supplies_data')) {
+            $cleaned = collect($this->supplies_data)
+                ->filter(fn($row) => !empty($row['supply_id']))
+                ->values()
+                ->all();
+            $this->merge(['supplies_data' => $cleaned]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -29,12 +83,12 @@ class UpdateTaskRequest extends FormRequest
             'assigned_to' => 'required|exists:users,id',
             'scheduled_for' => 'required|date',
             'payment_type' => 'required|in:hours,days,quantity',
-            'hours' => 'required_if:payment_type,hours|nullable|numeric|min:0',
+            'hours' => 'required_if:payment_type,hours|nullable|numeric|min:0.01',
             'days' => 'required_if:payment_type,days|nullable|integer|min:1',
-            'kilos' => 'required_if:payment_type,quantity|nullable|numeric|min:0',
-            'price_per_hour' => 'required_if:payment_type,hours|nullable|numeric|min:0',
-            'price_per_day' => 'required_if:payment_type,days|nullable|numeric|min:0',
-            'price_per_kg' => 'required_if:payment_type,quantity|nullable|numeric|min:0',
+            'kilos' => 'required_if:payment_type,quantity|nullable|numeric|min:0.01',
+            'price_per_hour' => 'required_if:payment_type,hours|nullable|numeric|min:0.01',
+            'price_per_day' => 'required_if:payment_type,days|nullable|numeric|min:0.01',
+            'price_per_kg' => 'required_if:payment_type,quantity|nullable|numeric|min:0.01',
             'total_payment' => 'nullable|numeric|min:0',
             'supplies_data' => 'nullable|array',
             'supplies_data.*.supply_id' => 'required|exists:supplies,id',

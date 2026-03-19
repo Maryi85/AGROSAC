@@ -46,8 +46,8 @@ class SupplyMovementController extends Controller
         $request->validate([
             'supply_id' => 'required|exists:supplies,id',
             'type' => 'required|in:entry,exit',
-            'quantity' => 'required|numeric|min:0.001',
-            'unit_cost' => 'required|numeric|min:0',
+            'quantity' => 'required|numeric|min:0.001|max:999999',
+            'unit_cost' => 'required|numeric|min:0.01',
             'reason' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'movement_date' => 'required|date'
@@ -127,8 +127,8 @@ class SupplyMovementController extends Controller
         $request->validate([
             'supply_id' => 'required|exists:supplies,id',
             'type' => 'required|in:entry,exit',
-            'quantity' => 'required|numeric|min:0.001',
-            'unit_cost' => 'required|numeric|min:0',
+            'quantity' => 'required|numeric|min:0.001|max:999999',
+            'unit_cost' => 'required|numeric|min:0.01',
             'reason' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'movement_date' => 'required|date'
@@ -189,22 +189,7 @@ class SupplyMovementController extends Controller
      */
     public function destroy(SupplyMovement $supplyMovement)
     {
-        DB::beginTransaction();
-        try {
-            $supply = $supplyMovement->supply;
-            $movementInfo = $supply->name . ' (Movimiento: ' . $supplyMovement->quantity . ')';
-            $supplyMovement->delete();
-            
-            // Actualizar el stock del insumo
-            $supply->updateStock();
-
-            DB::commit();
-            return redirect()->route('admin.supply-movements.index')
-                ->with('status', 'Movimiento de inventario eliminado exitosamente.');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->withErrors(['error' => 'Error al eliminar el movimiento: ' . $e->getMessage()]);
-        }
+        // Bloqueo total de eliminación de movimientos
+        return back()->with('error', 'Los movimientos de inventario no se pueden eliminar para preservar la integridad del historial. Si hubo un error, por favor registre un movimiento de ajuste (Entrada/Salida) para corregir el stock.');
     }
 }

@@ -18,8 +18,8 @@
                 <option value="">Seleccionar insumo</option>
                 @foreach($supplies as $supply)
                     <option value="{{ $supply->id }}" {{ old('supply_id') == $supply->id ? 'selected' : '' }}
-                            data-unit="{{ $supply->unit }}" data-unit-cost="{{ $supply->unit_cost }}">
-                        {{ $supply->name }} ({{ $supply->unit }}) - ${{ number_format($supply->unit_cost, 2) }}
+                            data-unit="{{ $supply->unit }}" data-unit-cost="{{ (int)$supply->unit_cost }}">
+                        {{ $supply->name }} ({{ $supply->unit }}) - ${{ number_format((int)$supply->unit_cost, 0) }}
                     </option>
                 @endforeach
             </select>
@@ -185,11 +185,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Mostrar el precio unitario registrado en la entrada de insumos
-            unitCostDisplay.textContent = `$${unitCost.toFixed(2)}`;
+            unitCostDisplay.textContent = `$${unitCost.toFixed(0)}`;
             
             // Calcular y mostrar el precio total cuando se ingresa la cantidad
             const totalCost = qty * unitCost;
-            totalCostDisplay.textContent = `$${totalCost.toFixed(2)}`;
+            totalCostDisplay.textContent = `$${totalCost.toFixed(0)}`;
         } else {
             unitInfo.textContent = 'Seleccione un insumo para ver la unidad';
             unitCostDisplay.textContent = '$0.00';

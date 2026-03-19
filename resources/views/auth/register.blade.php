@@ -13,23 +13,24 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 100svh;
             position: relative;
-            overflow-y: auto;
             overflow-x: hidden;
-            padding: 20px;
             background: #1a1a1a;
         }
-        
+
         body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -42,10 +43,10 @@
             transform: scale(1.1);
             z-index: 0;
         }
-        
+
         body::after {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -53,16 +54,25 @@
             background: rgba(0, 0, 0, 0.4);
             z-index: 1;
         }
-        
-        .register-container {
+
+        .page-wrapper {
             position: relative;
             z-index: 2;
+            min-height: 100vh;
+            min-height: 100svh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 16px 16px;
+            padding-top: max(60px, calc(40px + env(safe-area-inset-top)));
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+        }
+
+        .register-container {
             width: 100%;
             max-width: 480px;
-            margin: 20px auto;
-            padding: 0 20px;
         }
-        
+
         .register-card {
             background: rgba(20, 20, 20, 0.75);
             backdrop-filter: blur(20px);
@@ -158,43 +168,6 @@
             font-weight: 400;
         }
         
-        .password-requirements {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            padding: 0.5rem;
-            margin-top: 0.3rem;
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .requirement {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            margin-bottom: 0.15rem;
-        }
-        
-        .requirement:last-child {
-            margin-bottom: 0;
-        }
-        
-        .requirement-icon {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 7px;
-            color: white;
-        }
-        
-        .requirement.valid .requirement-icon {
-            background: #4CAF50;
-        }
-        
         .register-button {
             width: 100%;
             padding: 0.75rem 1.25rem;
@@ -268,59 +241,57 @@
             content: '⚠';
             font-size: 1rem;
         }
-        
+
         @media (max-width: 480px) {
-            body {
-                padding: 15px;
-            }
-            
-            .register-container {
-                margin: 10px auto;
-                padding: 0 15px;
-            }
-            
             .register-card {
-                padding: 2rem 1.5rem;
-                border-radius: 20px;
+                padding: 1.5rem 1.25rem;
+                border-radius: 16px;
             }
-            
-            .logo-section {
-                margin-bottom: 1.5rem;
+
+            .logo img {
+                height: 75px !important;
             }
-            
-            .logo-text {
-                font-size: 1.5rem;
-            }
-            
+
             .register-title {
-                font-size: 1.25rem;
+                font-size: 1.1rem;
             }
-            
+
             .register-subtitle {
-                font-size: 0.8rem;
+                font-size: 0.78rem;
             }
-            
+
             .form-group {
-                margin-bottom: 0.875rem;
+                margin-bottom: 0.65rem;
             }
-            
+
             .form-input {
-                padding: 0.75rem 0.875rem;
-                font-size: 0.9rem;
-            }
-            
-            .register-button {
-                padding: 0.75rem 1.25rem;
-                font-size: 0.95rem;
-            }
-            
-            .login-link {
-                margin-top: 1.25rem;
-                padding-top: 1rem;
+                padding: 0.65rem 0.75rem;
+                font-size: 0.875rem;
             }
         }
+
+        @media (max-width: 360px) {
+            .register-card {
+                padding: 1.25rem 1rem;
+                border-radius: 14px;
+            }
+
+            .logo img {
+                height: 60px !important;
+            }
+
+            .register-title {
+                font-size: 1rem;
+            }
+
+            .form-input {
+                padding: 0.6rem 0.7rem;
+                font-size: 0.85rem;
+            }
+        }
+
         .back-to-home {
-            position: absolute;
+            position: fixed;
             top: 20px;
             left: 20px;
             color: white;
@@ -353,10 +324,16 @@
 
         @media (max-width: 480px) {
             .back-to-home {
-                top: 10px;
-                left: 10px;
-                padding: 8px 15px;
-                font-size: 0.8rem;
+                top: 8px;
+                left: 8px;
+                padding: 7px 12px;
+                font-size: 0.78rem;
+                gap: 5px;
+            }
+
+            .back-to-home svg {
+                width: 15px;
+                height: 15px;
             }
         }
     </style>
@@ -368,61 +345,63 @@
         </svg>
         Volver al Inicio
     </a>
-    <div class="register-container">
-        <div class="register-card">
-            <div class="logo-section">
-                <div class="logo">
-                    <img src="{{ asset('AGROSACLOGO.png') }}" alt="AGROSAC" style="height: 100px;">
+    <div class="page-wrapper">
+        <div class="register-container">
+            <div class="register-card">
+                <div class="logo-section">
+                    <div class="logo">
+                        <img src="{{ asset('AGROSACLOGO.png') }}" alt="AGROSAC" style="height: 100px;">
+                    </div>
+                    <h1 class="register-title">Crear cuenta</h1>
+                    <p class="register-subtitle">Únete a AGROSAC y gestiona tu finca de manera profesional</p>
                 </div>
-                <h1 class="register-title">Crear cuenta</h1>
-                <p class="register-subtitle">Únete a AGROSAC y gestiona tu finca de manera profesional</p>
-            </div>
-            
-            <form method="POST" action="{{ route('register') }}">
-            @csrf
-                <div class="form-group">
-                    <label class="form-label">Nombre completo</label>
-                    <input type="text" name="name" value="{{ old('name') }}" required 
-                           class="form-input" placeholder="Tu nombre completo" />
-                    @error('name')
-                        <p class="error-message">{{ $message }}</p>
-                    @enderror
-            </div>
                 
-                <div class="form-group">
-                    <label class="form-label">Correo electrónico</label>
-                    <input type="email" name="email" value="{{ old('email') }}" required 
-                           class="form-input" placeholder="tu@email.com" />
-                    @error('email')
-                        <p class="error-message">{{ $message }}</p>
-                    @enderror
-            </div>
+                <form method="POST" action="{{ route('register') }}">
+                @csrf
+                    <div class="form-group">
+                        <label class="form-label">Nombre completo</label>
+                        <input type="text" name="name" value="{{ old('name') }}" required 
+                               class="form-input" placeholder="Tu nombre completo" />
+                        @error('name')
+                            <p class="error-message">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Correo electrónico</label>
+                        <input type="email" name="email" value="{{ old('email') }}" required 
+                               class="form-input" placeholder="tu@email.com" />
+                        @error('email')
+                            <p class="error-message">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="password" required 
+                               class="form-input" placeholder="••••••••" />
+                        @error('password')
+                            <p class="error-message">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Confirmar contraseña</label>
+                        <input type="password" name="password_confirmation" required 
+                               class="form-input" placeholder="••••••••" />
+                    </div>
+                    
+                    <button type="submit" class="register-button">
+                        Crear cuenta
+                    </button>
+                </form>
                 
-                <div class="form-group">
-                    <label class="form-label">Contraseña</label>
-                    <input type="password" name="password" required 
-                           class="form-input" placeholder="••••••••" />
-                    @error('password')
-                        <p class="error-message">{{ $message }}</p>
-                    @enderror
+                <div class="login-link">
+                    <p class="login-text">¿Ya tienes cuenta?</p>
+                    <a href="{{ route('login') }}">Inicia sesión aquí</a>
+                </div>
             </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Confirmar contraseña</label>
-                    <input type="password" name="password_confirmation" required 
-                           class="form-input" placeholder="••••••••" />
-            </div>
-                
-                <button type="submit" class="register-button">
-                    Crear cuenta
-                </button>
-        </form>
-            
-            <div class="login-link">
-                <p class="login-text">¿Ya tienes cuenta?</p>
-                <a href="{{ route('login') }}">Inicia sesión aquí</a>
-            </div>
-            </div>
-    </div>
+        </div>{{-- register-container --}}
+    </div>{{-- page-wrapper --}}
 </body>
 </html>

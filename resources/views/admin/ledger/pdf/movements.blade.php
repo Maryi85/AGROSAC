@@ -117,7 +117,7 @@
                 </td>
                 <td>{{ ucfirst(str_replace('_', ' ', $entry->category)) }}</td>
                 <td class="text-right">
-                    <strong>{{ $entry->type === 'income' ? '+' : '-' }}${{ number_format($entry->amount, 2) }}</strong>
+                    <strong>{{ $entry->type === 'income' ? '+' : '-' }}${{ number_format($entry->amount, 0) }}</strong>
                 </td>
                 <td>{{ $entry->crop ? $entry->crop->name : '—' }}</td>
                 <td>{{ $entry->plot ? $entry->plot->name : '—' }}</td>

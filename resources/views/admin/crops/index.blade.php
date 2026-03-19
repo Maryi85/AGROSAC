@@ -12,30 +12,30 @@ use Illuminate\Support\Facades\Storage;
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <!-- Botones de acción -->
-    <div class="mb-6 flex justify-between items-center">
-        <a href="{{ route('admin.crops.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+    {{-- Responsive: wrap on mobile --}}
+    <div class="mb-6 flex flex-wrap gap-2 justify-between items-center">
+        <a href="{{ route('admin.crops.create') }}" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>Nuevo Cultivo</span>
         </a>
-        <a href="{{ route('admin.crops.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
+        <a href="{{ route('admin.crops.pdf', request()->query()) }}" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-medium transition-colors">
             <i data-lucide="file-text" class="w-5 h-5"></i>
             <span>Descargar PDF</span>
         </a>
     </div>
 
-    <!-- Filtros -->
-    <form method="GET" class="mb-4 flex gap-2">
+    {{-- Responsive: stack filter on mobile --}}
+    <form method="GET" class="mb-4 flex flex-col sm:flex-row gap-2">
         <div class="flex-1">
             <x-search-bar placeholder="Buscar por nombre" :with-form="false" />
         </div>
-        <select name="status" class="border border-emerald-200 rounded px-3 py-2">
+        <select name="status" class="w-full sm:w-auto border border-emerald-200 rounded px-3 py-2">
             <option value="">Todos los estados</option>
             @foreach($statuses as $key => $label)
                 <option value="{{ $key }}" {{ $status === $key ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
-        <button class="px-3 py-2 border border-emerald-300 rounded text-emerald-700 hover:bg-emerald-100 inline-flex items-center gap-2">
+        <button class="w-full sm:w-auto px-3 py-2 border border-emerald-300 rounded text-emerald-700 hover:bg-emerald-100 inline-flex items-center justify-center gap-2">
             <i data-lucide="search" class="w-4 h-4"></i>
             <span>Filtrar</span>
         </button>
@@ -61,7 +61,7 @@ use Illuminate\Support\Facades\Storage;
                 <tr class="border-b hover:bg-gray-50" data-crop-id="{{ $crop->id }}">
                     <td class="py-3 pr-4">
                         @if(!empty($crop->photo))
-                            <img src="{{ asset('storage/' . $crop->photo) }}" alt="{{ $crop->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <img src="{{ storage_asset($crop->photo) }}" alt="{{ $crop->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
                             </div>
@@ -118,6 +118,9 @@ use Illuminate\Support\Facades\Storage;
                                     data-crop-status="{{ $crop->status }}"
                                     data-crop-created="{{ $crop->created_at->format('d/m/Y H:i') }}"
                                     data-crop-updated="{{ $crop->updated_at->format('d/m/Y H:i') }}"
+                                    data-crop-tasks-count="{{ $crop->tasks_count }}"
+                                    data-crop-consumptions-count="{{ $crop->supply_consumptions_count }}"
+                                    data-crop-entries-count="{{ $crop->ledger_entries_count }}"
                                     title="Ver detalles">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
@@ -131,7 +134,7 @@ use Illuminate\Support\Facades\Storage;
                                     data-crop-yield="{{ $crop->yield_per_hectare ?? '' }}"
                                     data-crop-status="{{ $crop->status }}"
                                     data-crop-plot-id="{{ $crop->plot_id ?? '' }}"
-                                    data-crop-photo="{{ $crop->photo ? asset('storage/' . $crop->photo) : '' }}"
+                                    data-crop-photo="{{ $crop->photo ? storage_asset($crop->photo) : '' }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
@@ -164,7 +167,7 @@ use Illuminate\Support\Facades\Storage;
 
         <!-- Modal de edición -->
     <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto" style="display: none;">
-        <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4 my-8">
+        <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 my-8 max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-emerald-700">Editar Cultivo</h3>
                 <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
@@ -187,15 +190,15 @@ use Illuminate\Support\Facades\Storage;
                         <textarea name="description" id="editDescription" rows="3" class="w-full border border-emerald-200 rounded px-3 py-2"></textarea>
                     </div>
                     
-                    <!-- Variedad y Rendimiento -->
-                    <div class="grid grid-cols-2 gap-4">
+                    {{-- Responsive: 1 col on mobile, 2 on sm+ --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm mb-1 text-emerald-800">Variedad</label>
                             <input type="text" name="variety" id="editVariety" class="w-full border border-emerald-200 rounded px-3 py-2" />
                         </div>
                         <div>
                             <label class="block text-sm mb-1 text-emerald-800">Rendimiento por Hectárea (kg)</label>
-                            <input type="number" step="0.01" min="0" name="yield_per_hectare" id="editYield" class="w-full border border-emerald-200 rounded px-3 py-2" />
+                            <input type="number" step="1" min="0" name="yield_per_hectare" id="editYield" class="w-full border border-emerald-200 rounded px-3 py-2" />
                         </div>
                     </div>
                     
@@ -235,14 +238,14 @@ use Illuminate\Support\Facades\Storage;
                         </select>
                     </div>
                     
-                    <!-- Botones -->
-                    <div class="flex items-center gap-2">
-                        <button type="button" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50" onclick="closeEditModal()">
+                    {{-- Responsive: full-width buttons on mobile --}}
+                    <div class="flex flex-col-reverse sm:flex-row gap-2">
+                        <button type="button" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-center" onclick="closeEditModal()">
                             <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                             Cancelar
                         </button>
-                        <button type="submit" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors" id="updateButton">
-                            <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
+                        <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors inline-flex items-center justify-center gap-2" id="updateButton">
+                            <i data-lucide="save" class="w-4 h-4"></i>
                             <span>Actualizar</span>
                         </button>
                     </div>
@@ -252,7 +255,7 @@ use Illuminate\Support\Facades\Storage;
     
     <!-- Modal de confirmación para eliminar -->
     <div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-        <div class="bg-white border rounded p-6 w-full max-w-md mx-4">
+        <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-red-700">Confirmar Eliminación</h3>
                 <button type="button" onclick="closeDeleteModal()" class="text-gray-400 hover:text-gray-600">
@@ -290,8 +293,8 @@ use Illuminate\Support\Facades\Storage;
     </div>
 
     <!-- Modal de detalles -->
-    <div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-        <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+        <div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
+        <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-emerald-700">Detalles del Cultivo</h3>
                 <button type="button" onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
@@ -336,11 +339,11 @@ use Illuminate\Support\Facades\Storage;
                             <div class="text-sm text-gray-600">Tareas</div>
                         </div>
                         <div class="text-center">
-                            <div class="text-2xl font-bold text-emerald-600">0</div>
+                            <div class="text-2xl font-bold text-emerald-600" id="viewConsumptions">0</div>
                             <div class="text-sm text-gray-600">Consumos</div>
                         </div>
                         <div class="text-center">
-                            <div class="text-2xl font-bold text-emerald-600">0</div>
+                            <div class="text-2xl font-bold text-emerald-600" id="viewEntries">0</div>
                             <div class="text-sm text-gray-600">Entradas</div>
                         </div>
                     </div>
@@ -490,7 +493,7 @@ function closeEditModal() {
 }
 
 // Función para abrir el modal de detalles
-function openViewModal(id, name, description, variety, yield_per_hectare, status, created, updated) {
+function openViewModal(id, name, description, variety, yield_per_hectare, status, created, updated, tasks, consumptions, entries) {
     // Llenar los campos del modal de detalles
     document.getElementById('viewName').textContent = name;
     document.getElementById('viewVariety').textContent = variety || '—';
@@ -498,6 +501,9 @@ function openViewModal(id, name, description, variety, yield_per_hectare, status
     document.getElementById('viewYield').textContent = yield_per_hectare ? `${yield_per_hectare} kg/ha` : '—';
     document.getElementById('viewCreated').textContent = created;
     document.getElementById('viewUpdated').textContent = updated;
+    document.getElementById('viewTasks').textContent = tasks || 0;
+    document.getElementById('viewConsumptions').textContent = consumptions || 0;
+    document.getElementById('viewEntries').textContent = entries || 0;
     
     // Configurar el estado con el badge apropiado
     const statusElement = document.getElementById('viewStatus');
@@ -907,8 +913,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const status = this.getAttribute('data-crop-status');
             const created = this.getAttribute('data-crop-created');
             const updated = this.getAttribute('data-crop-updated');
+            const tasksCount = this.getAttribute('data-crop-tasks-count');
+            const consumptionsCount = this.getAttribute('data-crop-consumptions-count');
+            const entriesCount = this.getAttribute('data-crop-entries-count');
             
-            openViewModal(id, name, description, variety, yield_per_hectare, status, created, updated);
+            openViewModal(id, name, description, variety, yield_per_hectare, status, created, updated, tasksCount, consumptionsCount, entriesCount);
         });
     });
     

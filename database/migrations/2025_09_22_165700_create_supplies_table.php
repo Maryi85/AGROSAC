@@ -16,7 +16,12 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('unit'); // kg, lt, unit
             $table->decimal('unit_cost', 12, 2)->default(0);
+            $table->decimal('current_stock', 12, 3)->default(0);
+            $table->decimal('min_stock', 12, 3)->default(0);
+            $table->string('category')->nullable();
+            $table->text('description')->nullable();
             $table->string('status')->default('active')->index();
+            $table->string('photo')->nullable();
             $table->timestamps();
         });
     }

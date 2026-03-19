@@ -193,24 +193,24 @@
             <!-- Ingresos -->
             <td class="kpi-card bg-green-light">
                 <div class="kpi-label text-green">Ingresos Totales</div>
-                <div class="kpi-value text-green">${{ number_format($totalIncome, 2) }}</div>
+                <div class="kpi-value text-green">${{ number_format($totalIncome, 0) }}</div>
             </td>
             <!-- Gastos -->
             <td class="kpi-card bg-red-light">
                 <div class="kpi-label text-red">Gastos Totales</div>
-                <div class="kpi-value text-red">${{ number_format($totalExpenses, 2) }}</div>
+                <div class="kpi-value text-red">${{ number_format($totalExpenses, 0) }}</div>
             </td>
             <!-- Costos Operativos -->
             <td class="kpi-card bg-orange-light">
                 <div class="kpi-label text-orange">Costos Operativos</div>
-                <div class="kpi-value text-orange">${{ number_format(($totalSupplyCosts ?? 0) + ($totalToolCosts ?? 0) + ($totalTaskCosts ?? 0), 2) }}</div>
+                <div class="kpi-value text-orange">${{ number_format(($totalSupplyCosts ?? 0) + ($totalToolCosts ?? 0) + ($totalTaskCosts ?? 0), 0) }}</div>
             </td>
             <!-- Resultado Neto -->
             @php $netProfit = $totalIncome - $totalExpenses; $isPositive = $netProfit >= 0; @endphp
             <td class="kpi-card" style="background-color: {{ $isPositive ? '#ecfdf5' : '#fef2f2' }}; border: 1px solid {{ $isPositive ? '#10b981' : '#ef4444' }};">
                 <div class="kpi-label" style="color: {{ $isPositive ? '#059669' : '#dc2626' }};">Resultado Neto</div>
                 <div class="kpi-value" style="color: {{ $isPositive ? '#059669' : '#dc2626' }};">
-                    {{ $isPositive ? '+' : '' }}${{ number_format($netProfit, 2) }}
+                    {{ $isPositive ? '+' : '' }}${{ number_format($netProfit, 0) }}
                 </div>
             </td>
         </tr>
@@ -225,7 +225,7 @@
                 @forelse($incomeByCategory as $item)
                 <tr>
                     <td class="category-name">{{ ucfirst(str_replace('_', ' ', $item->category)) }}</td>
-                    <td class="text-right font-bold text-green">${{ number_format($item->total, 2) }}</td>
+                    <td class="text-right font-bold text-green">${{ number_format($item->total, 0) }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="2" class="text-center text-gray">Sin registros</td></tr>
@@ -240,7 +240,7 @@
                 @forelse($expensesByCategory as $item)
                 <tr>
                     <td class="category-name">{{ ucfirst(str_replace('_', ' ', $item->category)) }}</td>
-                    <td class="text-right font-bold text-red">${{ number_format($item->total, 2) }}</td>
+                    <td class="text-right font-bold text-red">${{ number_format($item->total, 0) }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="2" class="text-center text-gray">Sin registros</td></tr>
@@ -264,11 +264,11 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>${{ number_format($totalSupplyCosts, 2) }}</td>
-                    <td>${{ number_format($totalToolCosts, 2) }}</td>
-                    <td>${{ number_format($totalTaskCosts, 2) }}</td>
+                    <td>${{ number_format($totalSupplyCosts, 0) }}</td>
+                    <td>${{ number_format($totalToolCosts, 0) }}</td>
+                    <td>${{ number_format($totalTaskCosts, 0) }}</td>
                     <td class="text-right font-bold text-orange">
-                        ${{ number_format(($totalSupplyCosts ?? 0) + ($totalToolCosts ?? 0) + ($totalTaskCosts ?? 0), 2) }}
+                        ${{ number_format(($totalSupplyCosts ?? 0) + ($totalToolCosts ?? 0) + ($totalTaskCosts ?? 0), 0) }}
                     </td>
                 </tr>
             </tbody>
@@ -310,20 +310,20 @@
                         </div>
                     </td>
                     <td class="text-right text-green font-bold">
-                        ${{ number_format($analysis['income'], 2) }}
+                        ${{ number_format($analysis['income'], 0) }}
                     </td>
                     <td class="text-right text-red">
-                        ${{ number_format($analysis['expenses']['ledger'], 2) }}
+                        ${{ number_format($analysis['expenses']['ledger'], 0) }}
                     </td>
                     <td class="text-right text-orange">
-                        ${{ number_format($totalCosts, 2) }}
+                        ${{ number_format($totalCosts, 0) }}
                     </td>
                     <td class="text-right font-bold" style="color: #b91c1c;">
-                        ${{ number_format($totalGeneral, 2) }}
+                        ${{ number_format($totalGeneral, 0) }}
                     </td>
                     <td class="text-right font-bold">
                         <span style="background-color: {{ $isProfit ? '#d1fae5' : '#fee2e2' }}; color: {{ $isProfit ? '#065f46' : '#991b1b' }}; padding: 2px 6px; border-radius: 4px;">
-                            {{ $isProfit ? '+' : '' }}${{ number_format($profit, 2) }}
+                            {{ $isProfit ? '+' : '' }}${{ number_format($profit, 0) }}
                         </span>
                     </td>
                 </tr>

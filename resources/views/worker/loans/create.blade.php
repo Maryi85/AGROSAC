@@ -28,7 +28,7 @@
                     <option value="{{ $tool->id }}" 
                             data-available="{{ $tool->available_qty }}"
                             data-category="{{ $tool->category }}"
-                            data-photo="{{ $tool->photo ? asset('storage/' . $tool->photo) : '' }}"
+                            data-photo="{{ $tool->photo ? storage_asset($tool->photo) : '' }}"
                             {{ old('tool_id') == $tool->id ? 'selected' : '' }}>
                         {{ $tool->name }} ({{ $tool->category }}) - Disponible: {{ $tool->available_qty }}
                     </option>

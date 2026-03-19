@@ -27,7 +27,7 @@ class DashboardController extends Controller
         $pendingTasksToday = Task::where('status', 'pending')
             ->whereDate('scheduled_for', Carbon::today())
             ->count();
-        
+
         // Si no usan due_date, usar created_at o simplemente pendientes generales si se prefiere
         if ($pendingTasksToday == 0) {
             $pendingTasksToday = Task::where('status', 'pending')->count();
@@ -43,10 +43,10 @@ class DashboardController extends Controller
         // 4. Alertas de Cultivo (Cultivos activos por ahora)
         $cropAlerts = Crop::where('status', 'scanner') // Asumiendo 'active' o similar
             ->count();
-            
+
         // Si no hay cultivos en estado 'scanner', mostrar todos los activos
         if ($cropAlerts == 0) {
-             $cropAlerts = Crop::where('status', 'active')->count();
+            $cropAlerts = Crop::where('status', 'active')->count();
         }
 
         // B) Gráfico Principal: Rendimiento Semanal (Completed vs Assigned last 7 days)
@@ -60,10 +60,13 @@ class DashboardController extends Controller
             $date = Carbon::now()->subDays($i);
             $dateString = $date->format('Y-m-d');
             $displayDate = $date->format('d/m');
-            
+
             $weeklyPerformance['dates'][] = $displayDate;
-            
-            $weeklyPerformance['assigned'][] = Task::whereDate('created_at', $dateString)->count();
+
+            // Asignadas = tareas programadas para ese día (scheduled_for)
+            $weeklyPerformance['assigned'][] = Task::whereDate('scheduled_for', $dateString)->count();
+
+            // Completadas = tareas marcadas como completadas ese día (por updated_at)
             $weeklyPerformance['completed'][] = Task::where('status', 'completed')
                 ->whereDate('updated_at', $dateString)
                 ->count();
@@ -129,5 +132,29 @@ class DashboardController extends Controller
 
         return view('foreman.loans', compact('loans'));
     }
-}
 
+    /**
+     * Get dashboard data in JSON format for real-time updates
+     */
+    public function data(): \Illuminate\Http\JsonResponse
+    {
+        $presentWorkers = User::where('role', 'worker')->whereNotNull('email_verified_at')->count();
+        $pendingTasksCount = Task::where('status', 'pending')->count();
+        $completedTasksCount = Task::where('status', 'completed')->count();
+
+        $tools = Tool::with('entries')->where('status', 'operational')->get();
+        $totalTools = $tools->sum('total_entries');
+        $availableTools = $tools->sum('available_qty');
+        $toolsInUseCount = $totalTools - $availableTools;
+
+        return response()->json([
+            'success' => true,
+            'stats' => [
+                'presentWorkers' => $presentWorkers,
+                'pendingTasks' => $pendingTasksCount,
+                'completedTasks' => $completedTasksCount,
+                'toolsInUse' => $toolsInUseCount,
+            ]
+        ]);
+    }
+}

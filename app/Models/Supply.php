@@ -49,7 +49,8 @@ class Supply extends Model
     {
         $totalEntries = $this->entries()->sum('quantity');
         $totalExits = $this->exits()->sum('quantity');
-        $this->current_stock = $totalEntries - $totalExits;
+        $totalConsumptions = $this->consumptions()->sum('qty');
+        $this->current_stock = $totalEntries - $totalExits - $totalConsumptions;
         $this->save();
     }
 

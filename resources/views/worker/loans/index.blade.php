@@ -1,9 +1,10 @@
 @extends('worker.layout')
 
 @section('header')
-<div class="flex items-center justify-between">
+{{-- Responsive: header wraps on mobile --}}
+<div class="flex flex-wrap items-center justify-between gap-2">
     <h2 class="text-lg font-semibold text-emerald-700">Mis Préstamos de Herramientas</h2>
-    <a href="{{ route('worker.loans.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded">
+    <a href="{{ route('worker.loans.create') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded">
         <i data-lucide="plus" class="w-4 h-4"></i>
         <span>Solicitar Préstamo</span>
     </a>
@@ -12,8 +13,8 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <!-- Filtros -->
-    <div class="mb-6 flex gap-4 items-end">
+    {{-- Responsive: filter stacks on mobile --}}
+    <div class="mb-6 flex flex-col sm:flex-row gap-2 sm:items-end">
         <div class="flex-1">
             <label class="block text-sm mb-1 text-emerald-800">Filtrar por estado</label>
             <select class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500" onchange="filterByStatus(this.value)">
@@ -43,11 +44,11 @@
             </thead>
             <tbody>
                 @forelse ($loans as $loan)
-                <tr class="border-b hover:bg-gray-50" data-status="{{ $loan->status }}">
+                <tr id="loan-row-{{ $loan->id }}" class="border-b hover:bg-gray-50" data-status="{{ $loan->status }}">
                     <td class="py-3 pr-4">
                         <div class="flex items-center gap-3">
                             @if($loan->tool->photo)
-                                <img src="{{ asset('storage/' . $loan->tool->photo) }}" alt="Foto" class="h-10 w-10 object-cover rounded border border-gray-200">
+                                <img src="{{ storage_asset($loan->tool->photo) }}" alt="Foto" class="h-10 w-10 object-cover rounded border border-gray-200">
                             @else
                                 <div class="h-10 w-10 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-xs text-gray-400">Sin foto</div>
                             @endif
@@ -66,11 +67,11 @@
                                 'pending' => 'bg-yellow-100 text-yellow-700',
                                 'approved' => 'bg-blue-100 text-blue-700',
                                 'rejected' => 'bg-red-100 text-red-700',
-                                'out' => 'bg-green-100 text-green-700',
-                                'returned_by_worker' => 'bg-orange-100 text-orange-700',
-                                'returned' => 'bg-gray-100 text-gray-700',
-                                'lost' => 'bg-red-100 text-red-700',
-                                'damaged' => 'bg-orange-100 text-orange-700',
+                                'out' => 'bg-blue-100 text-blue-700',
+                                'returned_by_worker' => 'bg-emerald-100 text-emerald-700',
+                                'returned' => 'bg-emerald-100 text-emerald-700',
+                                'lost' => 'bg-orange-100 text-orange-700',
+                                'damaged' => 'bg-red-100 text-red-700',
                             ];
                             $statusLabels = [
                                 'pending' => 'Pendiente',
@@ -83,7 +84,7 @@
                                 'damaged' => 'Dañado',
                             ];
                         @endphp
-                        <span class="px-2 py-1 text-xs rounded {{ $statusClasses[$loan->status] ?? 'bg-gray-100 text-gray-700' }}">
+                        <span id="loan-status-badge-{{ $loan->id }}" class="px-2 py-1 text-xs rounded {{ $statusClasses[$loan->status] ?? 'bg-gray-100 text-gray-700' }}">
                             {{ $statusLabels[$loan->status] ?? $loan->status }}
                         </span>
                     </td>
@@ -117,11 +118,12 @@
                             
                             <!-- Devolver (solo si está prestado) -->
                             @if($loan->status === 'out')
-                                <a href="{{ route('worker.loans.return-form', $loan) }}" 
-                                   class="inline-flex items-center justify-center w-8 h-8 border border-green-200 rounded hover:bg-green-50 text-green-600" 
-                                   title="Devolver">
-                                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                                </a>
+                                <button onclick="openReturnModal({{ $loan->id }}, '{{ $loan->tool->name }}')" 
+                                        class="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium text-xs transition-colors shadow-sm" 
+                                        title="Devolver Herramienta">
+                                    <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                                    <span>Devolver Herramienta</span>
+                                </button>
                             @endif
                         </div>
                     </td>
@@ -138,6 +140,54 @@
     <div class="mt-4">{{ $loans->links() }}</div>
 </div>
 
+<!-- Modal de Devolución -->
+<div id="returnModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+        <div class="p-4 border-b bg-emerald-50 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-emerald-800">Devolver Herramienta</h3>
+            <button onclick="closeReturnModal()" class="text-emerald-600 hover:text-emerald-800">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        
+        <form id="returnForm" method="POST" class="p-6 space-y-4">
+            @csrf
+            <p class="text-sm text-gray-600">
+                Estás devolviendo: <span id="returnToolName" class="font-bold text-gray-800"></span>
+            </p>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estado de la herramienta</label>
+                <div class="space-y-2">
+                    <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                        <input type="radio" name="condition_return" value="good" checked class="text-emerald-600">
+                        <span class="ml-2 text-sm">Buen estado</span>
+                    </label>
+                    <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                        <input type="radio" name="condition_return" value="damaged" class="text-orange-600">
+                        <span class="ml-2 text-sm">Dañado</span>
+                    </label>
+                    <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                        <input type="radio" name="condition_return" value="lost" class="text-red-600">
+                        <span class="ml-2 text-sm">Extraviado</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div>
+                <label for="return_notes" class="block text-sm font-medium text-gray-700 mb-1">Notas (Opcional)</label>
+                <textarea name="return_notes" id="return_notes" rows="2" class="w-full px-3 py-2 border rounded text-sm focus:ring-emerald-500" placeholder="Alguna observación sobre el estado..."></textarea>
+            </div>
+            
+            {{-- Responsive: full-width on mobile --}}
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+                <button type="button" onclick="closeReturnModal()" class="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded text-center">Cancelar</button>
+                <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-center">Confirmar Devolución</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 function filterByStatus(status) {
     const rows = document.querySelectorAll('tbody tr[data-status]');
@@ -149,5 +199,67 @@ function filterByStatus(status) {
         }
     });
 }
+
+function openReturnModal(loanId, toolName) {
+    document.getElementById('returnToolName').textContent = toolName;
+    document.getElementById('returnForm').action = `/worker/loans/${loanId}/return`;
+    document.getElementById('returnModal').style.display = 'flex';
+}
+
+function closeReturnModal() {
+    document.getElementById('returnModal').style.display = 'none';
+    document.getElementById('returnForm').reset();
+}
+
+document.getElementById('returnForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = this;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (window.Swal) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert(data.message);
+            }
+            closeReturnModal();
+            
+            // Actualizar fila dinámicamente
+            const loanId = form.action.split('/').slice(-2, -1)[0];
+            const badge = document.getElementById(`loan-status-badge-${loanId}`);
+            if (badge) {
+                badge.className = 'px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700';
+                badge.textContent = 'Devuelto (Pendiente)';
+            }
+            
+            // Opcional: Recargar después de un momento
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            alert(data.message || 'Error al procesar la devolución');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    }
+});
 </script>
 @endsection

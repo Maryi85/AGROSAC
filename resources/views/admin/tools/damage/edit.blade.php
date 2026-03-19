@@ -103,12 +103,12 @@
                 @if($entry->damage_photo)
                 <div class="mt-3">
                     <p class="text-xs text-gray-500 mb-1">Foto actual:</p>
-                    <a href="{{ asset('storage/' . $entry->damage_photo) }}" target="_blank" class="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 mb-2">
+                    <a href="{{ storage_asset($entry->damage_photo) }}" target="_blank" class="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 mb-2">
                         <i data-lucide="image" class="w-4 h-4"></i>
                         <span>Ver en pestaña</span>
                     </a>
                     <div class="mt-2">
-                        <img src="{{ asset('storage/' . $entry->damage_photo) }}" alt="Foto actual del daño/pérdida" class="max-h-48 rounded border border-gray-200">
+                        <img src="{{ storage_asset($entry->damage_photo) }}" alt="Foto actual del daño/pérdida" class="max-h-48 rounded border border-gray-200">
                     </div>
                 </div>
                 @endif

@@ -22,7 +22,7 @@ class UpdateToolRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:tools,name,' . $this->route('tool')->id],
             'category' => ['required', 'string', 'in:herramientas_manuales,herramientas_electricas,equipos_agricolas,vehiculos,otros'],
             'status' => ['required', 'string', 'in:operational,damaged,lost,retired'],
             'description' => ['nullable', 'string', 'max:1000'],
@@ -40,6 +40,7 @@ class UpdateToolRequest extends FormRequest
     {
         return [
             'name.required' => 'El nombre de la herramienta es obligatorio.',
+            'name.unique' => 'Ya existe una herramienta con este nombre.',
             'name.max' => 'El nombre no puede tener más de 255 caracteres.',
             'category.required' => 'La categoría es obligatoria.',
             'category.in' => 'La categoría seleccionada no es válida.',

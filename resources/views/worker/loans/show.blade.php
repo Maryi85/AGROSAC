@@ -33,7 +33,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Foto</label>
                     @if($loan->tool->photo)
-                        <img src="{{ asset('storage/' . $loan->tool->photo) }}" alt="Foto herramienta" class="h-24 w-24 object-cover rounded border border-gray-200">
+                        <img src="{{ storage_asset($loan->tool->photo) }}" alt="Foto herramienta" class="h-24 w-24 object-cover rounded border border-gray-200">
                     @else
                         <span class="text-gray-400 text-sm">Sin foto</span>
                     @endif

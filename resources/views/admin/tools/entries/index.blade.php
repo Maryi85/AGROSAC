@@ -12,11 +12,11 @@
 @endsection
 
 @section('content')
-<!-- Filtros -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-    <div class="flex items-end justify-between gap-4 mb-4">
+{{-- Responsive: wrap on mobile --}}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h3 class="text-lg font-semibold text-emerald-700">Filtrar Entradas</h3>
-        <a href="{{ route(route_prefix() . 'tool-entries.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
+        <a href="{{ route(route_prefix() . 'tool-entries.create') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-lg font-medium transition-colors">
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>Nueva Entrada</span>
         </a>
@@ -54,7 +54,7 @@
                     </td>
                     <td class="py-3 px-4">
                         @if($entry->tool->photo)
-                            <img src="{{ asset('storage/' . $entry->tool->photo) }}" alt="{{ $entry->tool->name }}" class="w-12 h-12 rounded-full object-cover border border-gray-200">
+                            <img src="{{ storage_asset($entry->tool->photo) }}" alt="{{ $entry->tool->name }}" class="w-12 h-12 rounded-full object-cover border border-gray-200">
                         @else
                             <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
                                 <i data-lucide="image" class="w-5 h-5"></i>
@@ -76,7 +76,7 @@
                     <td class="py-3 px-4">
                         <div class="text-sm text-gray-600">
                             @if($entry->unit_cost)
-                                ${{ number_format($entry->unit_cost, 2) }}
+                                ${{ number_format($entry->unit_cost, 0) }}
                             @else
                                 —
                             @endif
@@ -85,7 +85,7 @@
                     <td class="py-3 px-4">
                         <div class="font-semibold text-gray-900">
                             @if($entry->total_cost)
-                                ${{ number_format($entry->total_cost, 2) }}
+                                ${{ number_format($entry->total_cost, 0) }}
                             @else
                                 —
                             @endif
@@ -112,16 +112,23 @@
                             </button>
                             
                             <!-- Eliminar -->
-                            <form method="POST" action="{{ route(route_prefix() . 'tool-entries.destroy', $entry) }}" class="inline" 
-                                  data-confirm="true" data-message="¿Eliminar esta entrada? Esta acción no se puede deshacer.">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" 
-                                        class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" 
-                                        title="Eliminar">
+                            @if($entry->available_qty < $entry->quantity)
+                                <button class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" 
+                                        title="No se puede eliminar: Esta entrada ya ha sido utilizada (préstamos, daños o pérdidas)" disabled>
                                     <i data-lucide="trash" class="w-4 h-4"></i>
                                 </button>
-                            </form>
+                            @else
+                                <form method="POST" action="{{ route(route_prefix() . 'tool-entries.destroy', $entry) }}" class="inline" 
+                                      data-confirm="true" data-message="¿Eliminar esta entrada? Esta acción no se puede deshacer.">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="inline-flex items-center justify-center w-8 h-8 border border-red-200 rounded hover:bg-red-50 text-red-600" 
+                                            title="Eliminar">
+                                        <i data-lucide="trash" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -144,7 +151,7 @@
 
 <!-- Modal de edición -->
 <div id="editEntryModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto" style="display: none;">
-    <div class="bg-white border rounded-lg p-6 w-full max-w-2xl mx-4 my-8">
+    <div class="bg-white border rounded-lg p-5 sm:p-6 w-full max-w-2xl mx-4 my-8 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Editar Entrada de Herramienta</h3>
             <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
@@ -211,7 +218,7 @@
                     </label>
                     <div class="relative">
                         <span class="absolute left-3 top-2 text-gray-500">$</span>
-                        <input type="number" name="unit_cost" id="editUnitCost" step="0.01" min="0" 
+                        <input type="number" name="unit_cost" id="editUnitCost" step="1" min="0" 
                                class="w-full border border-gray-300 rounded-md pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
@@ -227,16 +234,16 @@
                 </div>
             </div>
 
-            <!-- Botones -->
-            <div class="flex items-center gap-2 justify-end pt-4 border-t">
+            {{-- Responsive: full-width on mobile --}}
+            <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-4 border-t">
                 <button type="button" onclick="closeEditModal()" 
-                        class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                        class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors text-center">
                     <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                     Cancelar
                 </button>
                 <button type="submit" 
-                        class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors">
-                    <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
+                        class="w-full sm:w-auto px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors inline-flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i>
                     Actualizar
                 </button>
             </div>
@@ -250,6 +257,34 @@
         const editButtons = document.querySelectorAll('.edit-entry-btn');
         const form = document.getElementById('editEntryForm');
         
+        // Variables para validación de costo en edit modal
+        const editTypeSelect = document.getElementById('editType');
+        const editUnitCostInput = document.getElementById('editUnitCost');
+        const editUnitCostLabel = document.querySelector('label[for="editUnitCost"]');
+        
+        function toggleEditUnitCostRequirement() {
+            const isPurchase = editTypeSelect.value === 'purchase';
+            
+            if (isPurchase) {
+                editUnitCostInput.setAttribute('required', 'required');
+                editUnitCostInput.setAttribute('min', '1'); 
+                if (editUnitCostLabel && !editUnitCostLabel.querySelector('.text-red-500')) {
+                    editUnitCostLabel.innerHTML += ' <span class="text-red-500">*</span>';
+                }
+            } else {
+                editUnitCostInput.removeAttribute('required');
+                editUnitCostInput.setAttribute('min', '0');
+                if (editUnitCostLabel && editUnitCostLabel.querySelector('.text-red-500')) {
+                    editUnitCostLabel.querySelector('.text-red-500').remove();
+                }
+            }
+        }
+        
+        // Agregar listener solo una vez
+        if(editTypeSelect) {
+            editTypeSelect.addEventListener('change', toggleEditUnitCostRequirement);
+        }
+
         editButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const entryId = this.dataset.entryId;
@@ -280,6 +315,9 @@
                 if (typeof lucide !== 'undefined') {
                     lucide.createIcons();
                 }
+                
+                // Actualizar estado de validación según el tipo cargado
+                toggleEditUnitCostRequirement();
             });
         });
     });

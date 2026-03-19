@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('foreman.layout')
 
 @section('content')
 <div class="bg-white border rounded p-4">
@@ -34,7 +34,7 @@
             </div>
             <div>
                 <label for="unit_cost" class="block text-sm mb-1 text-emerald-800">Costo por Unidad</label>
-                <input type="number" step="0.01" min="0" name="unit_cost" id="unit_cost" class="w-full border border-emerald-200 rounded px-3 py-2" value="{{ old('unit_cost', $supply->unit_cost) }}" required>
+                <input type="number" step="1" min="0" name="unit_cost" id="unit_cost" class="w-full border border-emerald-200 rounded px-3 py-2" value="{{ old('unit_cost', (int)$supply->unit_cost) }}" required>
                 @error('unit_cost')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -44,7 +44,7 @@
         <!-- Stock Mínimo -->
         <div>
             <label for="min_stock" class="block text-sm mb-1 text-emerald-800">Stock Mínimo</label>
-            <input type="number" step="0.01" min="0" name="min_stock" id="min_stock" class="w-full border border-emerald-200 rounded px-3 py-2" value="{{ old('min_stock', $supply->min_stock) }}" required>
+            <input type="number" step="1" min="0" name="min_stock" id="min_stock" class="w-full border border-emerald-200 rounded px-3 py-2" value="{{ old('min_stock', $supply->min_stock) }}" required>
             @error('min_stock')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
@@ -55,7 +55,7 @@
             <label for="photo" class="block text-sm mb-1 text-emerald-800">Foto</label>
             @if($supply->photo)
                 <div class="mb-2">
-                    <img src="{{ asset('storage/' . $supply->photo) }}" alt="{{ $supply->name }}" class="w-32 h-32 object-cover rounded">
+                    <img src="{{ storage_asset($supply->photo) }}" alt="{{ $supply->name }}" class="w-32 h-32 object-cover rounded">
                 </div>
             @endif
             <input type="file" name="photo" id="photo" class="w-full border border-emerald-200 rounded px-3 py-2" accept="image/*">

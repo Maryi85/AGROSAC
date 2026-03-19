@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('foreman.layout')
 
 @section('content')
 <div class="bg-white border rounded p-4">
@@ -27,7 +27,7 @@
                 <div>
                     @if($supply->photo)
                         <div class="mb-2">
-                            <img src="{{ asset('storage/' . $supply->photo) }}" alt="{{ $supply->name }}" class="w-48 h-48 object-cover rounded border border-emerald-200">
+                            <img src="{{ storage_asset($supply->photo) }}" alt="{{ $supply->name }}" class="w-48 h-48 object-cover rounded border border-emerald-200">
                         </div>
                     @else
                         <div class="w-48 h-48 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
@@ -71,7 +71,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Costo por Unidad</label>
-                    <p class="text-sm text-gray-900 mt-1">${{ number_format($supply->unit_cost, 2) }}</p>
+                    <p class="text-sm text-gray-900 mt-1">${{ number_format((int)$supply->unit_cost, 0) }}</p>
                 </div>
             </div>
         </div>

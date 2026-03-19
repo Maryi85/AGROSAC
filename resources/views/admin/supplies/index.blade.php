@@ -7,15 +7,16 @@
 @section('content')
 <div class="bg-white border rounded p-4">
     <!-- Filtros de búsqueda -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <div class="flex items-end justify-between gap-4 mb-4">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+        {{-- Responsive: wrap on mobile --}}
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Buscar Insumos</h3>
-            <div class="flex gap-2">
-                <a href="{{ route('admin.supplies.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded font-medium transition-colors">
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                <a href="{{ route('admin.supplies.pdf', request()->query()) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded font-medium transition-colors">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                     <span>Descargar PDF</span>
                 </a>
-                <a href="{{ route('admin.supplies.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded font-medium transition-colors">
+                <a href="{{ route('admin.supplies.create') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded font-medium transition-colors">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                     <span>Nuevo Insumo</span>
                 </a>
@@ -46,7 +47,7 @@
                 <tr class="border-b hover:bg-gray-50" data-supply-id="{{ $supply->id }}">
                     <td class="py-3 pr-4">
                         @if(!empty($supply->photo))
-                            <img src="{{ asset('storage/' . $supply->photo) }}" alt="{{ $supply->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <img src="{{ storage_asset($supply->photo) }}" alt="{{ $supply->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
                             </div>
@@ -76,7 +77,7 @@
                         <span class="text-sm text-gray-600">{{ rtrim(rtrim(number_format($supply->min_stock, 2, '.', ','), '0'), '.') }}</span>
                     </td>
                     <td class="py-3 pr-4 supply-unit-cost">
-                        ${{ number_format($supply->unit_cost, 2) }}
+                        ${{ number_format((int)$supply->unit_cost, 0) }}
                     </td>
                     <td class="py-3 pr-4 status-badge">
                         <span class="px-2 py-1 text-xs rounded {{ $supply->status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
@@ -94,7 +95,7 @@
                                     data-supply-id="{{ $supply->id }}"
                                     data-supply-name="{{ $supply->name }}"
                                     data-supply-unit="{{ $supply->unit }}"
-                                    data-supply-unit-cost="{{ $supply->unit_cost }}"
+                                    data-supply-unit-cost="{{ (int)$supply->unit_cost }}"
                                     data-supply-status="{{ $supply->status }}"
                                     data-supply-created="{{ $supply->created_at->format('d/m/Y H:i') }}"
                                     data-supply-updated="{{ $supply->updated_at->format('d/m/Y H:i') }}"
@@ -108,16 +109,16 @@
                                     data-supply-id="{{ $supply->id }}"
                                     data-supply-name="{{ $supply->name }}"
                                     data-supply-unit="{{ $supply->unit }}"
-                                    data-supply-unit-cost="{{ $supply->unit_cost }}"
+                                    data-supply-unit-cost="{{ (int)$supply->unit_cost }}"
                                     data-supply-status="{{ $supply->status }}"
-                                    data-supply-photo="{{ $supply->photo ? asset('storage/' . $supply->photo) : '' }}"
+                                    data-supply-photo="{{ $supply->photo ? storage_asset($supply->photo) : '' }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
                             
                             <!-- Eliminar -->
-                            @if($supply->consumptions()->exists())
-                                <button class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" title="No se puede eliminar un insumo con consumos registrados" disabled>
+                            @if($supply->consumptions()->exists() || $supply->movements()->exists())
+                                <button class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" title="No se puede eliminar un insumo con consumos o movimientos registrados" disabled>
                                     <i data-lucide="trash" class="w-4 h-4"></i>
                                 </button>
                             @else
@@ -146,7 +147,7 @@
 
 <!-- Modal de detalles -->
 <div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Detalles del Insumo</h3>
             <button type="button" onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
@@ -210,7 +211,7 @@
 
 <!-- Modal de edición -->
 <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4 my-8">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 my-8 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Editar Insumo</h3>
             <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
@@ -243,7 +244,7 @@
                 </div>
                 <div>
                     <label class="block text-sm mb-1 text-emerald-800">Costo por Unidad</label>
-                    <input type="number" step="0.01" min="0" name="unit_cost" id="editUnitCost" class="w-full border border-emerald-200 rounded px-3 py-2" required />
+                    <input type="number" step="1" min="0" name="unit_cost" id="editUnitCost" class="w-full border border-emerald-200 rounded px-3 py-2" required />
                 </div>
             </div>
             
@@ -272,14 +273,14 @@
                 </select>
             </div>
             
-            <!-- Botones -->
-            <div class="flex items-center gap-2">
-                <button type="button" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50" onclick="closeEditModal()">
+            {{-- Responsive: full-width on mobile --}}
+            <div class="flex flex-col-reverse sm:flex-row gap-2">
+                <button type="button" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-center" onclick="closeEditModal()">
                     <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                     Cancelar
                 </button>
-                <button type="submit" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors" id="updateButton">
-                    <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
+                <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors inline-flex items-center justify-center gap-2" id="updateButton">
+                    <i data-lucide="save" class="w-4 h-4"></i>
                     <span>Actualizar</span>
                 </button>
             </div>
@@ -392,7 +393,7 @@ function openViewModal(id, name, unit, unit_cost, status, created, updated, cons
     // Llenar los campos del modal de detalles
     document.getElementById('viewName').textContent = name;
     document.getElementById('viewUnit').textContent = unit;
-    document.getElementById('viewUnitCost').textContent = '$' + parseFloat(unit_cost).toFixed(2);
+    document.getElementById('viewUnitCost').textContent = '$' + parseFloat(unit_cost).toFixed(0);
     document.getElementById('viewConsumptions').textContent = consumptions + ' registros';
     document.getElementById('viewCreated').textContent = created;
     document.getElementById('viewUpdated').textContent = updated;
@@ -555,7 +556,7 @@ function updateTableRowWithServerData(supplyData) {
         // Actualizar costo unitario
         const unitCostCell = row.querySelector('.supply-unit-cost');
         if (unitCostCell) {
-            unitCostCell.textContent = '$' + parseFloat(supplyData.unit_cost).toFixed(2);
+            unitCostCell.textContent = '$' + parseFloat(supplyData.unit_cost).toFixed(0);
         }
         
         // Actualizar foto
@@ -629,7 +630,7 @@ function updateTableRow() {
         
         const unitCostCell = row.querySelector('.supply-unit-cost');
         if (unitCostCell) {
-            unitCostCell.textContent = '$' + parseFloat(document.getElementById('editUnitCost').value).toFixed(2);
+            unitCostCell.textContent = '$' + parseFloat(document.getElementById('editUnitCost').value).toFixed(0);
         }
     }
 }

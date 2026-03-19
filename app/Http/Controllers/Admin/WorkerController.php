@@ -7,7 +7,8 @@ use App\Http\Requests\StoreWorkerRequest;
 use App\Http\Requests\UpdateWorkerRequest;
 use App\Models\User;
 use App\Models\Task;
-use App\Models\Crop;
+use App\Services\WorkerService;
+use App\Notifications\WorkerCredentialsNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,11 +17,20 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Traits\UploadsImages;
 
 class WorkerController extends Controller
 {
+    use UploadsImages;
+    protected WorkerService $workerService;
+
+    public function __construct(WorkerService $workerService)
+    {
+        $this->workerService = $workerService;
+    }
+
     public function index(Request $request): View
     {
         $query = User::where('role', 'worker');
@@ -30,7 +40,7 @@ class WorkerController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%');
+                    ->orWhere('email', 'like', '%' . $search . '%');
             });
         }
 
@@ -38,7 +48,8 @@ class WorkerController extends Controller
         if ($request->filled('status') && $request->status !== 'all') {
             if ($request->status === 'active') {
                 $query->whereNotNull('email_verified_at');
-            } else {
+            }
+            else {
                 $query->whereNull('email_verified_at');
             }
         }
@@ -60,19 +71,9 @@ class WorkerController extends Controller
         $data = $request->validated();
 
         // Procesar foto si se envía
+        // Procesar foto si se envía usando Trait
         if ($request->hasFile('photo')) {
-            $photo = $request->file('photo');
-            $originalName = $photo->getClientOriginalName();
-            $extension = $photo->getClientOriginalExtension();
-            $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
-            $photoName = time() . '_' . $safeName . '.' . $extension;
-
-            $directory = storage_path('app/public/photos/users');
-            if (!File::exists($directory)) {
-                File::makeDirectory($directory, 0755, true);
-            }
-
-            $path = Storage::disk('public')->putFileAs('photos/users', $photo, $photoName);
+            $path = $this->uploadImage($request->file('photo'), 'users');
             if ($path) {
                 $data['photo'] = $path;
             }
@@ -88,9 +89,17 @@ class WorkerController extends Controller
             'email_verified_at' => now(), // Activar inmediatamente
         ]);
 
+        // Enviar correo con las credenciales
+        try {
+            $worker->notify(new WorkerCredentialsNotification($tempPassword));
+        }
+        catch (\Exception $e) {
+            Log::error('Error al enviar correo de credenciales al trabajador: ' . $e->getMessage());
+        // Continuar aunque falle el envío del correo
+        }
+
         return redirect()->route('admin.workers.index')
-            ->with('status', "Trabajador creado correctamente. Contraseña temporal: {$tempPassword}")
-            ->with('temp_password', $tempPassword);
+            ->with('status', "Trabajador creado correctamente. Las credenciales han sido enviadas por correo electrónico.");
     }
 
     public function show(User $worker): View
@@ -100,9 +109,9 @@ class WorkerController extends Controller
             abort(404);
         }
 
-        // Obtener estadísticas del trabajador
-        $stats = $this->getWorkerStats($worker);
-        
+        // Obtener estadísticas del trabajador usando el servicio
+        $stats = $this->workerService->getStats($worker);
+
         // Obtener tareas recientes
         $recentTasks = Task::where('assigned_to', $worker->id)
             ->with(['plot', 'crop'])
@@ -113,17 +122,13 @@ class WorkerController extends Controller
         return view('admin.workers.show', compact('worker', 'stats', 'recentTasks'));
     }
 
-    public function edit(User $worker): View
+    public function edit(User $worker): RedirectResponse
     {
-        // Verificar que sea un trabajador
-        if ($worker->role !== 'worker') {
-            abort(404);
-        }
-
-        return view('admin.workers.edit', compact('worker'));
+        // La edición se realiza mediante el modal en el listado de trabajadores
+        return redirect()->route('admin.workers.index');
     }
 
-    public function update(UpdateWorkerRequest $request, User $worker): RedirectResponse|JsonResponse
+    public function update(UpdateWorkerRequest $request, User $worker)
     {
         // Verificar que sea un trabajador
         if ($worker->role !== 'worker') {
@@ -132,41 +137,33 @@ class WorkerController extends Controller
 
         try {
             $validated = $request->validated();
-            
+
             // Manejar el estado
             if (isset($validated['status'])) {
                 if ($validated['status'] === 'active') {
                     $validated['email_verified_at'] = now();
-                } else {
+                }
+                else {
                     $validated['email_verified_at'] = null;
                 }
                 unset($validated['status']);
             }
-            
+
             // Manejo de foto
+            // Manejo de foto usando Trait
             if ($request->hasFile('photo')) {
                 // eliminar anterior
-                if ($worker->photo && Storage::disk('public')->exists($worker->photo)) {
-                    Storage::disk('public')->delete($worker->photo);
-                }
-                $photo = $request->file('photo');
-                $originalName = $photo->getClientOriginalName();
-                $extension = $photo->getClientOriginalExtension();
-                $safeName = preg_replace('/[^A-Za-z0-9\-_]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
-                $photoName = time() . '_' . $safeName . '.' . $extension;
+                $this->deleteImage($worker->photo);
 
-                $directory = storage_path('app/public/photos/users');
-                if (!File::exists($directory)) {
-                    File::makeDirectory($directory, 0755, true);
-                }
-
-                $path = Storage::disk('public')->putFileAs('photos/users', $photo, $photoName);
+                // subir nueva
+                $path = $this->uploadImage($request->file('photo'), 'users');
                 if ($path) {
                     $validated['photo'] = $path;
                 }
             }
 
             $worker->update($validated);
+            $worker->refresh();
 
             // Si es una petición AJAX, devolver JSON
             if ($request->ajax()) {
@@ -177,6 +174,8 @@ class WorkerController extends Controller
                         'id' => $worker->id,
                         'name' => $worker->name,
                         'email' => $worker->email,
+                        'phone' => $worker->phone,
+                        'photo' => $worker->photo ? asset('storage/' . $worker->photo) : null,
                         'status' => $worker->email_verified_at ? 'active' : 'inactive'
                     ]
                 ]);
@@ -184,7 +183,8 @@ class WorkerController extends Controller
 
             return redirect()->route('admin.workers.index')
                 ->with('status', 'Trabajador actualizado correctamente');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        }
+        catch (\Illuminate\Validation\ValidationException $e) {
             // Si es una petición AJAX, devolver errores de validación
             if ($request->ajax()) {
                 return response()->json([
@@ -197,7 +197,8 @@ class WorkerController extends Controller
             return redirect()->back()
                 ->withErrors($e->errors())
                 ->withInput();
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             // Si es una petición AJAX, devolver error JSON
             if ($request->ajax()) {
                 return response()->json([
@@ -211,36 +212,56 @@ class WorkerController extends Controller
         }
     }
 
-    public function destroy(User $worker): RedirectResponse
+    public function destroy(User $worker, Request $request): RedirectResponse|JsonResponse
     {
         // Verificar que sea un trabajador
         if ($worker->role !== 'worker') {
             abort(404);
         }
 
-        // Verificar que el trabajador esté inactivo
-        if ($worker->email_verified_at) {
-            return redirect()->route('admin.workers.index')
-                ->with('error', 'No se puede eliminar un trabajador activo. Debe desactivarlo primero.');
+        // 1. Verificar si tiene historial (Tareas, Préstamos o Movimientos)
+        $hasHistory = $worker->assignedTasks()->exists() ||
+            $worker->loans()->exists() ||
+            $worker->createdMovements()->exists();
+
+        if ($hasHistory) {
+            // Escenario B: Tiene historial -> Inactivación Lógica
+            $worker->update(['email_verified_at' => null]);
+            $message = 'El trabajador ha sido marcado como INACTIVO porque posee historial en el sistema. Sus datos permanecen visibles para consulta.';
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'worker' => [
+                        'id' => $worker->id,
+                        'name' => $worker->name,
+                        'status' => 'inactive'
+                    ]
+                ]);
+            }
+
+            return redirect()->route('admin.workers.index')->with('status', $message);
         }
 
-        // Verificar que no tenga tareas pendientes
-        $pendingTasks = Task::where('assigned_to', $worker->id)
-            ->whereIn('status', ['pending', 'in_progress'])
-            ->count();
-
-        if ($pendingTasks > 0) {
-            return redirect()->route('admin.workers.index')
-                ->with('error', 'No se puede eliminar un trabajador que tiene tareas pendientes.');
-        }
-
+        // Escenario A: No tiene historial -> Eliminación Física
+        $this->deleteImage($worker->photo);
         $worker->delete();
 
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Trabajador eliminado correctamente de la base de datos.',
+                'id' => $worker->id,
+                'deleted' => true
+            ]);
+        }
+
         return redirect()->route('admin.workers.index')
-            ->with('status', 'Trabajador eliminado correctamente');
+            ->with('status', 'Trabajador eliminado correctamente de la base de datos.');
     }
 
-    public function toggleStatus(User $worker): RedirectResponse
+    public function toggleStatus(Request $request, User $worker): RedirectResponse|JsonResponse
     {
         // Verificar que sea un trabajador
         if ($worker->role !== 'worker') {
@@ -251,41 +272,30 @@ class WorkerController extends Controller
         if ($worker->email_verified_at) {
             $worker->update(['email_verified_at' => null]);
             $message = 'Trabajador desactivado correctamente';
-        } else {
+        }
+        else {
             $worker->update(['email_verified_at' => now()]);
             $message = 'Trabajador activado correctamente';
         }
 
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'worker' => [
+                    'id' => $worker->id,
+                    'name' => $worker->name,
+                    'email' => $worker->email,
+                    'phone' => $worker->phone,
+                    'photo' => $worker->photo ? asset('storage/' . $worker->photo) : null,
+                    'status' => $worker->email_verified_at ? 'active' : 'inactive',
+                    'destroy_route' => route('admin.workers.destroy', $worker)
+                ]
+            ]);
+        }
+
         return redirect()->route('admin.workers.index')
             ->with('status', $message);
-    }
-
-    private function getWorkerStats(User $worker): array
-    {
-        $totalTasks = Task::where('assigned_to', $worker->id)->count();
-        $completedTasks = Task::where('assigned_to', $worker->id)->where('status', 'completed')->count();
-        $approvedTasks = Task::where('assigned_to', $worker->id)->where('status', 'approved')->count();
-        $pendingTasks = Task::where('assigned_to', $worker->id)->whereIn('status', ['pending', 'in_progress'])->count();
-
-        // Calcular total de horas trabajadas
-        $totalHours = Task::where('assigned_to', $worker->id)
-            ->where('status', 'approved')
-            ->sum('hours');
-
-        // Calcular total de kilos cosechados
-        $totalKilos = Task::where('assigned_to', $worker->id)
-            ->where('status', 'approved')
-            ->where('type', 'harvest')
-            ->sum('kilos');
-
-        return [
-            'total_tasks' => $totalTasks,
-            'completed_tasks' => $completedTasks,
-            'approved_tasks' => $approvedTasks,
-            'pending_tasks' => $pendingTasks,
-            'total_hours' => $totalHours,
-            'total_kilos' => $totalKilos,
-        ];
     }
 
     public function downloadPdf(Request $request)
@@ -297,14 +307,15 @@ class WorkerController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%');
+                    ->orWhere('email', 'like', '%' . $search . '%');
             });
         }
 
         if ($request->filled('status') && $request->status !== 'all') {
             if ($request->status === 'active') {
                 $query->whereNotNull('email_verified_at');
-            } else {
+            }
+            else {
                 $query->whereNull('email_verified_at');
             }
         }
@@ -322,79 +333,11 @@ class WorkerController extends Controller
             abort(404);
         }
 
-        // Obtener todas las tareas aprobadas del trabajador con información de cultivo y precios
-        // También incluir tareas completadas que puedan tener información de pago
-        $tasks = Task::where('assigned_to', $worker->id)
-            ->whereIn('status', ['approved', 'completed'])
-            ->with(['crop', 'plot'])
-            ->orderBy('scheduled_for', 'desc')
-            ->get();
+        $data = $this->workerService->getReportData($worker);
 
-        // Calcular el total_payment para cada tarea si no está guardado o es 0
-        $tasks = $tasks->map(function ($task) {
-            // Si total_payment es null o 0, calcularlo basándose en los precios
-            $calculatedPayment = 0;
-            
-            if ($task->price_per_hour && $task->hours > 0) {
-                $calculatedPayment = $task->hours * $task->price_per_hour;
-            } elseif ($task->price_per_day && $task->hours > 0) {
-                // Convertir horas a días (8 horas = 1 día)
-                $days = $task->hours / 8;
-                $calculatedPayment = $days * $task->price_per_day;
-            } elseif ($task->price_per_kg && $task->kilos > 0) {
-                $calculatedPayment = $task->kilos * $task->price_per_kg;
-            }
-            
-            // Usar el total_payment guardado si existe y es mayor que 0, sino usar el calculado
-            if ($task->total_payment && $task->total_payment > 0) {
-                $task->calculated_payment = $task->total_payment;
-            } else {
-                $task->calculated_payment = $calculatedPayment;
-                // Actualizar también el total_payment para que se guarde en la vista
-                $task->total_payment = $calculatedPayment;
-            }
-            
-            return $task;
-        });
-
-        // Calcular totales sumando todas las tareas
-        $totalPayment = $tasks->sum(function ($task) {
-            return $task->calculated_payment ?? ($task->total_payment ?? 0);
-        });
-        $totalHours = $tasks->sum(function ($task) {
-            return $task->hours ?? 0;
-        });
-        $totalKilos = $tasks->sum(function ($task) {
-            return $task->kilos ?? 0;
-        });
-        $totalTasks = $tasks->count();
-
-        // Agrupar por cultivo
-        $tasksByCrop = $tasks->groupBy('crop_id');
-
-        // Calcular totales por cultivo
-        $cropTotals = [];
-        foreach ($tasksByCrop as $cropId => $cropTasks) {
-            $crop = $cropTasks->first()->crop;
-            $cropPayment = $cropTasks->sum(function ($task) {
-                return $task->calculated_payment ?? ($task->total_payment ?? 0);
-            });
-            $cropHours = $cropTasks->sum(function ($task) {
-                return $task->hours ?? 0;
-            });
-            $cropKilos = $cropTasks->sum(function ($task) {
-                return $task->kilos ?? 0;
-            });
-            $cropTotals[$cropId] = [
-                'crop' => $crop ? $crop->name : 'Sin cultivo',
-                'tasks_count' => $cropTasks->count(),
-                'total_payment' => $cropPayment,
-                'total_hours' => $cropHours,
-                'total_kilos' => $cropKilos,
-            ];
-        }
-
-        return view('admin.workers.report', compact('worker', 'tasks', 'totalPayment', 'totalHours', 'totalKilos', 'totalTasks', 'cropTotals'));
+        // Desempaquetar datos para la vista (manteniendo compatibilidad con vista actual)
+        // La vista espera $tasks, $totalPayment, $totalHours, $totalKilos, $totalTasks, $cropTotals
+        return view('admin.workers.report', array_merge(['worker' => $worker], $data));
     }
 
     public function reportData(User $worker): JsonResponse
@@ -404,69 +347,31 @@ class WorkerController extends Controller
             abort(404);
         }
 
-        // Obtener todas las tareas aprobadas del trabajador con información de cultivo y precios
-        $tasks = Task::where('assigned_to', $worker->id)
-            ->whereIn('status', ['approved', 'completed'])
-            ->with(['crop', 'plot'])
-            ->orderBy('scheduled_for', 'desc')
-            ->get();
+        $data = $this->workerService->getReportData($worker);
 
-        // Calcular el total_payment para cada tarea si no está guardado o es 0
-        $tasks = $tasks->map(function ($task) {
-            $calculatedPayment = 0;
-            
-            if ($task->price_per_hour && $task->hours > 0) {
-                $calculatedPayment = $task->hours * $task->price_per_hour;
-            } elseif ($task->price_per_day && $task->hours > 0) {
-                $days = $task->hours / 8;
-                $calculatedPayment = $days * $task->price_per_day;
-            } elseif ($task->price_per_kg && $task->kilos > 0) {
-                $calculatedPayment = $task->kilos * $task->price_per_kg;
-            }
-            
-            if ($task->total_payment && $task->total_payment > 0) {
-                $task->calculated_payment = $task->total_payment;
-            } else {
-                $task->calculated_payment = $calculatedPayment;
-                $task->total_payment = $calculatedPayment;
-            }
-            
-            return $task;
-        });
-
-        // Calcular totales
-        $totalPayment = $tasks->sum(function ($task) {
-            return $task->calculated_payment ?? ($task->total_payment ?? 0);
-        });
-        $totalHours = $tasks->sum(function ($task) {
-            return $task->hours ?? 0;
-        });
-        $totalKilos = $tasks->sum(function ($task) {
-            return $task->kilos ?? 0;
-        });
-        $totalTasks = $tasks->count();
-
-        // Agrupar por cultivo
-        $tasksByCrop = $tasks->groupBy('crop_id');
-        $cropTotals = [];
-        foreach ($tasksByCrop as $cropId => $cropTasks) {
-            $crop = $cropTasks->first()->crop;
-            $cropPayment = $cropTasks->sum(function ($task) {
-                return $task->calculated_payment ?? ($task->total_payment ?? 0);
-            });
-            $cropHours = $cropTasks->sum(function ($task) {
-                return $task->hours ?? 0;
-            });
-            $cropKilos = $cropTasks->sum(function ($task) {
-                return $task->kilos ?? 0;
-            });
-            $cropTotals[] = [
-                'crop' => $crop ? $crop->name : 'Sin cultivo',
-                'tasks_count' => $cropTasks->count(),
-                'total_payment' => $cropPayment,
-                'total_hours' => $cropHours,
-                'total_kilos' => $cropKilos,
+        // Transformar cropTotals a lista para JSON si es necesario y formatear tareas
+        $tasksData = $data['tasks']->map(function ($task) {
+            return [
+            'date' => $task->scheduled_for->format('d/m/Y'),
+            'type' => ucfirst(str_replace('_', ' ', $task->type)),
+            'description' => $task->description ?: 'Sin descripción',
+            'crop' => $task->crop ? $task->crop->name : 'Sin cultivo',
+            'plot' => $task->plot ? $task->plot->name : 'Sin lote',
+            'hours' => $task->hours ?? 0,
+            'kilos' => $task->kilos ?? 0,
+            'price_per_hour' => $task->price_per_hour,
+            'price_per_day' => $task->price_per_day,
+            'price_per_kg' => $task->price_per_kg,
+            'total' => $task->calculated_payment ?? $task->total_payment ?? 0,
             ];
+        });
+
+        // Asegurar que cropTotals sea un array de objetos para JSONResponse
+        $cropTotalsList = [];
+        if (is_array($data['cropTotals']) || $data['cropTotals'] instanceof \Illuminate\Support\Collection) {
+            foreach ($data['cropTotals'] as $ct) {
+                $cropTotalsList[] = $ct; // Reindexar
+            }
         }
 
         return response()->json([
@@ -477,27 +382,13 @@ class WorkerController extends Controller
                 'registered' => $worker->created_at->format('d/m/Y H:i'),
             ],
             'totals' => [
-                'tasks' => $totalTasks,
-                'hours' => $totalHours,
-                'kilos' => $totalKilos,
-                'payment' => $totalPayment,
+                'tasks' => $data['totalTasks'],
+                'hours' => $data['totalHours'],
+                'kilos' => $data['totalKilos'],
+                'payment' => $data['totalPayment'],
             ],
-            'cropTotals' => $cropTotals,
-            'tasks' => $tasks->map(function ($task) {
-                return [
-                    'date' => $task->scheduled_for->format('d/m/Y'),
-                    'type' => ucfirst(str_replace('_', ' ', $task->type)),
-                    'description' => $task->description ?: 'Sin descripción',
-                    'crop' => $task->crop ? $task->crop->name : 'Sin cultivo',
-                    'plot' => $task->plot ? $task->plot->name : 'Sin lote',
-                    'hours' => $task->hours ?? 0,
-                    'kilos' => $task->kilos ?? 0,
-                    'price_per_hour' => $task->price_per_hour,
-                    'price_per_day' => $task->price_per_day,
-                    'price_per_kg' => $task->price_per_kg,
-                    'total' => $task->calculated_payment ?? $task->total_payment ?? 0,
-                ];
-            }),
+            'cropTotals' => $cropTotalsList,
+            'tasks' => $tasksData,
         ]);
     }
 
@@ -508,73 +399,10 @@ class WorkerController extends Controller
             abort(404);
         }
 
-        // Obtener todas las tareas aprobadas del trabajador
-        $tasks = Task::where('assigned_to', $worker->id)
-            ->whereIn('status', ['approved', 'completed'])
-            ->with(['crop', 'plot'])
-            ->orderBy('scheduled_for', 'desc')
-            ->get();
-
-        // Calcular el total_payment para cada tarea
-        $tasks = $tasks->map(function ($task) {
-            $calculatedPayment = 0;
-            
-            if ($task->price_per_hour && $task->hours > 0) {
-                $calculatedPayment = $task->hours * $task->price_per_hour;
-            } elseif ($task->price_per_day && $task->hours > 0) {
-                $days = $task->hours / 8;
-                $calculatedPayment = $days * $task->price_per_day;
-            } elseif ($task->price_per_kg && $task->kilos > 0) {
-                $calculatedPayment = $task->kilos * $task->price_per_kg;
-            }
-            
-            if ($task->total_payment && $task->total_payment > 0) {
-                $task->calculated_payment = $task->total_payment;
-            } else {
-                $task->calculated_payment = $calculatedPayment;
-                $task->total_payment = $calculatedPayment;
-            }
-            
-            return $task;
-        });
-
-        // Calcular totales
-        $totalPayment = $tasks->sum(function ($task) {
-            return $task->calculated_payment ?? ($task->total_payment ?? 0);
-        });
-        $totalHours = $tasks->sum(function ($task) {
-            return $task->hours ?? 0;
-        });
-        $totalKilos = $tasks->sum(function ($task) {
-            return $task->kilos ?? 0;
-        });
-        $totalTasks = $tasks->count();
-
-        // Agrupar por cultivo
-        $tasksByCrop = $tasks->groupBy('crop_id');
-        $cropTotals = [];
-        foreach ($tasksByCrop as $cropId => $cropTasks) {
-            $crop = $cropTasks->first()->crop;
-            $cropPayment = $cropTasks->sum(function ($task) {
-                return $task->calculated_payment ?? ($task->total_payment ?? 0);
-            });
-            $cropHours = $cropTasks->sum(function ($task) {
-                return $task->hours ?? 0;
-            });
-            $cropKilos = $cropTasks->sum(function ($task) {
-                return $task->kilos ?? 0;
-            });
-            $cropTotals[$cropId] = [
-                'crop' => $crop ? $crop->name : 'Sin cultivo',
-                'tasks_count' => $cropTasks->count(),
-                'total_payment' => $cropPayment,
-                'total_hours' => $cropHours,
-                'total_kilos' => $cropKilos,
-            ];
-        }
+        $data = $this->workerService->getReportData($worker);
 
         // Generar PDF
-        $pdf = Pdf::loadView('admin.workers.report-pdf', compact('worker', 'tasks', 'totalPayment', 'totalHours', 'totalKilos', 'totalTasks', 'cropTotals'));
+        $pdf = Pdf::loadView('admin.workers.report-pdf', array_merge(['worker' => $worker], $data));
         return $pdf->download('reporte-trabajador-' . $worker->name . '-' . now()->format('Y-m-d') . '.pdf');
     }
 }

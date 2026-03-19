@@ -25,12 +25,12 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Cantidad</label>
-                    <p class="mt-1 text-sm text-gray-900 font-semibold">{{ number_format($supplyConsumption->qty, 2) }} {{ $supplyConsumption->supply->unit }}</p>
+                    <p class="mt-1 text-sm text-gray-900 font-semibold">{{ number_format((float)$supplyConsumption->qty, 0) }} {{ $supplyConsumption->supply->unit }}</p>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Costo Total</label>
-                    <p class="mt-1 text-2xl font-bold text-emerald-600">${{ number_format($supplyConsumption->total_cost, 2) }}</p>
+                    <p class="mt-1 text-2xl font-bold text-emerald-600">${{ number_format((int)$supplyConsumption->total_cost, 0) }}</p>
                 </div>
             </div>
 
@@ -69,7 +69,7 @@
         <div class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Costo Unitario</label>
-                <p class="mt-1 text-sm text-gray-900 font-semibold">${{ number_format($supplyConsumption->supply->unit_cost, 2) }} / {{ $supplyConsumption->supply->unit }}</p>
+                <p class="mt-1 text-sm text-gray-900 font-semibold">${{ number_format($supplyConsumption->supply->unit_cost, 0) }} / {{ $supplyConsumption->supply->unit }}</p>
             </div>
 
             <div>

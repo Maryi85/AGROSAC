@@ -1,4 +1,7 @@
-@extends('foreman.layout')
+@php
+    $layout = route_prefix() === 'foreman.' ? 'foreman.layout' : 'admin.layout';
+@endphp
+@extends($layout)
 
 @section('header')
 <h2 class="text-lg font-semibold text-emerald-700">Registrar Nueva Herramienta</h2>
@@ -6,8 +9,9 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <form method="POST" action="{{ route('foreman.tools.store') }}" class="space-y-4" enctype="multipart/form-data">
+    <form method="POST" action="{{ route(route_prefix() . 'tools.store') }}" class="space-y-4" enctype="multipart/form-data">
         @csrf
+        
         <!-- Nombre -->
         <div>
             <label for="name" class="block text-sm mb-1 text-emerald-800">Nombre de la Herramienta</label>
@@ -18,6 +22,7 @@
                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
+        
         <!-- Categoría -->
         <div>
             <label for="category" class="block text-sm mb-1 text-emerald-800">Categoría</label>
@@ -35,6 +40,7 @@
                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
+        
         <!-- Estado -->
         <div>
             <label for="status" class="block text-sm mb-1 text-emerald-800">Estado</label>
@@ -52,6 +58,7 @@
                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
+        
         <!-- Foto -->
         <div>
             <label for="photo" class="block text-sm mb-1 text-emerald-800">Foto de la Herramienta</label>
@@ -65,9 +72,10 @@
                 <img id="photo-preview-img" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
             </div>
         </div>
+        
         <!-- Botones -->
         <div class="flex items-center gap-2 pt-4">
-            <a href="{{ route('foreman.tools.index') }}" 
+            <a href="{{ route(route_prefix() . 'tools.index') }}" 
                class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 <span>Volver</span>
@@ -88,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoInput = document.getElementById('photo');
     const photoPreview = document.getElementById('photo-preview');
     const photoPreviewImg = document.getElementById('photo-preview-img');
+    
     if (photoInput) {
         photoInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -106,3 +115,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+

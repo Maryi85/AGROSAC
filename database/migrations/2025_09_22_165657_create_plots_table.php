@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('location')->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->json('boundary')->nullable();
             $table->decimal('area', 10, 2)->nullable();
             $table->string('status')->default('active')->index();
             $table->timestamps();

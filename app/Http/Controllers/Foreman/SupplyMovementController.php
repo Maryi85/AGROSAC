@@ -37,7 +37,7 @@ class SupplyMovementController extends Controller
         $request->validate([
             'supply_id' => 'required|exists:supplies,id',
             'type' => 'required|in:entry,exit',
-            'quantity' => 'required|numeric|min:0.001',
+            'quantity' => 'required|numeric|min:0.001|max:999999',
             'unit_cost' => 'required|numeric|min:0',
             'reason' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
@@ -109,7 +109,7 @@ class SupplyMovementController extends Controller
         $request->validate([
             'supply_id' => 'required|exists:supplies,id',
             'type' => 'required|in:entry,exit',
-            'quantity' => 'required|numeric|min:0.001',
+            'quantity' => 'required|numeric|min:0.001|max:999999',
             'unit_cost' => 'required|numeric|min:0',
             'reason' => 'nullable|string|max:255',
             'notes' => 'nullable|string',

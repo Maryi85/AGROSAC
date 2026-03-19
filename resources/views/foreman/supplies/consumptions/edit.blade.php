@@ -31,8 +31,8 @@
                         <option value="{{ $supply->id }}" 
                                 {{ old('supply_id', $supplyConsumption->supply_id) == $supply->id ? 'selected' : '' }}
                                 data-unit="{{ $supply->unit }}" 
-                                data-unit-cost="{{ $supply->unit_cost }}">
-                            {{ $supply->name }} ({{ $supply->unit }}) - ${{ number_format($supply->unit_cost, 2) }}
+                                data-unit-cost="{{ (int)$supply->unit_cost }}">
+                            {{ $supply->name }} ({{ $supply->unit }}) - ${{ number_format((int)$supply->unit_cost, 0) }}
                         </option>
                     @endforeach
                 </select>
@@ -89,7 +89,7 @@
                     Cantidad <span class="text-red-500">*</span>
                 </label>
                 <input type="number" name="qty" id="qty" step="0.001" min="0.001" required 
-                       value="{{ old('qty', $supplyConsumption->qty) }}"
+                       value="{{ old('qty', (float)$supplyConsumption->qty) }}"
                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('qty') border-red-500 @enderror">
                 <p class="mt-1 text-xs text-gray-500" id="unit-info">Seleccione un insumo para ver la unidad</p>
                 @error('qty')
@@ -156,8 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
             unitInfo.textContent = `Unidad: ${unit}`;
             
             const formattedTotal = new Intl.NumberFormat('es-CO', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
             }).format(total);
             
             totalCostInput.value = '$' + formattedTotal;

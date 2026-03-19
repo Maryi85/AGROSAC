@@ -166,7 +166,7 @@
                     <label id="price-label" class="block text-sm font-medium text-emerald-800 mb-2"></label>
                     <div class="relative">
                         <span class="absolute left-3 top-2 text-gray-500">$</span>
-                        <input type="number" id="price-input" step="0.01" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 pl-8 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 5000">
+                        <input type="number" id="price-input" step="1" min="0" class="w-full border border-emerald-200 rounded px-3 py-2 pl-8 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Ej: 5000">
                     </div>
                     @error('price_per_hour')
                         <p class="text-red-600 text-sm mt-1" id="price_per_hour-error">{{ $message }}</p>
@@ -214,13 +214,13 @@
             </div>
 
             <div class="space-y-3">
-                <template x-for="(row, index) in rows" :key="row.id">
+            <template x-for="(row, index) in rows" :key="row.id">
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-white p-3 rounded shadow-sm">
                         
                         <!-- Selección de Insumo -->
                         <div class="md:col-span-7">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Insumo</label>
-                            <select :name="`supplies_data[${index}][supply_id]`" x-model="row.supply_id" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm" required>
+                            <select :name="`supplies_data[${index}][supply_id]`" x-model="row.supply_id" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
                                 <option value="">Seleccionar...</option>
                                 @foreach($supplies as $supply)
                                     <option value="{{ $supply->id }}" data-unit="{{ $supply->unit }}">
@@ -234,19 +234,20 @@
                         <div class="md:col-span-4">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
                             <div class="relative">
-                                <input type="number" :name="`supplies_data[${index}][quantity]`" x-model="row.quantity" step="0.01" min="0.01" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm" required>
+                                <input type="number" :name="`supplies_data[${index}][quantity]`" x-model="row.quantity" step="1" min="0" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
                                 <span class="absolute right-8 top-1.5 text-xs text-gray-500" x-text="getUnit(row.supply_id)"></span>
                             </div>
                         </div>
 
                         <!-- Botón Eliminar -->
-                        <div class="md:col-span-1 text-right">
-                            <button type="button" @click="removeSupply(index)" class="text-red-500 hover:text-red-700 p-1">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <div class="md:col-span-1 text-right pb-1">
+                            <button type="button" @click="removeSupply(row.id)" class="text-red-500 hover:text-red-700 p-1" title="Quitar insumo">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
                             </button>
                         </div>
                     </div>
                 </template>
+
 
                 <div x-show="rows.length === 0" class="text-center py-4 text-gray-500 text-sm italic">
                     No hay insumos asignados a esta tarea.
@@ -258,48 +259,7 @@
             @endif
         </div>
 
-        <script>
-            function suppliesRepeater() {
-                return {
-                    rows: [],
-                    init() {
-                        const oldSupplies = @json(old('supplies_data', []));
-                        if (oldSupplies.length > 0) {
-                            this.rows = oldSupplies.map(item => ({
-                                id: Date.now() + Math.random(),
-                                supply_id: item.supply_id,
-                                quantity: item.quantity
-                            }));
-                        }
-                    },
-                    addSupply() {
-                        this.rows.push({
-                            id: Date.now(),
-                            supply_id: '',
-                            quantity: ''
-                        });
-                    },
-                    removeSupply(index) {
-                        this.rows.splice(index, 1);
-                    },
-                    getUnit(supplyId) {
-                        if (!supplyId) return '';
-                        // Find option text logic or better yet, simple map if needed. 
-                        // For simplicity in this context, we can try to grab it from DOM if possible, 
-                        // or just not show it dynamically perfectly without a lookup map.
-                        // Let's rely on the user knowing the unit or adding a data attribute map.
-                        // Ideally we would pass a JS object with units.
-                        const supply = userSuppliesMap[supplyId];
-                        return supply ? supply.unit : '';
-                    }
-                }
-            }
-            // Create a map for quick unit lookup
-            const userSuppliesMap = {};
-            @foreach($supplies as $supply)
-                userSuppliesMap[{{ $supply->id }}] = { unit: '{{ $supply->unit }}', name: '{{ addslashes($supply->name) }}' };
-            @endforeach
-        </script>
+
 
         <!-- Botones -->
         <div class="flex items-center gap-4 pt-4">
@@ -345,19 +305,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Limpiar valores solo si no hay valores antiguos
         if (!oldPaymentType || oldPaymentType !== selectedType) {
-            quantityInput.value = '';
-            priceInput.value = '';
+            if (!oldPaymentType) { // Keep values if we are just switching back and forth in UI? No, requirement says clean.
+                // But oldPaymentType logic suggests we only clean if it's a fresh change, not a re-render with validation errors.
+                // The original code was correct in logic, I am just updating the min values in the else-if blocks below.
+                quantityInput.value = '';
+                priceInput.value = '';
+            }
         }
         
         // Mostrar y configurar campos según el tipo de pago
         if (selectedType === 'hours') {
             quantityLabel.textContent = 'Horas Estimadas *';
             quantityInput.placeholder = 'Ej: 8.5';
-            quantityInput.step = '0.5';
-            quantityInput.min = '0';
+            quantityInput.step = '0.01';
+            quantityInput.min = '0.1';
             
             priceLabel.textContent = 'Precio por Hora ($) *';
             priceInput.placeholder = 'Ej: 5000';
+            priceInput.min = '0'; // Update min
             
             // Mostrar errores relevantes
             const hoursError = document.getElementById('hours-error');
@@ -375,6 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             priceLabel.textContent = 'Precio por Día ($) *';
             priceInput.placeholder = 'Ej: 40000';
+            priceInput.min = '0'; // Update min
             
             // Mostrar errores relevantes
             const daysError = document.getElementById('days-error');
@@ -388,10 +354,11 @@ document.addEventListener('DOMContentLoaded', function() {
             quantityLabel.textContent = 'Cantidad (kg) *';
             quantityInput.placeholder = 'Ej: 50.5';
             quantityInput.step = '0.1';
-            quantityInput.min = '0';
+            quantityInput.min = '0.1';
             
             priceLabel.textContent = 'Precio por kg ($) *';
             priceInput.placeholder = 'Ej: 500';
+            priceInput.min = '0'; // Update min
             
             // Mostrar errores relevantes
             const kilosError = document.getElementById('kilos-error');
@@ -424,13 +391,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Formatear el total con 2 decimales y separador de miles
         const formattedTotal = new Intl.NumberFormat('es-CO', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
         }).format(total);
         
         // Actualizar el campo de visualización y el campo oculto
         totalDisplay.value = '$' + formattedTotal;
-        totalInput.value = total.toFixed(2);
+        totalInput.value = total.toFixed(0);
         
         // Actualizar campos ocultos para enviar al servidor
         updateHiddenFields();
@@ -504,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 // Mostrar mensaje de éxito temporal
-                showNotification('Lista de trabajadores actualizada correctamente', 'success');
+                // Notificación suprimida intencionalmente
             } else {
                 throw new Error('Error en la respuesta del servidor');
             }
@@ -622,22 +589,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedCrop = this.options[this.selectedIndex];
         const plotId = selectedCrop.getAttribute('data-plot-id');
         
-        // Si no hay cultivo seleccionado, limpiar el lote
         if (!this.value) {
             plotSelect.value = '';
             return;
         }
         
-        // Si hay un plot_id asociado al cultivo, seleccionarlo automáticamente
         if (plotId) {
-            // Buscar la opción del lote con ese ID
-            const plotOption = Array.from(plotSelect.options).find(opt => opt.value == plotId);
-            if (plotOption) {
-                plotSelect.value = plotId;
-            }
+            plotSelect.value = plotId;
         } else {
-            // Si el cultivo no tiene lote asociado, limpiar la selección
             plotSelect.value = '';
+        }
+    });
+
+    plotSelect.addEventListener('change', function() {
+        const selectedPlotId = this.value;
+        if (!selectedPlotId) return;
+
+        const cropsForPlot = Array.from(cropsSelect.options).filter(opt => opt.getAttribute('data-plot-id') === selectedPlotId);
+        
+        if (cropsForPlot.length === 1) {
+            cropsSelect.value = cropsForPlot[0].value;
+        } else if (cropsForPlot.length > 1) {
+            const currentCropPlotId = cropsSelect.options[cropsSelect.selectedIndex]?.getAttribute('data-plot-id');
+            if (currentCropPlotId !== selectedPlotId) {
+                cropsSelect.value = '';
+            }
         }
     });
     
@@ -680,4 +656,39 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateTotal();
 });
 </script>
+
+@push('scripts')
+<script>
+function suppliesRepeater() {
+    return {
+        rows: [],
+        init() {
+            const oldSupplies = @json(old('supplies_data', []));
+            if (oldSupplies.length > 0) {
+                this.rows = oldSupplies.map(item => ({
+                    id: Date.now() + Math.random(),
+                    supply_id: item.supply_id,
+                    quantity: item.quantity
+                }));
+            }
+        },
+        addSupply() {
+            this.rows.push({ id: Date.now(), supply_id: '', quantity: '' });
+        },
+        removeSupply(id) {
+            this.rows = this.rows.filter(r => r.id !== id);
+        },
+        getUnit(supplyId) {
+            if (!supplyId) return '';
+            const supply = window.suppliesMap[supplyId];
+            return supply ? supply.unit : '';
+        }
+    };
+}
+window.suppliesMap = {};
+@foreach($supplies as $supply)
+    window.suppliesMap[{{ $supply->id }}] = { unit: '{{ $supply->unit }}', name: '{{ addslashes($supply->name) }}' };
+@endforeach
+</script>
+@endpush
 @endsection

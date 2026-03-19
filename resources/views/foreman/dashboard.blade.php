@@ -130,25 +130,25 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-gray-600 mb-1">Personal Presente</p>
-                <p class="text-2xl font-black text-emerald-700">{{ $presentWorkers }}</p>
+                <p id="kpi-present-workers" class="text-2xl font-black text-emerald-700">{{ $presentWorkers }}</p>
                 <p class="text-xs text-gray-500 mt-1">Trabajadores activos hoy</p>
             </div>
         </div>
 
-        {{-- KPI 2: Tareas Pendientes Hoy --}}
+        {{-- KPI 2: Tareas Pendientes --}}
         <div class="kpi-card tasks p-4">
             <div class="flex items-start justify-between mb-3">
                 <div class="kpi-icon tasks-icon">
-                    <i data-lucide="list-todo" class="w-6 h-6 text-white"></i>
+                    <i data-lucide="clipboard-list" class="w-6 h-6 text-white"></i>
                 </div>
                 <div class="flex items-center gap-1">
                     <div class="w-2 h-2 bg-amber-500 rounded-full pulse-dot"></div>
-                    <span class="text-xs font-medium text-amber-700">Prioridad</span>
+                    <span class="text-xs font-medium text-amber-700">Por ejecutar</span>
                 </div>
             </div>
             <div>
-                <p class="text-xs font-medium text-gray-600 mb-1">Tareas para Hoy</p>
-                <p class="text-2xl font-black text-amber-700">{{ $pendingTasksToday }}</p>
+                <p class="text-xs font-medium text-gray-600 mb-1">Tareas Asignadas</p>
+                <p id="kpi-pending-tasks" class="text-2xl font-black text-amber-700">{{ $pendingTasks }}</p>
                 <p class="text-xs text-gray-500 mt-1">Pendientes de cierre</p>
             </div>
         </div>
@@ -166,26 +166,26 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-gray-600 mb-1">Herramientas Prestadas</p>
-                <p class="text-2xl font-black text-blue-700">{{ $toolsInUseCount }}</p>
+                <p id="kpi-tools-in-use" class="text-2xl font-black text-blue-700">{{ $toolsInUseCount }}</p>
                 <p class="text-xs text-gray-500 mt-1">Fuera de almacén</p>
             </div>
         </div>
 
-        {{-- KPI 4: Alertas de Cultivo --}}
-        <div class="kpi-card alerts p-4">
+        {{-- KPI 4: Tareas Completadas --}}
+        <div class="kpi-card alerts p-4" style="--gradient-from: #10b981; --gradient-to: #059669; background: linear-gradient(135deg, #f0fdf9 0%, #ecfdf5 100%);">
             <div class="flex items-start justify-between mb-3">
-                <div class="kpi-icon alerts-icon">
-                    <i data-lucide="alert-circle" class="w-6 h-6 text-white"></i>
+                <div class="kpi-icon" style="--icon-from: #10b981; --icon-to: #059669; background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-center: center;">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-white"></i>
                 </div>
                 <div class="flex items-center gap-1">
-                    <div class="w-2 h-2 bg-red-500 rounded-full pulse-dot"></div>
-                    <span class="text-xs font-medium text-red-700">Atención</span>
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                    <span class="text-xs font-medium text-emerald-700">Finalizadas</span>
                 </div>
             </div>
             <div>
-                <p class="text-xs font-medium text-gray-600 mb-1">Alertas de Cultivo</p>
-                <p class="text-2xl font-black text-red-700">{{ $cropAlerts }}</p>
-                <p class="text-xs text-gray-500 mt-1">Requieren revisión</p>
+                <p class="text-xs font-medium text-gray-600 mb-1">Tareas Completadas</p>
+                <p id="kpi-completed-tasks" class="text-2xl font-black text-emerald-700">{{ $completedTasks }}</p>
+                <p class="text-xs text-gray-500 mt-1">Histórico total</p>
             </div>
         </div>
     </div>
@@ -368,6 +368,32 @@
 
         var chart = new ApexCharts(document.querySelector("#weeklyTasksChart"), options);
         chart.render();
+
+        // Polling para actualización en tiempo real de KPIs
+        function refreshDashboardStats() {
+            fetch('{{ route('foreman.data') }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const stats = data.stats;
+                        
+                        if (document.getElementById('kpi-present-workers')) 
+                            document.getElementById('kpi-present-workers').textContent = stats.presentWorkers;
+                        
+                        if (document.getElementById('kpi-pending-tasks')) 
+                            document.getElementById('kpi-pending-tasks').textContent = stats.pendingTasks;
+                        
+                        if (document.getElementById('kpi-tools-in-use')) 
+                            document.getElementById('kpi-tools-in-use').textContent = stats.toolsInUse;
+                        
+                        if (document.getElementById('kpi-completed-tasks')) 
+                            document.getElementById('kpi-completed-tasks').textContent = stats.completedTasks;
+                    }
+                })
+                .catch(error => console.error('Error al actualizar stats:', error));
+        }
+
+        setInterval(refreshDashboardStats, 5000);
     });
 </script>
 @endpush

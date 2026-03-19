@@ -185,8 +185,8 @@
                     </td>
                     <td class="py-3 px-4">
                         @if($entry->damage_photo)
-                            <a href="{{ asset('storage/' . $entry->damage_photo) }}" target="_blank" title="Ver foto completa">
-                                <img src="{{ asset('storage/' . $entry->damage_photo) }}" alt="Foto evidencia" class="h-10 w-10 object-cover rounded border border-gray-200">
+                            <a href="{{ storage_asset($entry->damage_photo) }}" target="_blank" title="Ver foto completa">
+                                <img src="{{ storage_asset($entry->damage_photo) }}" alt="Foto evidencia" class="h-10 w-10 object-cover rounded border border-gray-200">
                             </a>
                         @else
                             <span class="text-gray-400">—</span>

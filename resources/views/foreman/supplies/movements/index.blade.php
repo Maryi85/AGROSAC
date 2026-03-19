@@ -6,13 +6,13 @@
 
 @section('content')
 <div class="bg-white border rounded p-4">
-    <!-- Botones de acción dentro del contenido -->
-    <div class="mb-6 flex justify-start gap-4">
-        <a href="{{ route('foreman.supply-movements.create', ['type' => 'entry']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 border border-green-200 rounded">
+    {{-- Responsive: wrap on mobile --}}
+    <div class="mb-6 flex flex-wrap gap-2">
+        <a href="{{ route('foreman.supply-movements.create', ['type' => 'entry']) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 border border-green-200 rounded">
             <i data-lucide="plus-circle" class="w-4 h-4"></i>
             <span>Entrada de Insumo</span>
         </a>
-        <a href="{{ route('foreman.supply-movements.create', ['type' => 'exit']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded">
+        <a href="{{ route('foreman.supply-movements.create', ['type' => 'exit']) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded">
             <i data-lucide="minus-circle" class="w-4 h-4"></i>
             <span>Salida de Insumo</span>
         </a>
@@ -66,10 +66,10 @@
                         <div class="font-medium text-gray-900">{{ rtrim(rtrim(number_format($movement->quantity, 2, '.', ','), '0'), '.') }}</div>
                     </td>
                     <td class="py-3 pr-4">
-                        <div class="text-sm text-gray-600">${{ number_format($movement->unit_cost, 2) }}</div>
+                        <div class="text-sm text-gray-600">${{ number_format((int)$movement->unit_cost, 0) }}</div>
                     </td>
                     <td class="py-3 pr-4">
-                        <div class="font-semibold text-gray-900">${{ number_format($movement->total_cost, 2) }}</div>
+                        <div class="font-semibold text-gray-900">${{ number_format((int)$movement->total_cost, 0) }}</div>
                     </td>
                     <td class="py-3 pr-4">
                         <div class="text-sm text-gray-600 max-w-xs truncate" title="{{ $movement->reason }}">
@@ -81,12 +81,35 @@
                     </td>
                     <td class="py-3 pr-4 text-right">
                         <div class="flex items-center gap-1 justify-end">
+                            <!-- Ver detalles -->
+                            <button type="button" class="inline-flex items-center justify-center w-8 h-8 border border-blue-200 rounded hover:bg-blue-50 text-blue-600 view-movement-btn" 
+                                    data-movement-id="{{ $movement->id }}"
+                                    data-movement-date="{{ $movement->movement_date->format('d/m/Y') }}"
+                                    data-movement-type="{{ $movement->isEntry() ? 'Entrada' : 'Salida' }}"
+                                    data-supply-name="{{ $movement->supply->name }}"
+                                    data-supply-unit="{{ $movement->supply->unit }}"
+                                    data-quantity="{{ rtrim(rtrim(number_format($movement->quantity, 2, '.', ','), '0'), '.') }}"
+                                    data-unit-cost="{{ number_format((int)$movement->unit_cost, 0) }}"
+                                    data-total-cost="{{ number_format((int)$movement->total_cost, 0) }}"
+                                    data-reason="{{ $movement->reason ?? '' }}"
+                                    data-notes="{{ $movement->notes ?? '' }}"
+                                    data-crop-name="{{ $movement->crop->name ?? '' }}"
+                                    data-plot-name="{{ $movement->plot->name ?? '' }}"
+                                    data-task-description="{{ $movement->task->description ?? '' }}"
+                                    data-created-by="{{ $movement->createdBy->name }}"
+                                    data-created-at="{{ $movement->created_at->format('d/m/Y H:i') }}"
+                                    title="Ver detalles">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                            
                             <!-- Editar -->
                             <a href="{{ route('foreman.supply-movements.edit', $movement) }}" 
                                class="inline-flex items-center justify-center w-8 h-8 border border-emerald-200 rounded hover:bg-emerald-50 text-emerald-600" 
                                title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </a>
+                            
+
                         </div>
                     </td>
                 </tr>
@@ -99,9 +122,189 @@
         </table>
     </div>
 
-    <!-- Paginación -->
-    <div class="mt-6">
-        {{ $movements->links() }}
+    <div class="mt-4">{{ $movements->links() }}</div>
+</div>
+
+<!-- Modal de detalles -->
+<div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Detalles del Movimiento</h3>
+            <button type="button" onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha del Movimiento</label>
+                    <p id="viewMovementDate" class="text-sm text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo de Movimiento</label>
+                    <p id="viewMovementType" class="text-sm text-gray-900"></p>
+                </div>
+            </div>
+            
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Insumo</label>
+                    <p id="viewSupplyName" class="text-sm text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Cantidad</label>
+                    <p id="viewQuantity" class="text-sm text-gray-900"></p>
+                </div>
+            </div>
+            
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Costo Unitario</label>
+                    <p id="viewUnitCost" class="text-sm text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Costo Total</label>
+                    <p id="viewTotalCost" class="text-sm text-gray-900 font-semibold"></p>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Motivo</label>
+                <p id="viewReason" class="text-sm text-gray-900"></p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Notas</label>
+                <p id="viewNotes" class="text-sm text-gray-900"></p>
+            </div>
+            
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Cultivo</label>
+                    <p id="viewCropName" class="text-sm text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Lote</label>
+                    <p id="viewPlotName" class="text-sm text-gray-900"></p>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Tarea</label>
+                <p id="viewTaskDescription" class="text-sm text-gray-900"></p>
+            </div>
+            
+            {{-- Responsive: 1 col on mobile --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Registrado por</label>
+                    <p id="viewCreatedBy" class="text-sm text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha de Registro</label>
+                    <p id="viewCreatedAt" class="text-sm text-gray-900"></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end gap-2 mt-6">
+            <button type="button" onclick="closeViewModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                Cerrar
+            </button>
+        </div>
     </div>
 </div>
+
+
+
+<script>
+
+
+// Función para abrir el modal de detalles
+function openViewModal(movementId, movementDate, movementType, supplyName, supplyUnit, quantity, unitCost, totalCost, reason, notes, cropName, plotName, taskDescription, createdBy, createdAt) {
+    document.getElementById('viewMovementDate').textContent = movementDate;
+    document.getElementById('viewMovementType').textContent = movementType;
+    document.getElementById('viewSupplyName').textContent = supplyName + ' (' + supplyUnit + ')';
+    document.getElementById('viewQuantity').textContent = quantity;
+    document.getElementById('viewUnitCost').textContent = '$' + unitCost;
+    document.getElementById('viewTotalCost').textContent = '$' + totalCost;
+    document.getElementById('viewReason').textContent = reason || '—';
+    document.getElementById('viewNotes').textContent = notes || '—';
+    document.getElementById('viewCropName').textContent = cropName || '—';
+    document.getElementById('viewPlotName').textContent = plotName || '—';
+    document.getElementById('viewTaskDescription').textContent = taskDescription || '—';
+    document.getElementById('viewCreatedBy').textContent = createdBy;
+    document.getElementById('viewCreatedAt').textContent = createdAt;
+    
+    document.getElementById('viewModal').style.display = 'flex';
+}
+
+// Función para cerrar el modal de detalles
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
+}
+
+
+
+// Función para mostrar mensaje de éxito
+function showSuccessMessage(message = 'Operación realizada correctamente') {
+    // Usar la función global de SweetAlert2 toast
+    if (window.showSuccessAlert) {
+        window.showSuccessAlert(message);
+    }
+}
+
+// Función para mostrar mensaje de error
+function showErrorMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.className = 'mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded';
+    messageElement.textContent = message;
+    
+    const content = document.querySelector('.bg-white.border.rounded.p-4');
+    if (content) {
+        content.insertBefore(messageElement, content.firstChild);
+        
+        // Remover el mensaje después de 5 segundos
+        setTimeout(() => {
+            if (messageElement.parentNode) {
+                messageElement.parentNode.removeChild(messageElement);
+            }
+        }, 5000);
+    }
+}
+
+// Inicialización cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar eventos a los botones de ver detalles
+    document.querySelectorAll('.view-movement-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const movementId = this.getAttribute('data-movement-id');
+            const movementDate = this.getAttribute('data-movement-date');
+            const movementType = this.getAttribute('data-movement-type');
+            const supplyName = this.getAttribute('data-supply-name');
+            const supplyUnit = this.getAttribute('data-supply-unit');
+            const quantity = this.getAttribute('data-quantity');
+            const unitCost = this.getAttribute('data-unit-cost');
+            const totalCost = this.getAttribute('data-total-cost');
+            const reason = this.getAttribute('data-reason');
+            const notes = this.getAttribute('data-notes');
+            const cropName = this.getAttribute('data-crop-name');
+            const plotName = this.getAttribute('data-plot-name');
+            const taskDescription = this.getAttribute('data-task-description');
+            const createdBy = this.getAttribute('data-created-by');
+            const createdAt = this.getAttribute('data-created-at');
+            
+            openViewModal(movementId, movementDate, movementType, supplyName, supplyUnit, quantity, unitCost, totalCost, reason, notes, cropName, plotName, taskDescription, createdBy, createdAt);
+        });
+    });
+    
+
+});
+</script>
 @endsection
+

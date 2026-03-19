@@ -122,7 +122,7 @@
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm text-gray-600">💰 Costo unitario:</span>
                                         <span class="font-bold text-emerald-700">
-                                            ${{ number_format($supply->unit_cost, 2) }}
+                                            ${{ number_format((int)$supply->unit_cost, 0) }}
                                         </span>
                                     </div>
                                 </div>

@@ -6,42 +6,41 @@
 
 @section('content')
 <div class="space-y-6 pb-8">
-    <!-- Worker Profile Card -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
-        <div class="absolute top-6 right-6 print:hidden">
-            <a href="{{ route('worker.reports.pdf') }}" 
-               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium shadow-sm transition-all text-sm">
-                <i data-lucide="download" class="w-4 h-4"></i>
-                <span>Descargar PDF</span>
-            </a>
-        </div>
+    {{-- Responsive: PDF button in header row instead of absolute --}}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-6">
-            <div class="flex items-start gap-4">
-                <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 text-emerald-700 font-bold text-2xl">
-                    {{ substr($user->name, 0, 1) }}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h3 class="text-lg font-bold text-gray-900 truncate">{{ $user->name }}</h3>
-                    <p class="text-gray-500 text-sm mb-4">{{ $user->email }}</p>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-4">
-                        <div>
-                            <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</span>
-                            <span class="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
-                                {{ $user->email_verified_at ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                <i data-lucide="{{ $user->email_verified_at ? 'check-circle' : 'minus-circle' }}" class="w-3.5 h-3.5"></i>
-                                {{ $user->email_verified_at ? 'Activo' : 'Inactivo' }}
-                            </span>
-                        </div>
-                        <div>
-                            <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Registro</span>
-                            <span class="block mt-1 text-sm font-semibold text-gray-900">{{ $user->created_at->format('d/m/Y') }}</span>
-                        </div>
-                        <div>
-                            <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</span>
-                            <span class="block mt-1 text-sm font-semibold text-gray-900">Trabajador</span>
-                        </div>
+            <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+                <div class="flex items-center gap-4 flex-1 min-w-0">
+                    <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 text-emerald-700 font-bold text-2xl">
+                        {{ substr($user->name, 0, 1) }}
                     </div>
+                    <div class="min-w-0">
+                        <h3 class="text-lg font-bold text-gray-900 truncate">{{ $user->name }}</h3>
+                        <p class="text-gray-500 text-sm">{{ $user->email }}</p>
+                    </div>
+                </div>
+                <a href="{{ route('worker.reports.pdf') }}" 
+                   class="print:hidden w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium shadow-sm transition-all text-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Descargar PDF</span>
+                </a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-4">
+                <div>
+                    <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</span>
+                    <span class="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
+                        {{ $user->email_verified_at ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                        <i data-lucide="{{ $user->email_verified_at ? 'check-circle' : 'minus-circle' }}" class="w-3.5 h-3.5"></i>
+                        {{ $user->email_verified_at ? 'Activo' : 'Inactivo' }}
+                    </span>
+                </div>
+                <div>
+                    <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Registro</span>
+                    <span class="block mt-1 text-sm font-semibold text-gray-900">{{ $user->created_at->format('d/m/Y') }}</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</span>
+                    <span class="block mt-1 text-sm font-semibold text-gray-900">Trabajador</span>
                 </div>
             </div>
         </div>
@@ -68,7 +67,7 @@
                 </div>
                 <span class="text-sm font-medium text-gray-600">Total Horas</span>
             </div>
-            <p class="text-2xl font-bold text-gray-900">{{ number_format($totalHours ?? 0, 2) }}</p>
+            <p class="text-2xl font-bold text-gray-900">{{ number_format($totalHours ?? 0, 0) }}</p>
         </div>
         
         <!-- Kilos -->
@@ -91,7 +90,7 @@
                 </div>
                 <span class="text-sm font-medium text-gray-600">Total Acumulado</span>
             </div>
-            <p class="text-2xl font-bold text-emerald-700">${{ number_format($totalPayment ?? 0, 2) }}</p>
+            <p class="text-2xl font-bold text-emerald-700">${{ number_format($totalPayment ?? 0, 0) }}</p>
         </div>
     </div>
 
@@ -123,9 +122,9 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 text-right text-gray-600">{{ $cropTotal['tasks_count'] }}</td>
-                        <td class="px-6 py-4 text-right text-gray-600">{{ number_format($cropTotal['total_hours'], 2) }}</td>
+                        <td class="px-6 py-4 text-right text-gray-600">{{ number_format($cropTotal['total_hours'], 0) }}</td>
                         <td class="px-6 py-4 text-right text-gray-600">{{ number_format($cropTotal['total_kilos'], 3) }}</td>
-                        <td class="px-6 py-4 text-right font-bold text-emerald-700">${{ number_format($cropTotal['total_payment'] ?? 0, 2) }}</td>
+                        <td class="px-6 py-4 text-right font-bold text-emerald-700">${{ number_format($cropTotal['total_payment'] ?? 0, 0) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -178,7 +177,7 @@
                         </td>
                         <td class="px-6 py-4 text-right whitespace-nowrap">
                             @if($task->hours > 0)
-                                <div class="text-gray-900">{{ number_format($task->hours, 2) }} h</div>
+                                <div class="text-gray-900">{{ number_format($task->hours, 0) }} h</div>
                             @endif
                             @if($task->kilos > 0)
                                 <div class="text-gray-900">{{ number_format($task->kilos, 3) }} kg</div>
@@ -188,18 +187,18 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 text-right whitespace-nowrap">
-                            @if($task->price_per_hour)
-                                <span class="text-xs text-gray-500">${{ number_format($task->price_per_hour, 2) }}/h</span>
-                            @elseif($task->price_per_day)
-                                <span class="text-xs text-gray-500">${{ number_format($task->price_per_day, 2) }}/d</span>
-                            @elseif($task->price_per_kg)
-                                <span class="text-xs text-gray-500">${{ number_format($task->price_per_kg, 2) }}/kg</span>
+                            @if((int)$task->price_per_hour)
+                                <span class="text-xs text-gray-500">${{ number_format((int)$task->price_per_hour, 0) }}/h</span>
+                            @elseif((int)$task->price_per_day)
+                                <span class="text-xs text-gray-500">${{ number_format((int)$task->price_per_day, 0) }}/d</span>
+                            @elseif((int)$task->price_per_kg)
+                                <span class="text-xs text-gray-500">${{ number_format((int)$task->price_per_kg, 0) }}/kg</span>
                             @else
                                 <span class="text-gray-400">-</span>
                             @endif
                         </td>
                         <td class="px-6 py-4 text-right whitespace-nowrap font-bold text-emerald-700">
-                            ${{ number_format($task->calculated_payment ?? $task->total_payment ?? 0, 2) }}
+                            ${{ number_format($task->calculated_payment ?? $task->total_payment ?? 0, 0) }}
                         </td>
                     </tr>
                     @endforeach
@@ -208,7 +207,7 @@
                     <tr>
                         <td colspan="5" class="px-6 py-4 text-right font-bold text-gray-700">Total Acumulado:</td>
                         <td class="px-6 py-4 text-right font-bold text-emerald-700 text-lg">
-                            ${{ number_format($totalPayment ?? 0, 2) }}
+                            ${{ number_format($totalPayment ?? 0, 0) }}
                         </td>
                     </tr>
                 </tfoot>

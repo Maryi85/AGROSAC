@@ -1,23 +1,22 @@
 @extends('foreman.layout')
 
 @section('header')
-<div class="flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-emerald-700">Gestión de Insumos</h2>
-</div>
+<h2 class="text-lg font-semibold text-emerald-700">Gestión de Insumos</h2>
 @endsection
 
 @section('content')
 <div class="bg-white border rounded p-4">
     <!-- Filtros de búsqueda -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <div class="flex items-end justify-between gap-4 mb-4">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+        {{-- Responsive: wrap on mobile --}}
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Buscar Insumos</h3>
-            <div class="flex gap-2">
-                <a href="{{ route('foreman.supplies.pdf', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded font-medium transition-colors">
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                <a href="{{ route('foreman.supplies.pdf', request()->query()) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded font-medium transition-colors">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                     <span>Descargar PDF</span>
                 </a>
-                <a href="{{ route('foreman.supplies.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded font-medium transition-colors">
+                <a href="{{ route('foreman.supplies.create') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded font-medium transition-colors">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                     <span>Nuevo Insumo</span>
                 </a>
@@ -48,7 +47,7 @@
                 <tr class="border-b hover:bg-gray-50" data-supply-id="{{ $supply->id }}">
                     <td class="py-3 pr-4">
                         @if(!empty($supply->photo))
-                            <img src="{{ asset('storage/' . $supply->photo) }}" alt="{{ $supply->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <img src="{{ storage_asset($supply->photo) }}" alt="{{ $supply->name }}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
                             </div>
@@ -67,7 +66,7 @@
                     <td class="py-3 pr-4">
                         <div class="flex items-center gap-2">
                             <span class="font-semibold {{ $supply->isLowStock() ? 'text-red-600' : 'text-gray-900' }}">
-                                {{ number_format($supply->current_stock, 3) }}
+                                {{ rtrim(rtrim(number_format($supply->current_stock, 2, '.', ','), '0'), '.') }}
                             </span>
                             @if($supply->isLowStock())
                                 <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500" title="Stock bajo"></i>
@@ -75,10 +74,10 @@
                         </div>
                     </td>
                     <td class="py-3 pr-4">
-                        <span class="text-sm text-gray-600">{{ number_format($supply->min_stock, 3) }}</span>
+                        <span class="text-sm text-gray-600">{{ rtrim(rtrim(number_format($supply->min_stock, 2, '.', ','), '0'), '.') }}</span>
                     </td>
                     <td class="py-3 pr-4 supply-unit-cost">
-                        ${{ number_format($supply->unit_cost, 2) }}
+                        ${{ number_format((int)$supply->unit_cost, 0) }}
                     </td>
                     <td class="py-3 pr-4 status-badge">
                         <span class="px-2 py-1 text-xs rounded {{ $supply->status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
@@ -96,7 +95,7 @@
                                     data-supply-id="{{ $supply->id }}"
                                     data-supply-name="{{ $supply->name }}"
                                     data-supply-unit="{{ $supply->unit }}"
-                                    data-supply-unit-cost="{{ $supply->unit_cost }}"
+                                    data-supply-unit-cost="{{ (int)$supply->unit_cost }}"
                                     data-supply-status="{{ $supply->status }}"
                                     data-supply-created="{{ $supply->created_at->format('d/m/Y H:i') }}"
                                     data-supply-updated="{{ $supply->updated_at->format('d/m/Y H:i') }}"
@@ -110,16 +109,16 @@
                                     data-supply-id="{{ $supply->id }}"
                                     data-supply-name="{{ $supply->name }}"
                                     data-supply-unit="{{ $supply->unit }}"
-                                    data-supply-unit-cost="{{ $supply->unit_cost }}"
+                                    data-supply-unit-cost="{{ (int)$supply->unit_cost }}"
                                     data-supply-status="{{ $supply->status }}"
-                                    data-supply-photo="{{ $supply->photo ? asset('storage/' . $supply->photo) : '' }}"
+                                    data-supply-photo="{{ $supply->photo ? storage_asset($supply->photo) : '' }}"
                                     title="Editar">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
                             
                             <!-- Eliminar -->
-                            @if($supply->consumptions()->exists())
-                                <button class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" title="No se puede eliminar un insumo con consumos registrados" disabled>
+                            @if($supply->consumptions()->exists() || $supply->movements()->exists())
+                                <button class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" title="No se puede eliminar un insumo con consumos o movimientos registrados" disabled>
                                     <i data-lucide="trash" class="w-4 h-4"></i>
                                 </button>
                             @else
@@ -148,7 +147,7 @@
 
 <!-- Modal de detalles -->
 <div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Detalles del Insumo</h3>
             <button type="button" onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
@@ -212,7 +211,7 @@
 
 <!-- Modal de edición -->
 <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto" style="display: none;">
-    <div class="bg-white border rounded p-6 w-full max-w-2xl mx-4 my-8">
+    <div class="bg-white border rounded p-5 sm:p-6 w-full max-w-2xl mx-4 my-8 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-emerald-700">Editar Insumo</h3>
             <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
@@ -245,7 +244,23 @@
                 </div>
                 <div>
                     <label class="block text-sm mb-1 text-emerald-800">Costo por Unidad</label>
-                    <input type="number" step="0.01" min="0" name="unit_cost" id="editUnitCost" class="w-full border border-emerald-200 rounded px-3 py-2" required />
+                    <input type="number" step="1" min="0" name="unit_cost" id="editUnitCost" class="w-full border border-emerald-200 rounded px-3 py-2" required />
+                </div>
+            </div>
+            
+            <!-- Foto -->
+            <div>
+                <label class="block text-sm mb-1 text-emerald-800">Foto del Insumo</label>
+                <div id="editPhotoPreview" class="mb-3">
+                    <p class="text-sm text-gray-600 mb-2">Foto actual:</p>
+                    <img id="editCurrentPhoto" src="" alt="Foto actual" class="max-w-xs rounded border border-emerald-200" style="display: none;">
+                </div>
+                <input type="file" name="photo" id="editPhoto" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif,.JPG,.JPEG,.PNG,.GIF" 
+                       class="w-full border border-emerald-200 rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, JPEG, PNG, GIF. Tamaño máximo: 2MB. Dejar vacío para mantener la foto actual.</p>
+                <div id="editPhotoNewPreview" class="mt-3 hidden">
+                    <p class="text-sm text-gray-600 mb-2">Nueva foto:</p>
+                    <img id="editPhotoNewPreviewImg" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
                 </div>
             </div>
             
@@ -258,28 +273,14 @@
                 </select>
             </div>
             
-            <!-- Foto -->
-            <div>
-                <label class="block text-sm mb-1 text-emerald-800">Foto del Insumo</label>
-                <div id="editPhotoPreview" class="mb-3">
-                    <p class="text-sm text-gray-600 mb-2">Foto actual:</p>
-                    <img id="editCurrentPhoto" src="" alt="Foto actual" class="max-w-xs rounded border border-emerald-200" style="display: none;">
-                </div>
-                <input type="file" name="photo" id="editPhoto" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif,.JPG,.JPEG,.PNG,.GIF" class="w-full border border-emerald-200 rounded px-3 py-2">
-                <div id="editPhotoNewPreview" class="mt-3 hidden">
-                    <p class="text-sm text-gray-600 mb-2">Nueva foto:</p>
-                    <img id="editPhotoNewPreviewImg" src="" alt="Vista previa" class="max-w-xs rounded border border-emerald-200">
-                </div>
-            </div>
-            
-            <!-- Botones -->
-            <div class="flex items-center gap-2">
-                <button type="button" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50" onclick="closeEditModal()">
+            {{-- Responsive: full-width on mobile --}}
+            <div class="flex flex-col-reverse sm:flex-row gap-2">
+                <button type="button" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-center" onclick="closeEditModal()">
                     <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
                     Cancelar
                 </button>
-                <button type="submit" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors" id="updateButton">
-                    <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
+                <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded transition-colors inline-flex items-center justify-center gap-2" id="updateButton">
+                    <i data-lucide="save" class="w-4 h-4"></i>
                     <span>Actualizar</span>
                 </button>
             </div>
@@ -290,8 +291,11 @@
 <script>
 let currentSupplyId = null;
 
+// Función para abrir el modal de edición
 function openEditModal(id, name, unit, unit_cost, status, photo) {
     currentSupplyId = id;
+    
+    // Llenar los campos del formulario
     document.getElementById('editName').value = name;
     document.getElementById('editUnit').value = unit;
     document.getElementById('editUnitCost').value = unit_cost;
@@ -307,10 +311,12 @@ function openEditModal(id, name, unit, unit_cost, status, photo) {
         currentPhoto.src = photo;
         currentPhoto.style.display = 'block';
         currentPhoto.onerror = function() {
+            console.log('Error cargando imagen:', photo);
             this.style.display = 'none';
             photoPreview.querySelector('p').textContent = 'Foto actual: (No se pudo cargar la imagen)';
         };
         currentPhoto.onload = function() {
+            console.log('Imagen cargada correctamente');
             photoPreview.querySelector('p').textContent = 'Foto actual:';
         };
         photoPreview.style.display = 'block';
@@ -343,6 +349,24 @@ function openEditModal(id, name, unit, unit_cost, status, photo) {
                 return;
             }
             
+            // Validar tipo de archivo
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                if (window.showErrorAlert) {
+                    showErrorAlert('Tipo de archivo no válido. Solo se permiten JPG, PNG y GIF.');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Tipo de archivo no válido. Solo se permiten JPG, PNG y GIF.',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+                e.target.value = '';
+                newPhotoPreview.classList.add('hidden');
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('editPhotoNewPreviewImg').src = e.target.result;
@@ -354,22 +378,27 @@ function openEditModal(id, name, unit, unit_cost, status, photo) {
         }
     };
     
+    // Mostrar el modal
     document.getElementById('editModal').style.display = 'flex';
 }
 
+// Función para cerrar el modal
 function closeEditModal() {
     document.getElementById('editModal').style.display = 'none';
     currentSupplyId = null;
 }
 
+// Función para abrir el modal de detalles
 function openViewModal(id, name, unit, unit_cost, status, created, updated, consumptions) {
+    // Llenar los campos del modal de detalles
     document.getElementById('viewName').textContent = name;
     document.getElementById('viewUnit').textContent = unit;
-    document.getElementById('viewUnitCost').textContent = '$' + parseFloat(unit_cost).toFixed(2);
+    document.getElementById('viewUnitCost').textContent = '$' + parseFloat(unit_cost).toFixed(0);
     document.getElementById('viewConsumptions').textContent = consumptions + ' registros';
     document.getElementById('viewCreated').textContent = created;
     document.getElementById('viewUpdated').textContent = updated;
     
+    // Configurar el estado con el badge apropiado
     const statusElement = document.getElementById('viewStatus');
     if (status === 'active') {
         statusElement.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700">Activo</span>';
@@ -377,13 +406,16 @@ function openViewModal(id, name, unit, unit_cost, status, created, updated, cons
         statusElement.innerHTML = '<span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">Inactivo</span>';
     }
     
+    // Mostrar el modal
     document.getElementById('viewModal').style.display = 'flex';
 }
 
+// Función para cerrar el modal de detalles
 function closeViewModal() {
     document.getElementById('viewModal').style.display = 'none';
 }
 
+// Función para actualizar el insumo
 async function updateSupply() {
     // Confirmar antes de actualizar
     const confirmResult = await Swal.fire({
@@ -408,6 +440,8 @@ async function updateSupply() {
     
     const updateButton = document.getElementById('updateButton');
     const originalText = updateButton.innerHTML;
+    
+    // Mostrar estado de carga
     updateButton.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 inline mr-2 animate-spin"></i><span>Actualizando...</span>';
     updateButton.disabled = true;
     
@@ -442,7 +476,11 @@ async function updateSupply() {
             if (result.success) {
                 // Actualizar la tabla en tiempo real con los datos del servidor
                 updateTableRowWithServerData(result.supply);
+                
+                // Cerrar el modal
                 closeEditModal();
+                
+                // Mostrar mensaje de éxito
                 showSuccessMessage();
             } else {
                 if (window.showErrorAlert) {
@@ -483,6 +521,7 @@ async function updateSupply() {
             });
         }
     } finally {
+        // Restaurar el botón
         updateButton.innerHTML = originalText;
         updateButton.disabled = false;
     }
@@ -517,14 +556,14 @@ function updateTableRowWithServerData(supplyData) {
         // Actualizar costo unitario
         const unitCostCell = row.querySelector('.supply-unit-cost');
         if (unitCostCell) {
-            unitCostCell.textContent = '$' + parseFloat(supplyData.unit_cost).toFixed(2);
+            unitCostCell.textContent = '$' + parseFloat(supplyData.unit_cost).toFixed(0);
         }
         
         // Actualizar foto
         const photoCell = row.querySelector('td:first-child');
         if (photoCell && supplyData.photo) {
             const existingImg = photoCell.querySelector('img');
-            const existingPlaceholder = photoCell.querySelector('div.w-16.h-16.bg-gray-100');
+            const existingPlaceholder = photoCell.querySelector('.photo-placeholder');
             if (existingImg) {
                 existingImg.src = supplyData.photo;
                 existingImg.style.display = 'block';
@@ -532,18 +571,18 @@ function updateTableRowWithServerData(supplyData) {
                     existingPlaceholder.style.display = 'none';
                 }
             } else if (!existingImg && !existingPlaceholder) {
-                photoCell.innerHTML = `<img src="${supplyData.photo}" alt="${supplyData.name}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center hidden"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>`;
+                photoCell.innerHTML = `<img src="${supplyData.photo}" alt="${supplyData.name}" class="w-16 h-16 object-cover rounded border border-emerald-200" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="photo-placeholder w-16 h-16 bg-gray-100 rounded border border-emerald-200 flex items-center justify-center text-gray-400 text-xs" style="display: none;"><i data-lucide="image" class="w-6 h-6"></i></div>`;
             }
         } else if (photoCell && !supplyData.photo) {
             const existingImg = photoCell.querySelector('img');
-            const existingPlaceholder = photoCell.querySelector('div.w-16.h-16.bg-gray-100');
+            const existingPlaceholder = photoCell.querySelector('.photo-placeholder');
             if (existingImg) {
                 existingImg.style.display = 'none';
             }
             if (existingPlaceholder) {
                 existingPlaceholder.style.display = 'flex';
             } else {
-                photoCell.innerHTML = `<div class="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>`;
+                photoCell.innerHTML = `<div class="photo-placeholder w-16 h-16 bg-gray-100 rounded border border-emerald-200 flex items-center justify-center text-gray-400 text-xs"><i data-lucide="image" class="w-6 h-6"></i></div>`;
             }
         }
         
@@ -578,6 +617,7 @@ function updateTableRow() {
             }
         }
         
+        // Actualizar otros campos
         const nameCell = row.querySelector('.supply-name');
         if (nameCell) {
             nameCell.textContent = document.getElementById('editName').value;
@@ -590,11 +630,12 @@ function updateTableRow() {
         
         const unitCostCell = row.querySelector('.supply-unit-cost');
         if (unitCostCell) {
-            unitCostCell.textContent = '$' + parseFloat(document.getElementById('editUnitCost').value).toFixed(2);
+            unitCostCell.textContent = '$' + parseFloat(document.getElementById('editUnitCost').value).toFixed(0);
         }
     }
 }
 
+// Función para mostrar mensaje de éxito
 function showSuccessMessage() {
     // Usar la función global de SweetAlert2 toast
     if (window.showSuccessAlert) {
@@ -602,12 +643,15 @@ function showSuccessMessage() {
     }
 }
 
+// Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
+    // Asegurar que los modales estén ocultos por defecto
     const editModal = document.getElementById('editModal');
     const viewModal = document.getElementById('viewModal');
     if (editModal) editModal.style.display = 'none';
     if (viewModal) viewModal.style.display = 'none';
     
+    // Agregar eventos a los botones de editar
     document.querySelectorAll('.edit-supply-btn').forEach(button => {
         button.addEventListener('click', function() {
             const id = this.getAttribute('data-supply-id');
@@ -621,6 +665,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Agregar eventos a los botones de ver detalles
     document.querySelectorAll('.view-supply-btn').forEach(button => {
         button.addEventListener('click', function() {
             const id = this.getAttribute('data-supply-id');
@@ -636,6 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Agregar evento de tecla Escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeEditModal();
@@ -643,18 +689,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Agregar evento de clic fuera del modal de edición
     editModal.addEventListener('click', function(e) {
         if (e.target === editModal) {
             closeEditModal();
         }
     });
     
+    // Agregar evento de clic fuera del modal de detalles
     viewModal.addEventListener('click', function(e) {
         if (e.target === viewModal) {
             closeViewModal();
         }
     });
     
+    // Agregar evento de envío del formulario
     document.getElementById('editForm').addEventListener('submit', function(e) {
         e.preventDefault();
         updateSupply();
@@ -662,3 +711,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+
+

@@ -127,7 +127,7 @@
                                 // Precio estimado por kg (esto podría venir de una tabla de precios)
                                 $pricePerKg = 2.50; // Precio base por kg
                             @endphp
-                            <div class="text-sm text-gray-900">${{ number_format($pricePerKg, 2) }}</div>
+                            <div class="text-sm text-gray-900">${{ number_format($pricePerKg, 0) }}</div>
                         @else
                             <div class="text-sm text-gray-500">—</div>
                         @endif
@@ -138,7 +138,7 @@
                                 $pricePerKg = 2.50; // Precio base por kg
                                 $total = $task->kilos * $pricePerKg;
                             @endphp
-                            <div class="text-sm text-gray-900 font-medium">${{ number_format($total, 2) }}</div>
+                            <div class="text-sm text-gray-900 font-medium">${{ number_format($total, 0) }}</div>
                         @else
                             <div class="text-sm text-gray-500">—</div>
                         @endif
